@@ -14,6 +14,27 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@v9
       - uses: DeterminateSystems/magic-nix-cache-action@v2
 
+      - name: Restore Previous Data
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find latest successful run ID for this workflow to restore state
+          RUN_ID=$(gh run list --workflow 02-data.yaml --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          
+          if [ -n "$RUN_ID" ]; then
+            echo "Restoring state from Run ID: $RUN_ID"
+            # Attempt download, but don't fail if artifact is missing (e.g. expired)
+            gh run download $RUN_ID -n raw-data-store || echo "No previous artifact found or download failed. Starting fresh."
+            
+            # Move contents if downloaded into a subdir
+            if [ -d "raw-data-store" ]; then
+               cp -r raw-data-store/* .
+               rm -rf raw-data-store
+            fi
+          else
+            echo "No previous successful run found. Starting fresh."
+          fi
+
       - name: Run Data Targets
         run: |
           # We run only the data acquisition targets
