@@ -15,3 +15,7 @@ _targets/
 
 # Nix
 result
+R-lib/
+
+# Local links
+AGENTS.md
