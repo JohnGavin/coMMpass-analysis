@@ -1,0 +1,34 @@
+name: Run Analysis
+
+on:
+  push:
+    branches: [main, master]
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+  workflow_dispatch:
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v9
+
+      - name: Setup Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - name: Run Targets Pipeline
+        # run target pipeline
+        run: |
+           nix-shell --pure default_dev.nix --run "Rscript -e 'targets::tar_make(callr_function = NULL)'"
+
+      - name: Upload Targets Store
+        uses: actions/upload-artifact@v4
+        with:
+          name: targets-store
+          path: _targets/
+          retention-days: 1
