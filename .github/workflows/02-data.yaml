@@ -1,0 +1,30 @@
+name: 02 Data Acquisition
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', 'README.md']
+  workflow_dispatch:
+
+jobs:
+  acquire-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - name: Run Data Targets
+        run: |
+          # We run only the data acquisition targets
+          nix-shell --pure default_dev.nix --run "Rscript -e 'targets::tar_make(c(\"s3_manifest\", \"rna_sample_files\", \"clinical_data\"), callr_function = NULL)'"
+
+      - name: Upload Data Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-data-store
+          # We need both the data files and the targets metadata tracking them
+          path: |
+            _targets/
+            data/
+          retention-days: 1

@@ -1,0 +1,54 @@
+name: 03 Compute Analysis
+
+on:
+  workflow_run:
+    workflows: ["02 Data Acquisition"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v9
+      - uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - name: Download Data
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_run" ]; then
+             RUN_ID=${{ github.event.workflow_run.id }}
+          else
+             # Find latest success for Data workflow
+             RUN_ID=$(gh run list --workflow 02-data.yaml --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          fi
+          
+          echo "Downloading data from Run ID: $RUN_ID"
+          gh run download raw-data-store --run-id $RUN_ID
+          
+          # gh run download might put it in a subdir 'raw-data-store'
+          if [ -d "raw-data-store" ]; then
+             cp -r raw-data-store/* .
+             rm -rf raw-data-store
+          fi
+          
+          ls -R data/
+          ls -F _targets/
+
+      - name: Run Analysis Targets
+        run: |
+          # Run the full pipeline (picks up where data left off)
+          nix-shell --pure default_dev.nix --run "Rscript -e 'targets::tar_make(callr_function = NULL)'"
+
+      - name: Upload Analysis Store
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-store
+          path: |
+            _targets/
+            data/
+          retention-days: 1
