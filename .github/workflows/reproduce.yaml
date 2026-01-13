@@ -1,0 +1,46 @@
+name: Reproduce Analysis
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed for pushing changes or deploying if we added that
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v9
+
+      - name: Setup Magic Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v2
+
+      - name: Verify Environment
+        run: |
+          nix-shell --pure default_dev.nix --run "R --version"
+          nix-shell --pure default_dev.nix --run "aws --version"
+
+      - name: Run Targets Pipeline
+        # We use 'callr_function = NULL' to avoid starting a separate process that might escape the shell or have path issues
+        run: |
+          nix-shell --pure default_dev.nix --run "Rscript -e 'targets::tar_make(callr_function = NULL)'"
+
+      - name: Build Website (Pkgdown)
+        # Re-uses the build_site.R script we created locally
+        run: |
+          echo "TAR_PROJECT=$PWD" >> $GITHUB_ENV
+          nix-shell --pure default_dev.nix --run "Rscript build_site.R"
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-site
+          path: docs/
