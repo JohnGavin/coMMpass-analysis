@@ -28,7 +28,7 @@ jobs:
           fi
           
           echo "Downloading data from Run ID: $RUN_ID"
-          gh run download raw-data-store --run-id $RUN_ID
+          gh run download $RUN_ID -n raw-data-store
           
           # gh run download might put it in a subdir 'raw-data-store'
           if [ -d "raw-data-store" ]; then
