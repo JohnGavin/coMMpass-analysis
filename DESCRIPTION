@@ -1,0 +1,15 @@
+Package: coMMpass
+Title: MMRF CoMMpass Data Analysis Pipeline
+Version: 0.0.1
+Authors@R: person("John", "Gavin", email = "john.gavin@example.com", role = c("aut", "cre"))
+Description: A reproducible data acquisition and analysis pipeline for the MMRF CoMMpass study using Targets and Nix.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.1
+Imports: 
+    targets,
+    TCGAbiolinks,
+    dplyr,
+    readr,
+    ggplot2
