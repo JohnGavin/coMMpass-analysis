@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.sciencedirect.com)",
+      "WebFetch(domain:wlandau.github.io)"
+      "WebFetch(domain:www.mountsinai.org)",
+      "WebFetch(domain:themmrf.org)",
+      "WebFetch(domain:pubmed.ncbi.nlm.nih.gov)",
+      "WebFetch(domain:rdrr.io)",
+      "WebFetch(domain:portal.gdc.cancer.gov)",
+      "WebFetch(domain:www.nature.com)",
+      "WebFetch(domain:registry.opendata.aws)"
+    ]
+  }
+}

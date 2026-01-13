@@ -1,0 +1,17 @@
+# Data
+data/
+!data/README.md
+
+# Targets
+_targets/
+!_targets/meta/
+!_targets/.gitignore
+
+# R environment
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Nix
+result
