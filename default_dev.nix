@@ -42,6 +42,7 @@ let
       direnv
       duckdb
       gcc
+      gh
       git
       htop
       jq
