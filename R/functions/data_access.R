@@ -22,34 +22,55 @@ get_commpass_clinical <- function() {
 #' @return Character vector of file paths
 #' @export
 list_s3_commpass <- function(prefix = "") {
-  # Use system aws cli as it was verified to work in nix shell
-  cmd <- sprintf("aws s3 ls --no-sign-request s3://gdc-mmrf-commpass-phs000748-2-open/%s --recursive", prefix)
-  system(cmd, intern = TRUE)
+  bucket <- "gdc-mmrf-commpass-phs000748-2-open"
+  region <- "us-east-1"
+  
+  res <- aws.s3::get_bucket_df(
+    bucket = bucket, 
+    region = region, 
+    prefix = prefix, 
+    max = 100,
+    key = "", 
+    secret = ""
+  )
+  
+  if (nrow(res) > 0) return(res$Key)
+  return(character(0))
 }
 
 #' Download a sample of RNA-seq files from S3
-#' @param s3_paths Character vector of S3 paths
+#' @param s3_paths Character vector of S3 keys (files)
 #' @param dest_dir Destination directory
 #' @param n Number of files to download
 #' @export
-download_s3_subset <- function(s3_paths, dest_dir = "data/raw/rna_seq", n = 5) {
+download_s3_subset <- function(s3_paths, dest_dir = "data/raw/rna_seq", n = 3) {
   if (!dir.exists(dest_dir)) dir.create(dest_dir, recursive = TRUE)
   
-  # Parse paths from 'ls' output (usually format: date time size path)
-  paths <- grep("\\.tsv$", s3_paths, value = TRUE)
-  # Extract the actual path part (last element in space-separated string)
-  clean_paths <- sapply(strsplit(paths, "\\s+"), function(x) tail(x, 1))
+  # Filter for RNA-seq files using character class to avoid backslashes
+  paths <- grep("[.]tsv$", s3_paths, value = TRUE)
+  sample_paths <- head(paths, n)
   
-  sample_paths <- head(clean_paths, n)
+  bucket <- "gdc-mmrf-commpass-phs000748-2-open"
+  region <- "us-east-1"
   
   downloaded_files <- c()
   for (p in sample_paths) {
     local_file <- file.path(dest_dir, basename(p))
-    cmd <- sprintf("aws s3 cp --no-sign-request s3://gdc-mmrf-commpass-phs000748-2-open/%s %s", p, local_file)
     message(paste("Downloading", p, "..."))
-    system(cmd)
-    downloaded_files <- c(downloaded_files, local_file)
+    
+    tryCatch({
+      aws.s3::save_object(
+        object = p,
+        bucket = bucket,
+        file = local_file,
+        region = region,
+        key = "",
+        secret = ""
+      )
+      downloaded_files <- c(downloaded_files, local_file)
+    }, error = function(e) {
+      warning(paste("Failed to download", p, ":", e$message))
+    })
   }
   return(downloaded_files)
 }
-
