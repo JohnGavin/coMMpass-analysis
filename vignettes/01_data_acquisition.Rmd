@@ -10,17 +10,17 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#">"
 )
 library(targets)
 library(dplyr)
 library(ggplot2)
 library(stringr)
 
-# Configure targets store for pkgdown execution (which runs in a temp dir)
-tar_store <- file.path(Sys.getenv("TAR_PROJECT"), "_targets")
-if (dir.exists(tar_store)) {
-  tar_config_set(store = tar_store)
+key <- "TAR_PROJECT"
+proj_dir <- Sys.getenv(key)
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_config_set(store = file.path(proj_dir, "_targets"))
 }
 ```
 
@@ -77,27 +77,46 @@ print(basename(downloaded))
 Clinical metadata retrieved from GDC:
 
 ```{r clinical}
-
 clinical <- tar_read(clinical_data)
-
 # Fix duplicate column names
-
 names(clinical) <- make.unique(names(clinical))
-
 cat("Clinical records:", nrow(clinical), "\n")
 
-
-
 # Display a subset of columns
-
 cols_to_show <- c("project", "submitter_id", "gender", "vital_status")
-
 # Ensure columns exist
-
 cols_to_show <- intersect(cols_to_show, names(clinical))
 
-
-
 knitr::kable(head(clinical[, cols_to_show, drop = FALSE]))
+```
 
+## Reproducibility
+
+### Git Commit Info
+
+```{r git-info, echo=FALSE}
+if (requireNamespace("gert", quietly = TRUE)) {
+  tryCatch({
+    # We use the current directory assuming the vignette runs in project root
+    # If pkgdown moves it, we might need Sys.getenv("TAR_PROJECT")
+    repo_path <- "."
+    if (Sys.getenv("TAR_PROJECT") != "") repo_path <- Sys.getenv("TAR_PROJECT")
+    
+    info <- gert::git_info(repo = repo_path)
+    knitr::kable(data.frame(
+      Item = c("Commit Hash", "Author", "Time", "Branch"),
+      Value = c(info$commit, info$author, as.character(info$time), info$shorthand)
+    ))
+  }, error = function(e) {
+    cat("Git info not available.")
+  })
+} else {
+  cat("gert package not installed.")
+}
+```
+
+### Session Info
+
+```{r session-info}
+sessionInfo()
 ```
