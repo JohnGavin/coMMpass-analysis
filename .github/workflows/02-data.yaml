@@ -12,11 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@v9
-        with:
-          extra-conf: |
-            substituters = https://cache.nixos.org https://rstats-on-nix.cachix.org
-            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= rstats-on-nix.cachix.org-1:Dcdz63NZKfvZOBGNy3/06/tW7y7c5JOQS7bCpBSb5Qs=
       - uses: DeterminateSystems/magic-nix-cache-action@v2
+      - uses: cachix/cachix-action@v14
+        with:
+          name: rstats-on-nix
+
 
       - name: Restore Previous Data
         env:
