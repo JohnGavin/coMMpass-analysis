@@ -21,6 +21,7 @@ let
       pkgdown
       purrr
       readr
+      remotes
       stringr
       styler
       SummarizedExperiment
