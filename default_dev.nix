@@ -7,6 +7,7 @@ let
     inherit (pkgs.rPackages) 
       aws_s3
       aws_signature
+      devtools
       dplyr
       fs
       GenomicDataCommons
