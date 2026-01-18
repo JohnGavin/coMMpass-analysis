@@ -22,4 +22,4 @@ jobs:
       - name: Check Tools
         run: |
           nix-shell --pure default_dev.nix --run "R --version"
-          nix-shell --pure default_dev.nix --run "aws --version"
+          nix-shell --pure default_dev.nix --run "Rscript -e 'library(aws.s3); library(TCGAbiolinks); cat(\"Core packages load OK\n\")'"
