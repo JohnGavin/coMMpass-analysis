@@ -2,7 +2,7 @@ library(targets)
 library(tarchetypes)
 
 # Source all functions in R/
-tar_source("R/functions")
+tar_source("R")
 
 # Pipeline Configuration
 tar_option_set(
