@@ -47,7 +47,7 @@ jobs:
         run: |
           # Pass current dir as project path
           echo "TAR_PROJECT=$PWD" >> $GITHUB_ENV
-          nix-shell --pure default_dev.nix --run "Rscript build_site.R"
+          nix-shell --pure default_ci.nix --run "Rscript build_site.R"
 
       - name: Upload Website
         uses: actions/upload-artifact@v4

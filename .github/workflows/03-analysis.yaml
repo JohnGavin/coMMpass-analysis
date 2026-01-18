@@ -47,7 +47,7 @@ jobs:
       - name: Run Analysis Targets
         run: |
           # Run the full pipeline (picks up where data left off)
-          nix-shell --pure default_dev.nix --run "Rscript -e 'targets::tar_make(callr_function = NULL)'"
+          nix-shell --pure default_ci.nix --run "Rscript -e 'targets::tar_make(callr_function = NULL)'"
 
       - name: Upload Analysis Store
         uses: actions/upload-artifact@v4
