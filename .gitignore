@@ -16,6 +16,11 @@ _targets/
 # Nix
 result
 R-lib/
+nix-shell-root
+
+# Local files
+run.log
+*.log
 
 # Local links
 AGENTS.md

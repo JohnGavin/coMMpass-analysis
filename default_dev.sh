@@ -171,12 +171,14 @@ tail -n +5 "$NIX_STORE_PATH" > "$ENV_SCRIPT"
 echo "Activating Nix environment..."
 USER_HOME="$HOME"
 USER_ACTUAL_SHELL="$SHELL"
+USER_PATH="$PATH"  # Save user PATH before Nix overwrites it (includes nvm, homebrew, etc.)
 
 source "$ENV_SCRIPT"
 export IN_NIX_SHELL=impure
 
-# Restore HOME
+# Restore HOME and user PATH (includes nvm, homebrew, claude CLI, etc.)
 export HOME="$USER_HOME"
+export PATH="$PATH:$USER_PATH"
 
 rm -f "$ENV_SCRIPT"
 

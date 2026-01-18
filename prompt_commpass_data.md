@@ -5,6 +5,8 @@ digest https://www.mountsinai.org/about/newsroom/2026/mount-sinai-researchers-he
   + and any other relevant sources that use R to analyse this data source (CoMMpass
   (Clinical Outcomes in MM to Personal Assessment of Genetic Profile) study). Prepare a plan that includes what R packages need to
   be installed by the rix R package to create reproduicible analysis.
+  + to understand patient subtypes, risk stratification, and identify new targets.
+
 
 
 
@@ -27,6 +29,17 @@ MMRF’s CureCloud, a first-of-its-kind registry, has amassed clinical, genomic,
 + MMRFBiolinks: an R-package for integrating and analyzing MMRF-CoMMpass data
   + https://pubmed.ncbi.nlm.nih.gov/33821961/
   + Old (6 years old)
++ https://www.nature.com/articles/s43018-025-01072-4
+  + single cell atlas for MM
+  + cell atlas of the bone marrow of patients with multiple myeloma
+  + 1.5 million immune cells from the bone marrow of 
+  + 335 newly diagnosed patients in the MMRF’s 
+  + CoMMpass study dataset, using 
+  + single-cell RNA sequencing.
+  + T cells appeared to show a state of immunosenescence, 
+    + meaning they were present but not functioning effectively and 
+    + contributing to immune suppression.
+
 
 # Data
 + https://github.com/theMMRF
