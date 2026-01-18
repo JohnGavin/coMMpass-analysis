@@ -1,8 +1,8 @@
 library(targets)
 library(tarchetypes)
 
-# Source all functions in R/
-tar_source("R")
+# Source only package R files (not R/dev/ scripts)
+tar_source(files = "R/data_access.R")
 
 # Pipeline Configuration
 tar_option_set(
