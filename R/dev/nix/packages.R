@@ -5,7 +5,7 @@ cran_packages <- c(
   "dplyr", "tidyr", "ggplot2", "readr", "purrr", "tibble", "stringr", "forcats", # tidyverse core
   "logger", "here", "fs", "glue", "tictoc",
   "aws.s3", "aws.signature",
-  "devtools", "usethis", "testthat", "remotes",
+  "devtools", "usethis", "testthat",
   "targets", "tarchetypes"
 )
 

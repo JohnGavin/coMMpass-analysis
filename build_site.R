@@ -1,12 +1,10 @@
-# Set up a local library for the package itself
-dir.create("R-lib", showWarnings = FALSE)
-.libPaths(c("R-lib", .libPaths()))
-
-# Install the package *without* upgrading dependencies
-remotes::install_local(".", dependencies = FALSE, force = TRUE, lib = "R-lib")
+# Load the package without installing (uses Nix-provided dependencies)
+# devtools::load_all() loads the package for development without CRAN fetch
+devtools::load_all(".")
 
 # Pass the current project path to the vignette
 Sys.setenv(TAR_PROJECT = getwd())
+Sys.setenv(HOME = Sys.getenv("HOME", "/tmp"))  # Fix /homeless-shelter warning
 
 # Build the site
 pkgdown::build_site()
