@@ -43,7 +43,7 @@ This report summarizes the initial data acquisition step for the MMRF CoMMpass s
 
 We query the S3 bucket to get a complete manifest of available files.
 
-```{r manifest, eval=targets_available}
+```{r manifest, eval=FALSE}
 # Load the manifest from the targets pipeline
 manifest_lines <- safe_tar_read("s3_manifest")
 
@@ -64,7 +64,7 @@ cat("Total size:", format(sum(manifest_df$size, na.rm=TRUE), units="auto"), "\n"
 
 ### File Type Distribution
 
-```{r plot_types, fig.width=8, fig.height=4, eval=targets_available}
+```{r plot_types, fig.width=8, fig.height=4, eval=FALSE}
 if (exists("manifest_df") && nrow(manifest_df) > 0) {
   manifest_df %>%
     mutate(extension = str_extract(file, "\\.[^.]+$")) %>%
@@ -80,7 +80,7 @@ if (exists("manifest_df") && nrow(manifest_df) > 0) {
 
 We downloaded a small subset of RNA-seq files for initial testing.
 
-```{r samples, eval=targets_available}
+```{r samples, eval=FALSE}
 downloaded <- safe_tar_read("rna_sample_files")
 if (!is.null(downloaded)) print(basename(downloaded))
 ```
@@ -89,7 +89,7 @@ if (!is.null(downloaded)) print(basename(downloaded))
 
 Clinical metadata retrieved from GDC:
 
-```{r clinical, eval=targets_available}
+```{r clinical, eval=FALSE}
 clinical <- safe_tar_read("clinical_data")
 if (!is.null(clinical)) {
   # Fix duplicate column names
