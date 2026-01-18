@@ -10,7 +10,7 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#">"
+  comment = "#>"
 )
 library(targets)
 library(dplyr)
@@ -19,8 +19,19 @@ library(stringr)
 
 key <- "TAR_PROJECT"
 proj_dir <- Sys.getenv(key)
+targets_available <- FALSE
+
 if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
   tar_config_set(store = file.path(proj_dir, "_targets"))
+  targets_available <- TRUE
+} else if (dir.exists("_targets")) {
+  targets_available <- TRUE
+}
+
+# Helper to safely read targets (returns NULL if not available)
+safe_tar_read <- function(name) {
+  if (!targets_available) return(NULL)
+  tryCatch(tar_read(name), error = function(e) NULL)
 }
 ```
 
@@ -32,9 +43,9 @@ This report summarizes the initial data acquisition step for the MMRF CoMMpass s
 
 We query the S3 bucket to get a complete manifest of available files.
 
-```{r manifest}
+```{r manifest, eval=targets_available}
 # Load the manifest from the targets pipeline
-manifest_lines <- tar_read(s3_manifest)
+manifest_lines <- safe_tar_read("s3_manifest")
 
 # Parse the ls output
 # Format: "2022-05-11 10:23:45 123456 filename"
@@ -53,41 +64,45 @@ cat("Total size:", format(sum(manifest_df$size, na.rm=TRUE), units="auto"), "\n"
 
 ### File Type Distribution
 
-```{r plot_types, fig.width=8, fig.height=4}
-manifest_df %>%
-  mutate(extension = str_extract(file, "\\.[^.]+$")) %>%
-  count(extension) %>%
-  ggplot(aes(x = n, y = reorder(extension, n))) + 
-  geom_col(fill = "steelblue") + 
-  theme_minimal() + 
-  labs(title = "File Types in CoMMpass S3 Bucket", x = "Count", y = "Extension")
+```{r plot_types, fig.width=8, fig.height=4, eval=targets_available}
+if (exists("manifest_df") && nrow(manifest_df) > 0) {
+  manifest_df %>%
+    mutate(extension = str_extract(file, "\\.[^.]+$")) %>%
+    count(extension) %>%
+    ggplot(aes(x = n, y = reorder(extension, n))) +
+    geom_col(fill = "steelblue") +
+    theme_minimal() +
+    labs(title = "File Types in CoMMpass S3 Bucket", x = "Count", y = "Extension")
+}
 ```
 
 ## Downloaded Samples
 
 We downloaded a small subset of RNA-seq files for initial testing.
 
-```{r samples}
-downloaded <- tar_read(rna_sample_files)
-print(basename(downloaded))
+```{r samples, eval=targets_available}
+downloaded <- safe_tar_read("rna_sample_files")
+if (!is.null(downloaded)) print(basename(downloaded))
 ```
 
 ## Clinical Data
 
 Clinical metadata retrieved from GDC:
 
-```{r clinical}
-clinical <- tar_read(clinical_data)
-# Fix duplicate column names
-names(clinical) <- make.unique(names(clinical))
-cat("Clinical records:", nrow(clinical), "\n")
+```{r clinical, eval=targets_available}
+clinical <- safe_tar_read("clinical_data")
+if (!is.null(clinical)) {
+  # Fix duplicate column names
+  names(clinical) <- make.unique(names(clinical))
+  cat("Clinical records:", nrow(clinical), "\n")
 
-# Display a subset of columns
-cols_to_show <- c("project", "submitter_id", "gender", "vital_status")
-# Ensure columns exist
-cols_to_show <- intersect(cols_to_show, names(clinical))
+  # Display a subset of columns
+  cols_to_show <- c("project", "submitter_id", "gender", "vital_status")
+  # Ensure columns exist
+  cols_to_show <- intersect(cols_to_show, names(clinical))
 
-knitr::kable(head(clinical[, cols_to_show, drop = FALSE]))
+  knitr::kable(head(clinical[, cols_to_show, drop = FALSE]))
+}
 ```
 
 ## Reproducibility
