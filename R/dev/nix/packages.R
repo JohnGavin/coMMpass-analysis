@@ -6,11 +6,14 @@ cran_packages <- c(
   "logger", "here", "fs", "glue", "tictoc",
   "aws.s3", "aws.signature",
   "devtools", "usethis", "testthat",
-  "targets", "tarchetypes"
+  "targets", "tarchetypes", "crew",  # pipeline tools
+  "survival", "survminer",  # survival analysis
+  "tidyverse"  # meta-package for convenience
 )
 
 bioc_packages <- c(
-  "TCGAbiolinks", "GenomicDataCommons", "SummarizedExperiment"
+  "TCGAbiolinks", "GenomicDataCommons", "SummarizedExperiment",
+  "DESeq2", "edgeR", "limma"  # differential expression packages
 )
 
 git_packages <- list()

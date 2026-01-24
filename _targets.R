@@ -1,42 +1,45 @@
+# _targets.R
+# Main orchestrator for CoMMpass analysis pipeline
+# Sources modular plans from R/tar_plans/
 library(targets)
 library(tarchetypes)
+library(crew)
 
-# Source only package R files (not R/dev/ scripts)
-tar_source(files = "R/data_access.R")
-
-# Pipeline Configuration
+# Set global options
 tar_option_set(
-  packages = c("TCGAbiolinks", "dplyr", "readr", "logger"),
-  format = "rds"
+  packages = c(
+    "TCGAbiolinks", "GenomicDataCommons", "SummarizedExperiment",
+    "DESeq2", "edgeR", "limma",
+    "survival", "survminer",
+    "tidyverse", "logger"
+  ),
+  format = "rds",  # Fast serialization
+  memory = "transient",  # Free memory after use
+  garbage_collection = TRUE,
+  controller = crew_controller_local(
+    workers = 4,  # Parallel workers
+    seconds_idle = 60
+  )
 )
 
-# Pipeline Definition
-list(
-  # 1. Metadata from GDC
-  tar_target(
-    gdc_rna_query,
-    query_commpass_rna()
-  ),
-  
-  tar_target(
-    gdc_rna_metadata,
-    TCGAbiolinks::getResults(gdc_rna_query)
-  ),
-  
-  tar_target(
-    clinical_data,
-    get_commpass_clinical()
-  ),
-  
-  # 2. S3 File Manifest & Sample Download
-  tar_target(
-    s3_manifest,
-    list_s3_commpass()
-  ),
-  
-  tar_target(
-    rna_sample_files,
-    download_s3_subset(s3_manifest, n = 3),
-    format = "file"
-  )
+# Source analysis functions (excluding R/dev/ and R/tar_plans/)
+for (file in list.files("R", pattern = "\\.(R|r)$", full.names = TRUE)) {
+  if (!grepl("R/(dev|tar_plans)/", file)) {
+    source(file)
+  }
+}
+
+# Source modular target plans from R/tar_plans/
+plan_files <- list.files("R/tar_plans", pattern = "^plan_.*\\.R$", full.names = TRUE)
+for (plan_file in plan_files) {
+  source(plan_file)
+}
+
+# Combine all plans into main pipeline
+c(
+  plan_data_acquisition,
+  plan_quality_control,
+  plan_differential_expression,
+  plan_survival_analysis,
+  plan_pathway_analysis
 )
