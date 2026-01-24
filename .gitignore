@@ -1,6 +1,8 @@
 # Data
 data/
 !data/README.md
+!data/example/
+data/example/*.csv
 
 # Targets
 _targets/
