@@ -12,7 +12,7 @@ shell_hook <- "export R_MAKEVARS_USER=/dev/null\nprintf 'CoMMpass environment re
 message("Generating default_dev.nix...")
 
 rix::rix(
-  r_ver = "2026-01-12",
+  r_ver = "4.5.2",  # Use stable R version
   project_path = ".",
   overwrite = TRUE,
   r_pkgs = c(r_pkgs, bioc_pkgs),
