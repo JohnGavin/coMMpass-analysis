@@ -138,38 +138,85 @@ download_clinical_data <- function(
   ))
 }
 
+#' Load example data for testing
+#' @param example_dir Directory containing example data
+load_example_data <- function(example_dir = "data/example") {
+  library(logger)
+
+  log_info("Loading example data from {example_dir}...")
+
+  # Check if example data exists
+  if (!dir.exists(example_dir)) {
+    stop("Example data directory not found. Run generate_example_data() first.")
+  }
+
+  # Load the combined data object
+  example_data_file <- file.path(example_dir, "example_data.rds")
+  if (file.exists(example_data_file)) {
+    data <- readRDS(example_data_file)
+    log_info("Loaded example data with {data$metadata$n_samples} samples and {data$metadata$n_genes} genes")
+    return(data)
+  }
+
+  # Fallback to loading individual components
+  counts <- readRDS(file.path(example_dir, "counts_matrix.rds"))
+  clinical <- readRDS(file.path(example_dir, "clinical_data.rds"))
+  metadata <- readRDS(file.path(example_dir, "metadata.rds"))
+
+  # Create mock SummarizedExperiment structure
+  data <- list(
+    assays = list(counts = counts),
+    colData = cbind(clinical, metadata[, -1]),
+    metadata = list(
+      n_samples = ncol(counts),
+      n_genes = nrow(counts)
+    )
+  )
+
+  log_info("Loaded example data components")
+  return(data)
+}
+
 #' Main data acquisition function
 #' @param download_rnaseq Whether to download RNA-seq data
 #' @param download_clinical Whether to download clinical data
 #' @param download_aws Whether to download from AWS
 #' @param sample_limit Limit number of samples (NULL for all)
+#' @param use_example Use example data instead of downloading
 acquire_commpass_data <- function(
   download_rnaseq = TRUE,
   download_clinical = TRUE,
   download_aws = FALSE,
-  sample_limit = 10  # Default to 10 for testing
+  sample_limit = 10,  # Default to 10 for testing
+  use_example = FALSE  # New parameter for example mode
 ) {
   library(logger)
-  
+
+  # Use example data if requested
+  if (use_example) {
+    log_info("Using example data for testing...")
+    return(load_example_data())
+  }
+
   log_info("Starting CoMMpass data acquisition...")
-  
+
   results <- list()
-  
+
   # Download RNA-seq data
   if (download_rnaseq) {
     results$rnaseq <- download_gdc_rnaseq(sample_limit = sample_limit)
   }
-  
+
   # Download clinical data
   if (download_clinical) {
     results$clinical <- download_clinical_data()
   }
-  
+
   # Download from AWS (optional)
   if (download_aws) {
     results$aws_files <- download_aws_data()
   }
-  
+
   log_info("Data acquisition complete")
   return(results)
 }
