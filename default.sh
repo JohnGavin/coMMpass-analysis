@@ -24,7 +24,7 @@ set -e  # Exit on error
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_PATH="$SCRIPT_DIR"
 GC_ROOT_PATH="$PROJECT_PATH/nix-shell-root"
-NIX_FILE="$PROJECT_PATH/default_dev.nix"
+NIX_FILE="$PROJECT_PATH/default.nix"
 R_FILE="$PROJECT_PATH/default.R"
 
 echo "=== CoMMpass Analysis Nix Environment Setup ==="
@@ -57,37 +57,37 @@ export NIXPKGS_ALLOW_UNFREE=1
 export SSL_CERT_FILE="${SSL_CERT_FILE:-/etc/ssl/cert.pem}"
 export CURL_CA_BUNDLE="${CURL_CA_BUNDLE:-/etc/ssl/cert.pem}"
 
-echo -e "\n=== STEP 1: Generate default_dev.nix from default.R (if needed) ==="
+echo -e "\n=== STEP 1: Generate default.nix from default.R (if needed) ==="
 
-# Determine if default_dev.nix needs regeneration
+# Determine if default.nix needs regeneration
 NEED_REGEN=false
 
-# Check 1: default_dev.nix doesn't exist
+# Check 1: default.nix doesn't exist
 if [ ! -f "$NIX_FILE" ]; then
-    echo "default_dev.nix does not exist."
+    echo "default.nix does not exist."
     NEED_REGEN=true
-# Check 2: default_dev.nix exists but is empty
+# Check 2: default.nix exists but is empty
 elif [ ! -s "$NIX_FILE" ]; then
-    echo "default_dev.nix exists but is empty."
+    echo "default.nix exists but is empty."
     NEED_REGEN=true
-# Check 3: default.R is newer than default_dev.nix
+# Check 3: default.R is newer than default.nix
 elif [ "$R_FILE" -nt "$NIX_FILE" ]; then
-    echo "default.R has been modified since default_dev.nix was generated."
+    echo "default.R has been modified since default.nix was generated."
     NEED_REGEN=true
-# Check 4: packages.R is newer than default_dev.nix
+# Check 4: packages.R is newer than default.nix
 elif [ "$PROJECT_PATH/R/dev/nix/packages.R" -nt "$NIX_FILE" ]; then
-    echo "packages.R has been modified since default_dev.nix was generated."
+    echo "packages.R has been modified since default.nix was generated."
     NEED_REGEN=true
-# Check 5: default_dev.nix has invalid Nix syntax
+# Check 5: default.nix has invalid Nix syntax
 elif ! nix-instantiate --parse "$NIX_FILE" > /dev/null 2>&1; then
-    echo "default_dev.nix has invalid Nix syntax."
+    echo "default.nix has invalid Nix syntax."
     NEED_REGEN=true
 else
-    echo "default_dev.nix is up to date."
+    echo "default.nix is up to date."
 fi
 
 if [ "$NEED_REGEN" = true ]; then
-    echo "Regenerating default_dev.nix from default.R..."
+    echo "Regenerating default.nix from default.R..."
     nix-shell \
         --pure \
         --keep PATH \
@@ -106,10 +106,10 @@ if [ "$NEED_REGEN" = true ]; then
 
     # Verify regeneration succeeded
     if [ ! -s "$NIX_FILE" ]; then
-        echo "ERROR: default_dev.nix regeneration failed (file is empty or missing)."
+        echo "ERROR: default.nix regeneration failed (file is empty or missing)."
         exit 1
     fi
-    echo "Successfully generated default_dev.nix"
+    echo "Successfully generated default.nix"
 fi
 
 echo -e "\n=== STEP 2: Build shell and create persistent GC root ==="

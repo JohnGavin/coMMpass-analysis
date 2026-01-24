@@ -22,7 +22,7 @@ rix::rix(
   shell_hook = shell_hook
 )
 
+# default.nix is created directly by rix (no renaming needed)
 if (file.exists("default.nix")) {
-  file.rename("default.nix", "default_dev.nix")
-  message("Created default_dev.nix")
+  message("Created default.nix")
 }
