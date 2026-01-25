@@ -9,6 +9,19 @@ The [CoMMpass study](https://themmrf.org/finding-a-cure/personalized-treatment-a
 - Reproducible Nix environment with all required R/Bioconductor packages
 - Analysis workflows for RNA-seq, single-cell, and survival analysis
 - Direct access to CoMMpass data via AWS S3, GDC, and MMRF Researcher Gateway
+- **[Interactive Dashboard](https://johngavin.github.io/coMMpass-analysis/dashboard.html)** - Explore analysis results in your browser
+
+## Interactive Dashboard
+
+**[View the Interactive Dashboard](https://johngavin.github.io/coMMpass-analysis/dashboard.html)**
+
+Explore CoMMpass analysis results directly in your browser:
+- Quality Control metrics and visualizations
+- Differential Expression analysis (volcano plots, MA plots, heatmaps)
+- Survival Analysis (Kaplan-Meier curves, Cox regression)
+- Pathway Analysis (enrichment plots, GSEA)
+
+The dashboard runs entirely in your browser using WebAssembly - no R server required!
 
 ## Usage
 
