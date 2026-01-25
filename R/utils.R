@@ -84,3 +84,101 @@ check_dependencies <- function() {
   message("All required packages are installed")
   return(TRUE)
 }
+
+#' Format File Size in Human-Readable Format
+#'
+#' Converts file sizes from bytes to human-readable format with appropriate units
+#'
+#' @param size_bytes Numeric vector of file sizes in bytes
+#' @param digits Number of decimal places to show (default: 1)
+#' @return Character vector with formatted file sizes
+#' @export
+#' @examples
+#' format_file_size(c(1024, 1048576, 5000877192))
+#' # Returns: "1.0 KB", "1.0 MB", "4.7 GB"
+format_file_size <- function(size_bytes, digits = 1) {
+  # Handle NA and non-numeric values
+  if (!is.numeric(size_bytes)) {
+    return(as.character(size_bytes))
+  }
+
+  # Units and thresholds
+  units <- c("bytes", "KB", "MB", "GB", "TB", "PB")
+  thresholds <- c(1, 1024, 1024^2, 1024^3, 1024^4, 1024^5)
+
+  # Vectorized formatting
+  result <- character(length(size_bytes))
+
+  for (i in seq_along(size_bytes)) {
+    if (is.na(size_bytes[i])) {
+      result[i] <- NA_character_
+    } else {
+      # Find appropriate unit
+      unit_idx <- max(which(size_bytes[i] >= thresholds))
+      value <- size_bytes[i] / thresholds[unit_idx]
+
+      # Format with commas for raw bytes
+      if (unit_idx == 1) {
+        result[i] <- format(size_bytes[i], big.mark = ",", scientific = FALSE)
+        result[i] <- paste(result[i], units[unit_idx])
+      } else {
+        result[i] <- sprintf(paste0("%.", digits, "f %s"), value, units[unit_idx])
+      }
+    }
+  }
+
+  return(result)
+}
+
+#' Format Number with Thousands Separator
+#'
+#' Adds commas as thousands separators to large numbers
+#'
+#' @param x Numeric value or vector
+#' @return Character vector with formatted numbers
+#' @export
+#' @examples
+#' format_with_commas(1234567)
+#' # Returns: "1,234,567"
+format_with_commas <- function(x) {
+  format(x, big.mark = ",", scientific = FALSE)
+}
+
+#' Create Summary Statistics Table
+#'
+#' Generate a nicely formatted summary statistics table for numeric variables
+#'
+#' @param data Data frame
+#' @param vars Character vector of variable names (NULL for all numeric)
+#' @return Data frame with summary statistics
+#' @export
+create_summary_table <- function(data, vars = NULL) {
+  # Select numeric variables if vars not specified
+  if (is.null(vars)) {
+    vars <- names(data)[sapply(data, is.numeric)]
+  }
+
+  # Calculate statistics
+  summary_list <- list()
+  for (var in vars) {
+    if (var %in% names(data) && is.numeric(data[[var]])) {
+      values <- data[[var]][!is.na(data[[var]])]
+
+      summary_list[[var]] <- data.frame(
+        Variable = var,
+        N = length(values),
+        Missing = sum(is.na(data[[var]])),
+        Mean = round(mean(values), 2),
+        SD = round(sd(values), 2),
+        Min = round(min(values), 2),
+        Q1 = round(quantile(values, 0.25), 2),
+        Median = round(median(values), 2),
+        Q3 = round(quantile(values, 0.75), 2),
+        Max = round(max(values), 2),
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+
+  do.call(rbind, summary_list)
+}
