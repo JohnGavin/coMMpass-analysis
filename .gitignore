@@ -24,3 +24,13 @@ run.log
 
 # Local links
 AGENTS.md
+
+# Shinylive generated files
+vignettes/dashboard_shinylive_files/
+vignettes/_extensions/
+vignettes/dashboard_shinylive.html
+vignettes/shinylive-sw.js
+
+# Backup files
+*.backup
+_targets.yaml
