@@ -8,7 +8,9 @@ cran_packages <- c(
   "devtools", "usethis", "testthat",
   "targets", "tarchetypes", "crew",  # pipeline tools
   "survival", "survminer",  # survival analysis
-  "tidyverse"  # meta-package for convenience
+  "tidyverse",  # meta-package for convenience
+  "shiny", "bslib", "plotly", "DT", "shinylive",  # dashboard packages
+  "broom"  # for tidying model outputs
 )
 
 bioc_packages <- c(
