@@ -46,8 +46,9 @@ download_gdc_rnaseq <- function(
   output_file <- file.path(data_dir, "rnaseq_se.rds")
   saveRDS(data, output_file)
   log_info("Saved SummarizedExperiment to {output_file}")
-  
-  return(data)
+
+  # Return file path instead of data object (targets serialization)
+  return(output_file)
 }
 
 #' Download data from AWS S3 open access bucket
@@ -97,7 +98,8 @@ download_aws_data <- function(
   }
   
   log_info("Downloaded {length(downloaded_files)} files to {data_dir}")
-  return(downloaded_files)
+  # Return directory path instead of list (targets serialization)
+  return(data_dir)
 }
 
 #' Download clinical data from GDC
@@ -132,13 +134,9 @@ download_clinical_data <- function(
   
   log_info("Clinical data saved to {data_dir}")
 
-  # Return file paths instead of data (targets has issues serializing nested lists)
-  return(list(
-    clinical_csv = output_clinical,
-    biospecimen_csv = output_biospec,
-    clinical_rds = file.path(data_dir, "clinical_data.rds"),
-    biospecimen_rds = file.path(data_dir, "biospecimen_data.rds")
-  ))
+  # Return the directory path (targets has issues serializing lists)
+  # Files saved: clinical_data.csv, biospecimen_data.csv, clinical_data.rds, biospecimen_data.rds
+  return(data_dir)
 }
 
 #' Main data acquisition function
