@@ -34,13 +34,17 @@ jobs:
           else
              RUN_ID=$(gh run list --workflow 03-analysis.yaml --status success --limit 1 --json databaseId --jq '.[0].databaseId')
           fi
-          
-          echo "Downloading artifacts from Run ID: $RUN_ID"
-          gh run download $RUN_ID -n analysis-store
-          
-          if [ -d "analysis-store" ]; then
-             cp -r analysis-store/* .
-             rm -rf analysis-store
+
+          if [ -n "$RUN_ID" ]; then
+            echo "Downloading artifacts from Run ID: $RUN_ID"
+            gh run download $RUN_ID -n analysis-store || echo "No artifacts found, continuing without them"
+
+            if [ -d "analysis-store" ]; then
+               cp -r analysis-store/* .
+               rm -rf analysis-store
+            fi
+          else
+            echo "No successful analysis runs found, continuing without artifacts"
           fi
 
       - name: Build Website
