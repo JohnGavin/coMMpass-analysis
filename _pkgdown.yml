@@ -1,3 +1,83 @@
 url: https://JohnGavin.github.io/coMMpass-analysis/
 template:
   bootstrap: 5
+
+reference:
+- title: "Data Acquisition"
+  desc: "Functions for retrieving CoMMpass data from GDC"
+  contents:
+  - download_commpass_rna
+  - query_gdc_clinical
+  - list_s3_files
+  - download_s3_files
+
+- title: "Quality Control"
+  desc: "Functions for data quality assessment and filtering"
+  contents:
+  - calculate_qc_metrics
+  - identify_outliers
+  - filter_low_expression
+  - normalize_counts
+
+- title: "Differential Expression"
+  desc: "Functions for differential expression analysis"
+  contents:
+  - run_deseq2_analysis
+  - run_edger_analysis
+  - run_limma_analysis
+  - combine_de_results
+
+- title: "Survival Analysis"
+  desc: "Functions for survival modeling and visualization"
+  contents:
+  - prepare_survival_data
+  - fit_survival_model
+  - plot_survival_curves
+  - cox_regression_analysis
+
+- title: "Pathway Analysis"
+  desc: "Functions for functional enrichment and pathway analysis"
+  contents:
+  - run_enrichment_analysis
+  - run_gsea
+  - plot_enrichment_results
+  - create_pathway_network
+
+- title: "Utilities"
+  desc: "Helper functions and utilities"
+  contents:
+  - format_file_size
+  - format_with_commas
+  - create_summary_table
+  - setup_logging
+  - create_project_dirs
+  - save_timestamped
+  - summarize_data
+  - check_dependencies
+
+- title: "Data Cleaning"
+  desc: "Functions for data cleaning and integration"
+  contents:
+  - clean_clinical_data
+  - clean_expression_data
+  - integrate_clinical_expression
+
+articles:
+- title: "Analysis Workflow"
+  navbar: "Workflow"
+  contents:
+  - 01_data_acquisition
+  - dashboard_shinylive
+
+navbar:
+  structure:
+    left:  [intro, reference, articles]
+    right: [github]
+  components:
+    articles:
+      text: "Vignettes"
+      menu:
+      - text: "Data Acquisition"
+        href: articles/01_data_acquisition.html
+      - text: "Interactive Dashboard"
+        href: articles/dashboard_shinylive.html
