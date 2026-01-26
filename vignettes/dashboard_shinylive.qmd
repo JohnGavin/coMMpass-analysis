@@ -9,6 +9,26 @@ format:
     toc-depth: 2
 filters:
   - shinylive
+webr:
+  packages:
+    - shiny
+    - bslib
+    - plotly
+    - DT
+    - dplyr
+    - tidyr
+    - survival
+    - ggplot2
+    # ggplot2 dependencies (CRITICAL - must be explicit!)
+    - munsell
+    - scales
+    - farver
+    - labeling
+    - RColorBrewer
+    - viridisLite
+    - gtable
+    - isoband
+    - colorspace
 ---
 
 ## About This Dashboard
