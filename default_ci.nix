@@ -21,8 +21,10 @@ let
       edgeR
       limma
       survival
-      # Note: survminer not in nixpkgs
-      # Core tidyverse
+      # Note: survminer not in nixpkgs - removed from pipeline requirements
+      # tidyverse meta-package (includes all tidyverse packages)
+      tidyverse
+      # Core tidyverse packages (already included by tidyverse above)
       dplyr
       ggplot2
       purrr
@@ -30,7 +32,6 @@ let
       stringr
       tibble
       tidyr
-      # Additional tidyverse for full meta-package
       forcats
       lubridate
       # Utilities

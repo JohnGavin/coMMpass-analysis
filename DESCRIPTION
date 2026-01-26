@@ -24,7 +24,6 @@ Imports:
     ggplot2,
     aws.s3
 Suggests:
-    survminer,
     tidyverse,
     knitr,
     rmarkdown,

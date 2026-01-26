@@ -69,7 +69,7 @@ check_dependencies <- function() {
   required_pkgs <- c(
     "TCGAbiolinks", "GenomicDataCommons", "SummarizedExperiment",
     "DESeq2", "edgeR", "limma",
-    "survival", "survminer",
+    "survival",  # survminer removed - not available in nixpkgs
     "targets", "crew",
     "tidyverse", "logger"
   )

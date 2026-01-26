@@ -10,7 +10,7 @@ tar_option_set(
   packages = c(
     "TCGAbiolinks", "GenomicDataCommons", "SummarizedExperiment",
     "DESeq2", "edgeR", "limma",
-    "survival", "survminer",
+    "survival",  # survminer removed - not available in nixpkgs
     "tidyverse", "logger"
   ),
   format = "rds",  # Fast serialization

@@ -27,7 +27,7 @@ prepare_survival_data <- function(clinical_data, se_data) {
 #' Run Kaplan-Meier analysis
 run_kaplan_meier <- function(surv_data, group_by = "risk_group") {
   library(survival)
-  library(survminer)
+  # Note: survminer not available in nixpkgs, using base survival package
   library(logger)
   
   log_info("Running Kaplan-Meier analysis grouped by {group_by}...")
