@@ -131,10 +131,13 @@ download_clinical_data <- function(
   saveRDS(biospecimen, file.path(data_dir, "biospecimen_data.rds"))
   
   log_info("Clinical data saved to {data_dir}")
-  
+
+  # Return file paths instead of data (targets has issues serializing nested lists)
   return(list(
-    clinical = clinical,
-    biospecimen = biospecimen
+    clinical_csv = output_clinical,
+    biospecimen_csv = output_biospec,
+    clinical_rds = file.path(data_dir, "clinical_data.rds"),
+    biospecimen_rds = file.path(data_dir, "biospecimen_data.rds")
   ))
 }
 
