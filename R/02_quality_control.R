@@ -2,6 +2,8 @@
 # Quality control and normalization functions
 
 #' Calculate QC metrics for RNA-seq data
+#' @description calculate_qc_metrics
+#' @export
 calculate_qc_metrics <- function(se_data) {
   library(SummarizedExperiment)
   library(logger)

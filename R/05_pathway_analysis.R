@@ -25,6 +25,8 @@ run_pathway_analysis <- function(de_genes, method = "clusterProfiler") {
 }
 
 #' Run Gene Set Enrichment Analysis
+#' @description run_gsea
+#' @export
 run_gsea <- function(se_data, clinical_data) {
   library(logger)
   

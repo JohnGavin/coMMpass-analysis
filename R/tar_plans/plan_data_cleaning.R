@@ -6,6 +6,8 @@
 #' Standardizes clinical data column names and formats
 #' @param clinical_raw Raw clinical data frame
 #' @return Cleaned clinical data frame
+#' @description clean_clinical_data
+#' @export
 clean_clinical_data <- function(clinical_raw) {
   if (is.null(clinical_raw) || nrow(clinical_raw) == 0) {
     return(clinical_raw)
@@ -56,6 +58,8 @@ clean_clinical_data <- function(clinical_raw) {
 #' Standardizes expression data format and adds metadata
 #' @param expr_raw Raw expression data (matrix or data frame)
 #' @return Cleaned expression matrix with gene names as rownames
+#' @description clean_expression_data
+#' @export
 clean_expression_data <- function(expr_raw) {
   if (is.null(expr_raw)) {
     return(expr_raw)
@@ -102,6 +106,8 @@ clean_expression_data <- function(expr_raw) {
 #' @param clinical_clean Cleaned clinical data
 #' @param expr_clean Cleaned expression data
 #' @return List with matched clinical and expression data
+#' @description integrate_clinical_expression
+#' @export
 integrate_clinical_expression <- function(clinical_clean, expr_clean) {
   if (is.null(clinical_clean) || is.null(expr_clean)) {
     return(list(

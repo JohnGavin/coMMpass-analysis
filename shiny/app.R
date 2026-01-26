@@ -1,7 +1,4 @@
-# shiny/app.R
-# CoMMpass Analysis Dashboard - Shinylive Compatible
-# This dashboard visualizes results from the CoMMpass multiple myeloma analysis pipeline
-
+# Load required packages
 library(shiny)
 library(bslib)
 library(plotly)
@@ -10,16 +7,838 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(survival)
-library(survminer)
 
-# Source modules
-source("modules/mod_data_loader.R")
-source("modules/mod_qc_viz.R")
-source("modules/mod_de_viz.R")
-source("modules/mod_survival_viz.R")
-source("modules/mod_pathway_viz.R")
+# ============================================================================
+# Data Generation Functions
+# ============================================================================
 
-# Define UI
+generate_example_counts <- function(n_genes = 500, n_samples = 40) {
+  # Generate realistic RNA-seq counts
+  set.seed(123)
+  
+  gene_names <- paste0("GENE", seq_len(n_genes))
+  sample_names <- paste0("SAMPLE", seq_len(n_samples))
+  
+  # Simulate counts with overdispersion
+  counts <- matrix(
+    rnbinom(n_genes * n_samples, mu = 500, size = 2),
+    nrow = n_genes,
+    dimnames = list(gene_names, sample_names)
+  )
+  
+  # Add some differential expression for first 50 genes
+  group1_samples <- seq_len(n_samples / 2)
+  counts[1:50, group1_samples] <- counts[1:50, group1_samples] * 2
+  
+  return(counts)
+}
+
+generate_example_clinical <- function(n_samples = 40) {
+  set.seed(123)
+  
+  sample_names <- paste0("SAMPLE", seq_len(n_samples))
+  
+  clinical <- data.frame(
+    sample = sample_names,
+    age = round(rnorm(n_samples, mean = 65, sd = 10)),
+    stage = sample(c("I", "II", "III"), n_samples, replace = TRUE),
+    risk_group = sample(c("Standard", "High"), n_samples, replace = TRUE),
+    response = sample(c("CR", "PR", "SD", "PD"), n_samples, replace = TRUE),
+    os_time = round(rexp(n_samples, rate = 1/365) * 365),
+    os_status = rbinom(n_samples, 1, 0.4),
+    pfs_time = round(rexp(n_samples, rate = 1/250) * 250),
+    pfs_status = rbinom(n_samples, 1, 0.5),
+    stringsAsFactors = FALSE
+  )
+  
+  return(clinical)
+}
+
+generate_example_qc <- function(counts) {
+  data.frame(
+    sample = colnames(counts),
+    total_counts = colSums(counts),
+    detected_genes = colSums(counts > 0),
+    is_outlier = FALSE,
+    stringsAsFactors = FALSE
+  )
+}
+
+generate_example_de <- function(counts) {
+  n_genes <- nrow(counts)
+  gene_names <- rownames(counts)
+  
+  # Simulate DE results
+  list(
+    DESeq2 = data.frame(
+      gene = gene_names,
+      baseMean = rowMeans(counts),
+      log2FoldChange = c(rnorm(50, mean = 2, sd = 0.5), rnorm(n_genes - 50, mean = 0, sd = 0.3)),
+      lfcSE = runif(n_genes, 0.1, 0.3),
+      stat = rnorm(n_genes, 0, 2),
+      pvalue = c(runif(50, 0, 0.01), runif(n_genes - 50, 0, 1)),
+      padj = c(runif(50, 0, 0.05), runif(n_genes - 50, 0.05, 1)),
+      stringsAsFactors = FALSE
+    ),
+    edgeR = data.frame(
+      gene = gene_names,
+      logFC = c(rnorm(50, mean = 2, sd = 0.5), rnorm(n_genes - 50, mean = 0, sd = 0.3)),
+      logCPM = log2(rowMeans(counts) + 1),
+      PValue = c(runif(50, 0, 0.01), runif(n_genes - 50, 0, 1)),
+      FDR = c(runif(50, 0, 0.05), runif(n_genes - 50, 0.05, 1)),
+      stringsAsFactors = FALSE
+    ),
+    limma = data.frame(
+      gene = gene_names,
+      logFC = c(rnorm(50, mean = 2, sd = 0.5), rnorm(n_genes - 50, mean = 0, sd = 0.3)),
+      AveExpr = rowMeans(log2(counts + 1)),
+      t = rnorm(n_genes, 0, 2),
+      P.Value = c(runif(50, 0, 0.01), runif(n_genes - 50, 0, 1)),
+      adj.P.Val = c(runif(50, 0, 0.05), runif(n_genes - 50, 0.05, 1)),
+      B = rnorm(n_genes, 0, 2),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+generate_example_pathways <- function() {
+  data.frame(
+    pathway = c(
+      "HALLMARK_MYC_TARGETS_V1", "HALLMARK_E2F_TARGETS",
+      "HALLMARK_G2M_CHECKPOINT", "HALLMARK_APOPTOSIS",
+      "HALLMARK_UNFOLDED_PROTEIN_RESPONSE", "HALLMARK_INFLAMMATORY_RESPONSE",
+      "KEGG_PROTEASOME", "KEGG_CELL_CYCLE",
+      "REACTOME_IMMUNE_SYSTEM", "GO_DNA_REPAIR",
+      "HALLMARK_P53_PATHWAY", "KEGG_OXIDATIVE_PHOSPHORYLATION",
+      "REACTOME_CELL_CYCLE", "GO_MITOCHONDRION",
+      "HALLMARK_TNFA_SIGNALING_VIA_NFKB"
+    ),
+    p_value = c(0.001, 0.002, 0.003, 0.004, 0.005, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1),
+    gene_count = c(25, 22, 20, 18, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6),
+    pathway_size = 200,
+    NES = c(2.3, 2.1, 1.9, -1.8, 1.7, -1.6, 1.5, 1.4, -1.3, 1.2, 1.1, -1.0, 0.9, 0.8, -0.7),
+    q_value = c(0.01, 0.01, 0.02, 0.02, 0.03, 0.05, 0.08, 0.1, 0.12, 0.15, 0.18, 0.2, 0.22, 0.24, 0.26),
+    stringsAsFactors = FALSE
+  )
+}
+
+# ============================================================================
+# Module: Data Loader
+# ============================================================================
+
+mod_data_loader_ui <- function(id) {
+  ns <- NS(id)
+  
+  tagList(
+    layout_columns(
+      col_widths = c(4, 8),
+      
+      card(
+        card_header("Data Source"),
+        card_body(
+          radioButtons(
+            ns("data_source"),
+            "Select Data Source:",
+            choices = list("Example Data (Simulated)" = "example"),
+            selected = "example"
+          ),
+          
+          p(class = "text-muted",
+            "This demo uses simulated CoMMpass-like data with:",
+            tags$ul(
+              tags$li("500 genes, 40 samples"),
+              tags$li("50 differentially expressed genes"),
+              tags$li("Simulated survival outcomes")
+            )
+          ),
+          
+          hr(),
+          
+          actionButton(
+            ns("load_data"),
+            "Load Example Data",
+            class = "btn-primary btn-lg",
+            icon = icon("play")
+          ),
+          
+          br(), br(),
+          
+          verbatimTextOutput(ns("load_status"))
+        )
+      ),
+      
+      card(
+        card_header("Data Summary"),
+        card_body(
+          h5("Loaded Datasets"),
+          tableOutput(ns("data_summary")),
+          
+          hr(),
+          
+          h5("Sample Distribution"),
+          plotlyOutput(ns("sample_distribution"), height = "250px"),
+          
+          hr(),
+          
+          h5("Data Preview"),
+          DTOutput(ns("data_preview"))
+        )
+      )
+    )
+  )
+}
+
+mod_data_loader_server <- function(id, shared_data) {
+  moduleServer(id, function(input, output, session) {
+    
+    observeEvent(input$load_data, {
+      withProgress(message = 'Generating example data...', value = 0, {
+        
+        incProgress(0.2, detail = "Generating counts matrix")
+        counts <- generate_example_counts(n_genes = 500, n_samples = 40)
+        
+        incProgress(0.4, detail = "Generating clinical data")
+        clinical <- generate_example_clinical(n_samples = 40)
+        
+        incProgress(0.6, detail = "Calculating QC metrics")
+        qc_metrics <- generate_example_qc(counts)
+        
+        incProgress(0.8, detail = "Simulating DE results")
+        de_results <- generate_example_de(counts)
+        
+        incProgress(0.9, detail = "Generating pathway results")
+        pathway_results <- generate_example_pathways()
+        
+        shared_data$raw_data <- list(counts = counts, clinical = clinical)
+        shared_data$qc_metrics <- qc_metrics
+        shared_data$de_results <- de_results
+        shared_data$survival_data <- clinical
+        shared_data$pathway_results <- pathway_results
+        
+        incProgress(1.0, detail = "Complete!")
+      })
+      
+      output$load_status <- renderText("Example data loaded successfully!\nReady to explore the dashboard.")
+    })
+    
+    output$data_summary <- renderTable({
+      req(shared_data$raw_data)
+      
+      data.frame(
+        Dataset = c("Expression Data", "QC Metrics", "DE Results", "Survival Data", "Pathway Results"),
+        Status = c(
+          ifelse(is.null(shared_data$raw_data), "Not loaded", "Loaded"),
+          ifelse(is.null(shared_data$qc_metrics), "Not loaded", "Loaded"),
+          ifelse(is.null(shared_data$de_results), "Not loaded", "Loaded"),
+          ifelse(is.null(shared_data$survival_data), "Not loaded", "Loaded"),
+          ifelse(is.null(shared_data$pathway_results), "Not loaded", "Loaded")
+        ),
+        Dimensions = c(
+          if (!is.null(shared_data$raw_data)) paste(dim(shared_data$raw_data$counts), collapse = " x ") else "-",
+          if (!is.null(shared_data$qc_metrics)) paste(dim(shared_data$qc_metrics), collapse = " x ") else "-",
+          if (!is.null(shared_data$de_results)) paste(length(shared_data$de_results), "methods") else "-",
+          if (!is.null(shared_data$survival_data)) paste(dim(shared_data$survival_data), collapse = " x ") else "-",
+          if (!is.null(shared_data$pathway_results)) paste(dim(shared_data$pathway_results), collapse = " x ") else "-"
+        ),
+        stringsAsFactors = FALSE
+      )
+    })
+    
+    output$sample_distribution <- renderPlotly({
+      req(shared_data$qc_metrics)
+      
+      plot_ly(
+        data = shared_data$qc_metrics,
+        x = ~total_counts,
+        y = ~detected_genes,
+        type = 'scatter',
+        mode = 'markers',
+        marker = list(size = 10, color = ~total_counts, colorscale = 'Viridis', showscale = TRUE),
+        text = ~paste("Sample:", sample, "<br>Total counts:", format(total_counts, big.mark = ","), 
+                     "<br>Detected genes:", detected_genes),
+        hovertemplate = "%{text}<extra></extra>"
+      ) %>%
+        layout(
+          xaxis = list(title = "Total Counts"),
+          yaxis = list(title = "Detected Genes"),
+          hovermode = 'closest',
+          margin = list(l = 50, r = 50, t = 20, b = 50)
+        )
+    })
+    
+    output$data_preview <- renderDT({
+      req(shared_data$qc_metrics)
+      
+      datatable(
+        shared_data$qc_metrics,
+        options = list(pageLength = 5, scrollX = TRUE, dom = 'tp'),
+        rownames = FALSE
+      )
+    })
+    
+    return(reactive({
+      list(loaded = !is.null(shared_data$raw_data), source = input$data_source)
+    }))
+  })
+}
+
+# ============================================================================
+# Module: QC Visualization
+# ============================================================================
+
+mod_qc_viz_ui <- function(id) {
+  ns <- NS(id)
+  
+  tagList(
+    card(
+      card_header("Quality Control Metrics"),
+      card_body(
+        layout_columns(
+          col_widths = c(6, 6),
+          plotlyOutput(ns("library_size_plot"), height = "350px"),
+          plotlyOutput(ns("pca_plot"), height = "350px")
+        ),
+        hr(),
+        h5("Sample QC Table"),
+        DTOutput(ns("qc_table"))
+      )
+    )
+  )
+}
+
+mod_qc_viz_server <- function(id, shared_data) {
+  moduleServer(id, function(input, output, session) {
+    
+    output$library_size_plot <- renderPlotly({
+      req(shared_data$qc_metrics)
+      
+      plot_ly(
+        data = shared_data$qc_metrics,
+        x = ~sample,
+        y = ~total_counts,
+        type = 'bar',
+        marker = list(color = ~total_counts, colorscale = 'Blues', showscale = FALSE),
+        text = ~paste("Sample:", sample, "<br>Total counts:", format(total_counts, big.mark = ",")),
+        hovertemplate = "%{text}<extra></extra>"
+      ) %>%
+        layout(
+          title = "Library Size Distribution",
+          xaxis = list(title = "Sample", tickangle = -45),
+          yaxis = list(title = "Total Counts"),
+          margin = list(b = 100)
+        )
+    })
+    
+    output$pca_plot <- renderPlotly({
+      req(shared_data$raw_data)
+      
+      if (is.list(shared_data$raw_data) && "counts" %in% names(shared_data$raw_data)) {
+        counts <- shared_data$raw_data$counts
+        log_counts <- log2(counts + 1)
+        pca_result <- prcomp(t(log_counts), scale. = TRUE, center = TRUE)
+        
+        pc_df <- data.frame(
+          sample = rownames(pca_result$x),
+          PC1 = pca_result$x[,1],
+          PC2 = pca_result$x[,2]
+        )
+        
+        var_explained <- round(100 * pca_result$sdev^2 / sum(pca_result$sdev^2), 1)
+        
+        plot_ly(
+          data = pc_df,
+          x = ~PC1,
+          y = ~PC2,
+          type = 'scatter',
+          mode = 'markers',
+          marker = list(size = 12, color = "#2E86AB"),
+          text = ~sample,
+          hovertemplate = "Sample: %{text}<br>PC1: %{x:.2f}<br>PC2: %{y:.2f}<extra></extra>"
+        ) %>%
+          layout(
+            title = "PCA of Samples",
+            xaxis = list(title = paste0("PC1 (", var_explained[1], "% variance)")),
+            yaxis = list(title = paste0("PC2 (", var_explained[2], "% variance)"))
+          )
+      } else {
+        plot_ly() %>% layout(title = "PCA Plot", annotations = list(text = "No data", showarrow = FALSE))
+      }
+    })
+    
+    output$qc_table <- renderDT({
+      req(shared_data$qc_metrics)
+      datatable(shared_data$qc_metrics, options = list(pageLength = 10, scrollX = TRUE), rownames = FALSE)
+    })
+  })
+}
+
+# ============================================================================
+# Module: Differential Expression
+# ============================================================================
+
+mod_de_viz_ui <- function(id) {
+  ns <- NS(id)
+  
+  tagList(
+    layout_columns(
+      col_widths = c(3, 9),
+      
+      card(
+        card_header("DE Analysis Controls"),
+        card_body(
+          selectInput(ns("de_method"), "Select Method:", 
+                     choices = c("DESeq2", "edgeR", "limma"), selected = "DESeq2"),
+          sliderInput(ns("padj_threshold"), "Adjusted P-value:", min = 0.001, max = 0.1, value = 0.05, step = 0.001),
+          sliderInput(ns("lfc_threshold"), "Log2 Fold Change:", min = 0, max = 3, value = 1, step = 0.1),
+          hr(),
+          h5("Summary"),
+          tableOutput(ns("de_summary"))
+        )
+      ),
+      
+      card(
+        card_header("Differential Expression Results"),
+        card_body(
+          navset_tab(
+            nav_panel("Volcano Plot", plotlyOutput(ns("volcano_plot"), height = "500px")),
+            nav_panel("MA Plot", plotlyOutput(ns("ma_plot"), height = "500px")),
+            nav_panel("DE Table", DTOutput(ns("de_table")))
+          )
+        )
+      )
+    )
+  )
+}
+
+mod_de_viz_server <- function(id, shared_data) {
+  moduleServer(id, function(input, output, session) {
+    
+    current_de_results <- reactive({
+      req(shared_data$de_results)
+      if (is.list(shared_data$de_results) && input$de_method %in% names(shared_data$de_results)) {
+        shared_data$de_results[[input$de_method]]
+      } else {
+        shared_data$de_results[[1]]
+      }
+    })
+    
+    output$de_summary <- renderTable({
+      req(current_de_results())
+      df <- current_de_results()
+      
+      padj_col <- if ("padj" %in% names(df)) "padj" else if ("FDR" %in% names(df)) "FDR" else "adj.P.Val"
+      lfc_col <- if ("log2FoldChange" %in% names(df)) "log2FoldChange" else if ("logFC" %in% names(df)) "logFC" else "log2FC"
+      
+      n_sig <- sum(df[[padj_col]] < input$padj_threshold, na.rm = TRUE)
+      n_up <- sum(df[[padj_col]] < input$padj_threshold & df[[lfc_col]] > input$lfc_threshold, na.rm = TRUE)
+      n_down <- sum(df[[padj_col]] < input$padj_threshold & df[[lfc_col]] < -input$lfc_threshold, na.rm = TRUE)
+      
+      data.frame(
+        Metric = c("Total Genes", "Significant", "Upregulated", "Downregulated"),
+        Count = c(nrow(df), n_sig, n_up, n_down)
+      )
+    })
+    
+    output$volcano_plot <- renderPlotly({
+      req(current_de_results())
+      df <- current_de_results()
+      
+      padj_col <- if ("padj" %in% names(df)) "padj" else if ("FDR" %in% names(df)) "FDR" else "adj.P.Val"
+      lfc_col <- if ("log2FoldChange" %in% names(df)) "log2FoldChange" else if ("logFC" %in% names(df)) "logFC" else "log2FC"
+      
+      df$significance <- ifelse(
+        df[[padj_col]] < input$padj_threshold & abs(df[[lfc_col]]) > input$lfc_threshold,
+        ifelse(df[[lfc_col]] > 0, "Up", "Down"),
+        "Not Significant"
+      )
+      
+      colors <- c("Up" = "#DC3545", "Down" = "#0066CC", "Not Significant" = "#CCCCCC")
+      
+      plot_ly(
+        data = df,
+        x = ~get(lfc_col),
+        y = ~-log10(get(padj_col)),
+        type = 'scatter',
+        mode = 'markers',
+        color = ~significance,
+        colors = colors,
+        marker = list(size = 5),
+        text = ~paste("Gene:", gene, "<br>Log2FC:", round(get(lfc_col), 3), 
+                     "<br>Adj P:", format(get(padj_col), digits = 3)),
+        hovertemplate = "%{text}<extra></extra>"
+      ) %>%
+        layout(
+          title = paste("Volcano Plot -", input$de_method),
+          xaxis = list(title = "Log2 Fold Change"),
+          yaxis = list(title = "-Log10(Adjusted P-value)"),
+          shapes = list(
+            list(type = 'line', x0 = input$lfc_threshold, x1 = input$lfc_threshold,
+                 y0 = 0, y1 = 1, yref = "paper",
+                 line = list(color = 'gray', dash = 'dash', width = 1)),
+            list(type = 'line', x0 = -input$lfc_threshold, x1 = -input$lfc_threshold,
+                 y0 = 0, y1 = 1, yref = "paper",
+                 line = list(color = 'gray', dash = 'dash', width = 1)),
+            list(type = 'line', x0 = 0, x1 = 1, xref = "paper",
+                 y0 = -log10(input$padj_threshold), y1 = -log10(input$padj_threshold),
+                 line = list(color = 'gray', dash = 'dash', width = 1))
+          )
+        )
+    })
+    
+    output$ma_plot <- renderPlotly({
+      req(current_de_results())
+      df <- current_de_results()
+      
+      padj_col <- if ("padj" %in% names(df)) "padj" else if ("FDR" %in% names(df)) "FDR" else "adj.P.Val"
+      lfc_col <- if ("log2FoldChange" %in% names(df)) "log2FoldChange" else if ("logFC" %in% names(df)) "logFC" else "log2FC"
+      
+      if ("baseMean" %in% names(df)) {
+        df$avg_expr <- log10(df$baseMean + 1)
+      } else if ("AveExpr" %in% names(df)) {
+        df$avg_expr <- df$AveExpr
+      } else {
+        df$avg_expr <- runif(nrow(df), 0, 5)
+      }
+      
+      df$significance <- ifelse(
+        df[[padj_col]] < input$padj_threshold & abs(df[[lfc_col]]) > input$lfc_threshold,
+        "Significant", "Not Significant"
+      )
+      
+      colors <- c("Significant" = "#DC3545", "Not Significant" = "#CCCCCC")
+      
+      plot_ly(
+        data = df,
+        x = ~avg_expr,
+        y = ~get(lfc_col),
+        type = 'scatter',
+        mode = 'markers',
+        color = ~significance,
+        colors = colors,
+        marker = list(size = 4),
+        text = ~paste("Gene:", gene, "<br>Avg Expression:", round(avg_expr, 2), 
+                     "<br>Log2FC:", round(get(lfc_col), 3)),
+        hovertemplate = "%{text}<extra></extra>"
+      ) %>%
+        layout(
+          title = paste("MA Plot -", input$de_method),
+          xaxis = list(title = "Average Expression (log10)"),
+          yaxis = list(title = "Log2 Fold Change")
+        )
+    })
+    
+    output$de_table <- renderDT({
+      req(current_de_results())
+      df <- current_de_results()
+      numeric_cols <- sapply(df, is.numeric)
+      df[numeric_cols] <- lapply(df[numeric_cols], function(x) round(x, 4))
+      datatable(df, options = list(pageLength = 25, scrollX = TRUE), rownames = FALSE, filter = 'top')
+    })
+  })
+}
+
+# ============================================================================
+# Module: Survival Analysis
+# ============================================================================
+
+mod_survival_viz_ui <- function(id) {
+  ns <- NS(id)
+  
+  tagList(
+    layout_columns(
+      col_widths = c(3, 9),
+      
+      card(
+        card_header("Survival Controls"),
+        card_body(
+          radioButtons(ns("survival_type"), "Survival Endpoint:",
+                      choices = c("Overall Survival" = "os", "Progression-Free Survival" = "pfs"),
+                      selected = "os"),
+          selectInput(ns("group_by"), "Group By:",
+                     choices = c("Risk Group" = "risk_group", "ISS Stage" = "stage", "None" = "none"),
+                     selected = "risk_group"),
+          hr(),
+          h5("Summary"),
+          tableOutput(ns("survival_summary"))
+        )
+      ),
+      
+      card(
+        card_header("Survival Analysis Results"),
+        card_body(
+          plotlyOutput(ns("km_plot"), height = "500px"),
+          hr(),
+          verbatimTextOutput(ns("km_stats"))
+        )
+      )
+    )
+  )
+}
+
+mod_survival_viz_server <- function(id, shared_data) {
+  moduleServer(id, function(input, output, session) {
+    
+    output$survival_summary <- renderTable({
+      req(shared_data$survival_data)
+      surv_data <- shared_data$survival_data
+      
+      time_col <- if (input$survival_type == "os") "os_time" else "pfs_time"
+      status_col <- if (input$survival_type == "os") "os_status" else "pfs_status"
+      
+      if (time_col %in% names(surv_data) && status_col %in% names(surv_data)) {
+        data.frame(
+          Metric = c("Total Patients", "Events", "Censored", "Median Follow-up"),
+          Value = c(
+            nrow(surv_data),
+            sum(surv_data[[status_col]], na.rm = TRUE),
+            sum(!surv_data[[status_col]], na.rm = TRUE),
+            round(median(surv_data[[time_col]], na.rm = TRUE), 1)
+          )
+        )
+      } else {
+        data.frame(Metric = "No data", Value = "-")
+      }
+    })
+    
+    output$km_plot <- renderPlotly({
+      req(shared_data$survival_data)
+      
+      surv_data <- shared_data$survival_data
+      time_col <- if (input$survival_type == "os") "os_time" else "pfs_time"
+      status_col <- if (input$survival_type == "os") "os_status" else "pfs_status"
+      title_text <- if (input$survival_type == "os") "Overall Survival" else "Progression-Free Survival"
+      
+      if (!time_col %in% names(surv_data) || !status_col %in% names(surv_data)) {
+        return(plot_ly() %>% layout(title = title_text, 
+                                    annotations = list(text = "No data", showarrow = FALSE)))
+      }
+      
+      if (input$group_by != "none" && input$group_by %in% names(surv_data)) {
+        formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ ", input$group_by))
+        fit <- survfit(formula, data = surv_data)
+        
+        groups <- unique(surv_data[[input$group_by]])
+        colors <- c("#2E86AB", "#A23B72", "#F18F01")
+        
+        p <- plot_ly()
+        for (i in seq_along(groups)) {
+          idx <- which(fit$strata == i)
+          if (length(idx) > 0) {
+            p <- add_trace(p,
+              x = c(0, fit$time[idx]),
+              y = c(1, fit$surv[idx]),
+              type = 'scatter',
+              mode = 'lines',
+              line = list(shape = 'hv', color = colors[i], width = 2),
+              name = as.character(groups[i]),
+              hovertemplate = paste0("Time: %{x}<br>Survival: %{y:.2%}<extra></extra>")
+            )
+          }
+        }
+        
+        p <- layout(p,
+          title = paste(title_text, "by", input$group_by),
+          xaxis = list(title = "Time (days)"),
+          yaxis = list(title = "Survival Probability", range = c(0, 1))
+        )
+      } else {
+        formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ 1"))
+        fit <- survfit(formula, data = surv_data)
+        
+        p <- plot_ly(
+          x = c(0, fit$time),
+          y = c(1, fit$surv),
+          type = 'scatter',
+          mode = 'lines',
+          line = list(shape = 'hv', color = '#2E86AB', width = 2),
+          hovertemplate = "Time: %{x}<br>Survival: %{y:.2%}<extra></extra>"
+        ) %>%
+          layout(
+            title = title_text,
+            xaxis = list(title = "Time (days)"),
+            yaxis = list(title = "Survival Probability", range = c(0, 1))
+          )
+      }
+      
+      p
+    })
+    
+    output$km_stats <- renderPrint({
+      req(shared_data$survival_data)
+      
+      surv_data <- shared_data$survival_data
+      time_col <- if (input$survival_type == "os") "os_time" else "pfs_time"
+      status_col <- if (input$survival_type == "os") "os_status" else "pfs_status"
+      
+      if (time_col %in% names(surv_data) && status_col %in% names(surv_data)) {
+        if (input$group_by != "none" && input$group_by %in% names(surv_data)) {
+          formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ ", input$group_by))
+          survdiff_result <- survdiff(formula, data = surv_data)
+          p_value <- 1 - pchisq(survdiff_result$chisq, length(survdiff_result$n) - 1)
+          cat("Log-rank test p-value:", format(p_value, digits = 4), "\n\n")
+          fit <- survfit(formula, data = surv_data)
+          print(fit)
+        } else {
+          formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ 1"))
+          fit <- survfit(formula, data = surv_data)
+          print(fit)
+        }
+      } else {
+        cat("Survival data not available")
+      }
+    })
+  })
+}
+
+# ============================================================================
+# Module: Pathway Analysis
+# ============================================================================
+
+mod_pathway_viz_ui <- function(id) {
+  ns <- NS(id)
+  
+  tagList(
+    card(
+      card_header("Pathway Analysis Results"),
+      card_body(
+        navset_tab(
+          nav_panel(
+            "Enrichment Results",
+            layout_columns(
+              col_widths = c(6, 6),
+              plotlyOutput(ns("enrichment_plot"), height = "500px"),
+              plotlyOutput(ns("dotplot"), height = "500px")
+            ),
+            hr(),
+            DTOutput(ns("pathway_table"))
+          ),
+          nav_panel(
+            "GSEA Results",
+            plotlyOutput(ns("gsea_plot"), height = "500px"),
+            hr(),
+            DTOutput(ns("gsea_table"))
+          )
+        )
+      )
+    )
+  )
+}
+
+mod_pathway_viz_server <- function(id, shared_data) {
+  moduleServer(id, function(input, output, session) {
+    
+    output$enrichment_plot <- renderPlotly({
+      req(shared_data$pathway_results)
+      df <- shared_data$pathway_results
+      
+      if (!all(c("pathway", "p_value") %in% names(df))) {
+        return(plot_ly() %>% layout(title = "No data"))
+      }
+      
+      top_pathways <- df %>%
+        arrange(p_value) %>%
+        head(15) %>%
+        mutate(
+          neg_log_p = -log10(p_value),
+          pathway = factor(pathway, levels = rev(pathway))
+        )
+      
+      plot_ly(
+        data = top_pathways,
+        x = ~neg_log_p,
+        y = ~pathway,
+        type = 'bar',
+        orientation = 'h',
+        marker = list(color = ~neg_log_p, colorscale = list(c(0, "#E8F4F8"), c(1, "#0066CC")),
+                     showscale = TRUE, colorbar = list(title = "-Log10(P)")),
+        text = ~paste("Pathway:", pathway, "<br>P-value:", format(p_value, digits = 3)),
+        hovertemplate = "%{text}<extra></extra>"
+      ) %>%
+        layout(
+          title = "Top Enriched Pathways",
+          xaxis = list(title = "-Log10(P-value)"),
+          yaxis = list(title = "", tickfont = list(size = 10)),
+          margin = list(l = 250)
+        )
+    })
+    
+    output$dotplot <- renderPlotly({
+      req(shared_data$pathway_results)
+      df <- shared_data$pathway_results
+      
+      top_pathways <- df %>% arrange(p_value) %>% head(15)
+      top_pathways$gene_ratio <- top_pathways$gene_count / top_pathways$pathway_size
+      top_pathways$q_value <- p.adjust(top_pathways$p_value, method = "BH")
+      
+      plot_ly(
+        data = top_pathways,
+        x = ~gene_ratio,
+        y = ~reorder(pathway, -p_value),
+        type = 'scatter',
+        mode = 'markers',
+        marker = list(size = ~gene_count * 2, color = ~-log10(q_value), colorscale = 'Reds',
+                     showscale = TRUE, colorbar = list(title = "-Log10(Q)")),
+        text = ~paste("Pathway:", pathway, "<br>Gene Ratio:", round(gene_ratio, 3), 
+                     "<br>Q-value:", format(q_value, digits = 3)),
+        hovertemplate = "%{text}<extra></extra>"
+      ) %>%
+        layout(
+          title = "Pathway Enrichment Dotplot",
+          xaxis = list(title = "Gene Ratio"),
+          yaxis = list(title = "", tickfont = list(size = 10)),
+          margin = list(l = 250)
+        )
+    })
+    
+    output$pathway_table <- renderDT({
+      req(shared_data$pathway_results)
+      datatable(shared_data$pathway_results, 
+               options = list(pageLength = 25, scrollX = TRUE), 
+               rownames = FALSE, filter = 'top')
+    })
+    
+    output$gsea_plot <- renderPlotly({
+      req(shared_data$pathway_results)
+      df <- shared_data$pathway_results
+      
+      if ("NES" %in% names(df)) {
+        sig_sets <- df %>% filter(q_value < 0.25) %>% arrange(desc(abs(NES))) %>% head(20)
+        
+        plot_ly(
+          data = sig_sets,
+          x = ~NES,
+          y = ~reorder(pathway, NES),
+          type = 'bar',
+          orientation = 'h',
+          marker = list(color = ~ifelse(NES > 0, "#DC3545", "#0066CC")),
+          text = ~paste("Gene Set:", pathway, "<br>NES:", round(NES, 2), 
+                       "<br>Q-value:", format(q_value, digits = 3)),
+          hovertemplate = "%{text}<extra></extra>"
+        ) %>%
+          layout(
+            title = "GSEA - Normalized Enrichment Scores",
+            xaxis = list(title = "NES", zeroline = TRUE),
+            yaxis = list(title = "", tickfont = list(size = 9)),
+            margin = list(l = 300)
+          )
+      } else {
+        plot_ly() %>% layout(title = "No GSEA results")
+      }
+    })
+    
+    output$gsea_table <- renderDT({
+      req(shared_data$pathway_results)
+      datatable(shared_data$pathway_results, 
+               options = list(pageLength = 25, scrollX = TRUE), 
+               rownames = FALSE)
+    })
+  })
+}
+
+# ============================================================================
+# Main App
+# ============================================================================
+
 ui <- page_navbar(
   title = "CoMMpass Analysis Dashboard",
   theme = bs_theme(
@@ -31,124 +850,110 @@ ui <- page_navbar(
     warning = "#FFC107",
     danger = "#DC3545"
   ),
-
-  # Home tab
+  
   nav_panel(
     title = "Overview",
     icon = icon("home"),
-    layout_columns(
-      col_widths = c(12),
-      card(
-        card_header("CoMMpass Multiple Myeloma Analysis"),
-        card_body(
-          h4("Welcome to the CoMMpass Analysis Dashboard"),
-          p("This interactive dashboard provides visualization and exploration of the MMRF CoMMpass dataset analysis results."),
-          hr(),
-          h5("Dataset Overview"),
-          p("The CoMMpass (Relating Clinical Outcomes in Multiple Myeloma to Personal Assessment of Genetic Profile) study includes:"),
-          tags$ul(
-            tags$li("1,143 newly diagnosed multiple myeloma patients"),
-            tags$li("RNA-seq expression data"),
-            tags$li("Clinical and survival outcomes"),
-            tags$li("Cytogenetic and mutation data")
-          ),
-          hr(),
-          h5("Analysis Modules"),
-          p("Navigate through the tabs above to explore:"),
-          tags$ul(
-            tags$li(strong("Quality Control:"), " Sample and gene QC metrics, normalization results"),
-            tags$li(strong("Differential Expression:"), " DE results from DESeq2, edgeR, and limma"),
-            tags$li(strong("Survival Analysis:"), " Kaplan-Meier curves and Cox regression models"),
-            tags$li(strong("Pathway Analysis:"), " Enrichment analysis and GSEA results")
-          )
-        )
+    card(
+      card_header("CoMMpass Multiple Myeloma Analysis"),
+      card_body(
+        h4("Welcome to the CoMMpass Analysis Dashboard"),
+        p("This interactive dashboard runs entirely in your web browser using WebAssembly (Shinylive)."),
+        hr(),
+        h5("Dataset Overview"),
+        p("Simulated CoMMpass-like data includes:"),
+        tags$ul(
+          tags$li("500 genes, 40 samples"),
+          tags$li("RNA-seq expression data"),
+          tags$li("Simulated survival outcomes"),
+          tags$li("Pathway enrichment results")
+        ),
+        hr(),
+        h5("Analysis Modules"),
+        tags$ul(
+          tags$li(strong("Data:"), " Load and preview example data"),
+          tags$li(strong("Quality Control:"), " Sample QC metrics, PCA visualization"),
+          tags$li(strong("Differential Expression:"), " Volcano plots, MA plots (DESeq2, edgeR, limma)"),
+          tags$li(strong("Survival Analysis:"), " Kaplan-Meier curves, log-rank tests"),
+          tags$li(strong("Pathway Analysis:"), " Enrichment analysis and GSEA results")
+        ),
+        hr(),
+        div(
+          class = "alert alert-info",
+          icon("info-circle"),
+          " Start by clicking the ", strong("Data"), " tab and loading the example dataset."
+        ),
+        hr(),
+        h5("Example ggplot2 Visualization"),
+        p("Demonstrating ggplot2 works in Shinylive with all dependencies:"),
+        plotOutput("example_ggplot", height = "300px")
       )
     )
   ),
-
-  # Data Loading tab
-  nav_panel(
-    title = "Data",
-    icon = icon("database"),
-    mod_data_loader_ui("data_loader")
-  ),
-
-  # QC Visualization tab
-  nav_panel(
-    title = "Quality Control",
-    icon = icon("chart-line"),
-    mod_qc_viz_ui("qc_viz")
-  ),
-
-  # Differential Expression tab
-  nav_panel(
-    title = "Differential Expression",
-    icon = icon("dna"),
-    mod_de_viz_ui("de_viz")
-  ),
-
-  # Survival Analysis tab
-  nav_panel(
-    title = "Survival Analysis",
-    icon = icon("heartbeat"),
-    mod_survival_viz_ui("survival_viz")
-  ),
-
-  # Pathway Analysis tab
-  nav_panel(
-    title = "Pathway Analysis",
-    icon = icon("project-diagram"),
-    mod_pathway_viz_ui("pathway_viz")
-  ),
-
-  # About tab
+  
+  nav_panel(title = "Data", icon = icon("database"), mod_data_loader_ui("data_loader")),
+  nav_panel(title = "Quality Control", icon = icon("chart-line"), mod_qc_viz_ui("qc_viz")),
+  nav_panel(title = "Differential Expression", icon = icon("dna"), mod_de_viz_ui("de_viz")),
+  nav_panel(title = "Survival Analysis", icon = icon("heartbeat"), mod_survival_viz_ui("survival_viz")),
+  nav_panel(title = "Pathway Analysis", icon = icon("project-diagram"), mod_pathway_viz_ui("pathway_viz")),
+  
   nav_panel(
     title = "About",
     icon = icon("info-circle"),
     card(
       card_header("About This Dashboard"),
       card_body(
-        h5("Data Source"),
-        p("Data from the MMRF CoMMpass study (phs000748) accessed via the NCI Genomic Data Commons."),
-        hr(),
-        h5("Analysis Pipeline"),
-        p("Results generated using the targets-based R pipeline with:"),
-        tags$ul(
-          tags$li("Quality control and normalization"),
-          tags$li("Multi-method differential expression analysis"),
-          tags$li("Survival analysis (OS and PFS endpoints)"),
-          tags$li("Pathway enrichment and GSEA")
-        ),
-        hr(),
         h5("Technology"),
-        p("Built with R Shiny and convertible to Shinylive for browser-based execution without R server."),
+        p("Built with R Shiny and Shinylive for browser-based execution without R server."),
+        p("All computations run in your browser using WebAssembly."),
         hr(),
-        h5("Contact"),
-        p("For questions or issues, please contact the analysis team or submit an issue on GitHub.")
+        h5("Data Source"),
+        p("This demo uses simulated data similar to the MMRF CoMMpass study (phs000748)."),
+        hr(),
+        h5("Performance"),
+        p("First load takes 30-60 seconds while packages download. Subsequent visits are faster due to browser caching.")
       )
     )
   )
 )
 
-# Define Server
 server <- function(input, output, session) {
-  # Initialize reactive values for shared data
   shared_data <- reactiveValues(
     raw_data = NULL,
     qc_metrics = NULL,
     de_results = NULL,
     survival_data = NULL,
-    pathway_results = NULL,
-    config = list(use_example = TRUE)
+    pathway_results = NULL
   )
 
-  # Call module servers
-  data_loader_results <- mod_data_loader_server("data_loader", shared_data)
+  # Example ggplot2 visualization showing it works with munsell colors
+  output$example_ggplot <- renderPlot({
+    set.seed(123)
+    data <- data.frame(
+      category = rep(c("High Risk", "Standard Risk", "Low Risk"), each = 100),
+      value = c(rnorm(100, 5, 2), rnorm(100, 7, 1.5), rnorm(100, 9, 1))
+    )
+
+    ggplot(data, aes(x = category, y = value, fill = category)) +
+      geom_violin(alpha = 0.7) +
+      geom_boxplot(width = 0.2, alpha = 0.9) +
+      scale_fill_manual(values = c("High Risk" = "#E63946",
+                                  "Standard Risk" = "#F1C40F",
+                                  "Low Risk" = "#2ECC71")) +
+      theme_minimal() +
+      theme(legend.position = "none",
+            plot.title = element_text(size = 14, face = "bold")) +
+      labs(title = "Risk Stratification Distribution (ggplot2)",
+           x = "Risk Category",
+           y = "Expression Score") +
+      coord_cartesian(ylim = c(0, 12))
+  })
+
+  mod_data_loader_server("data_loader", shared_data)
   mod_qc_viz_server("qc_viz", shared_data)
   mod_de_viz_server("de_viz", shared_data)
   mod_survival_viz_server("survival_viz", shared_data)
   mod_pathway_viz_server("pathway_viz", shared_data)
 }
 
-# Run the app
 shinyApp(ui = ui, server = server)
