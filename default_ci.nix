@@ -13,6 +13,7 @@ let
       SummarizedExperiment
       TCGAbiolinks
       # Pipeline
+      crew
       tarchetypes
       targets
       # Core tidyverse
