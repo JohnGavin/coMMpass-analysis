@@ -130,12 +130,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 #| viewerHeight: 800
 
 # Load required packages
+# Using modern Shinylive pattern - packages auto-bundle with dependencies
 library(shiny)
 library(bslib)
 library(plotly)
 library(DT)
 library(dplyr)
 library(tidyr)
+library(ggplot2)  # Now includes munsell automatically via Shinylive 0.8.0+
 library(survival)
 
 # ============================================================================
@@ -1012,7 +1014,11 @@ ui &lt;- page_navbar(
           class = "alert alert-info",
           icon("info-circle"),
           " Start by clicking the ", strong("Data"), " tab and loading the example dataset."
-        )
+        ),
+        hr(),
+        h5("Example ggplot2 Visualization"),
+        p("Demonstrating ggplot2 works in Shinylive with all dependencies:"),
+        plotOutput("example_ggplot", height = "300px")
       )
     )
   ),
@@ -1051,7 +1057,30 @@ server &lt;- function(input, output, session) {
     survival_data = NULL,
     pathway_results = NULL
   )
-  
+
+  # Example ggplot2 visualization showing it works with munsell colors
+  output$example_ggplot &lt;- renderPlot({
+    set.seed(123)
+    data &lt;- data.frame(
+      category = rep(c("High Risk", "Standard Risk", "Low Risk"), each = 100),
+      value = c(rnorm(100, 5, 2), rnorm(100, 7, 1.5), rnorm(100, 9, 1))
+    )
+
+    ggplot(data, aes(x = category, y = value, fill = category)) +
+      geom_violin(alpha = 0.7) +
+      geom_boxplot(width = 0.2, alpha = 0.9) +
+      scale_fill_manual(values = c("High Risk" = "#E63946",
+                                  "Standard Risk" = "#F1C40F",
+                                  "Low Risk" = "#2ECC71")) +
+      theme_minimal() +
+      theme(legend.position = "none",
+            plot.title = element_text(size = 14, face = "bold")) +
+      labs(title = "Risk Stratification Distribution (ggplot2)",
+           x = "Risk Category",
+           y = "Expression Score") +
+      coord_cartesian(ylim = c(0, 12))
+  })
+
   mod_data_loader_server("data_loader", shared_data)
   mod_qc_viz_server("qc_viz", shared_data)
   mod_de_viz_server("de_viz", shared_data)
