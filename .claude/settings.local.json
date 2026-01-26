@@ -9,7 +9,8 @@
       "WebFetch(domain:rdrr.io)",
       "WebFetch(domain:portal.gdc.cancer.gov)",
       "WebFetch(domain:www.nature.com)",
-      "WebFetch(domain:registry.opendata.aws)"
+      "WebFetch(domain:registry.opendata.aws)",
+      "WebFetch(domain:docs.ropensci.org)"
     ]
   }
 }

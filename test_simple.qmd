@@ -1,0 +1,16 @@
+---
+title: "Simple Test"
+format: html
+filters:
+  - shinylive
+---
+
+```{shinylive-r}
+#| standalone: true
+
+library(shiny)
+
+ui <- fluidPage("Hello Shinylive!")
+server <- function(input, output, session) {}
+shinyApp(ui, server)
+```

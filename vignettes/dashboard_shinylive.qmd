@@ -2,6 +2,7 @@
 title: "CoMMpass Analysis Dashboard - Interactive"
 format:
   html:
+    embed-resources: false
     page-layout: full
     resources:
       - shinylive-sw.js

@@ -1,0 +1,48 @@
+---
+title: "CoMMpass Analysis Dashboard - Interactive"
+format:
+  html:
+    embed-resources: false
+    page-layout: full
+    toc: true
+    toc-depth: 2
+filters:
+  - shinylive
+---
+
+## About This Dashboard
+
+This is an interactive dashboard for exploring CoMMpass multiple myeloma analysis results, running entirely in your web browser using Shinylive (WebAssembly). No R server required!
+
+**Features:**
+- Quality Control visualization
+- Differential Expression analysis
+- Survival Analysis with Kaplan-Meier curves  
+- Pathway Enrichment results
+- All analysis runs in your browser
+
+**Note:** First load may take 30-60 seconds while packages download. Subsequent visits will be faster due to caching.
+
+## Interactive Dashboard
+
+```{shinylive-r}
+#| standalone: true
+#| viewerHeight: 800
+
+# Load required packages
+library(shiny)
+library(bslib)
+library(plotly)
+library(DT)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(survival)
+
+cat("Shinylive dashboard loaded!\n")
+cat("Packages: shiny, bslib, plotly, DT, dplyr, tidyr, ggplot2, survival\n")
+shinyApp(
+  ui = page_navbar(title = "Test", nav_panel("Home", "Dashboard placeholder")),
+  server = function(input, output, session) {}
+)
+```

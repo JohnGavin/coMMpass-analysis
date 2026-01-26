@@ -22,7 +22,7 @@ Imports:
     dplyr,
     readr,
     ggplot2,
-    aws_s3
+    aws.s3
 Suggests:
     survminer,
     tidyverse,

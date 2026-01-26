@@ -41,6 +41,15 @@ MMRF’s CureCloud, a first-of-its-kind registry, has amassed clinical, genomic,
     + contributing to immune suppression.
 
 
++ Pairwise Sequentially Markovian Coalescent modelling (PSMC)
+  + PSMC models compare differences between genome sequences on the two strands of DNA each individual has, one from each parent.
++ estimate the distribution of times since 
+  + each bit of the sequence shared a common ancestor. 
+  + The greater the difference between the two strands of DNA, 
+    + the greater the genetic difference between the parents, and 
+    + the larger the population size would have been
+
+
 # Data
 + https://github.com/theMMRF
   + packages that analyse this kind of data 

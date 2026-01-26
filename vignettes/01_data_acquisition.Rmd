@@ -15,6 +15,15 @@ knitr::opts_chunk$set(
   message = FALSE,
   warning = FALSE,
   fig.width = 8,
+  fig.height = 5,
+  fig.cap = TRUE  # Enable figure captions
+)
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,  # Hide code by default
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8,
   fig.height = 5
 )
 library(targets)
