@@ -2,6 +2,8 @@
 # Survival analysis functions
 
 #' Prepare survival data
+#' @description prepare_survival_data
+#' @export
 prepare_survival_data <- function(clinical_data, se_data) {
   library(survival)
   library(logger)
