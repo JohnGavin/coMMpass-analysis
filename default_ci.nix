@@ -16,6 +16,12 @@ let
       crew
       tarchetypes
       targets
+      # Analysis packages
+      DESeq2
+      edgeR
+      limma
+      survival
+      # Note: survminer not in nixpkgs
       # Core tidyverse
       dplyr
       ggplot2
@@ -24,6 +30,9 @@ let
       stringr
       tibble
       tidyr
+      # Additional tidyverse for full meta-package
+      forcats
+      lubridate
       # Utilities
       fs
       glue

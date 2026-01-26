@@ -18,10 +18,16 @@ Imports:
     edgeR,
     limma,
     survival,
-    survminer,
-    tidyverse,
     logger,
     dplyr,
     readr,
     ggplot2,
-    aws.s3
+    aws_s3
+Suggests:
+    survminer,
+    tidyverse,
+    knitr,
+    rmarkdown,
+    pkgdown,
+    testthat,
+    gert
