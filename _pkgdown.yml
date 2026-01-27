@@ -5,54 +5,12 @@ template:
 
 reference:
 - title: "Data Access"
-  desc: "Functions for retrieving CoMMpass data"
+  desc: "Functions for retrieving CoMMpass data from GDC and AWS S3"
   contents:
-  - download_commpass_rna
-  - query_gdc_clinical
-  - list_s3_files
-  - download_s3_files
-
-- title: "Quality Control"
-  desc: "Functions for data quality assessment"
-  contents:
-  - calculate_qc_metrics
-  - identify_outliers
-  - filter_low_expression
-  - normalize_counts
-
-- title: "Differential Expression"
-  desc: "Functions for differential expression analysis"
-  contents:
-  - run_deseq2_analysis
-  - run_edger_analysis
-  - run_limma_analysis
-  - combine_de_results
-
-- title: "Survival Analysis"
-  desc: "Functions for survival modeling"
-  contents:
-  - prepare_survival_data
-  - fit_survival_model
-  - plot_survival_curves
-  - cox_regression_analysis
-
-- title: "Pathway Analysis"
-  desc: "Functions for functional enrichment"
-  contents:
-  - run_enrichment_analysis
-  - run_gsea
-  - plot_enrichment_results
-  - create_pathway_network
-
-- title: "Utilities"
-  desc: "Helper functions and utilities"
-  contents:
-  - format_file_size
-  - format_with_commas
-  - create_summary_table
-  - clean_clinical_data
-  - clean_expression_data
-  - integrate_clinical_expression
+  - query_commpass_rna
+  - get_commpass_clinical
+  - list_s3_commpass
+  - download_s3_subset
 
 articles:
 - title: "Vignettes"
