@@ -7,8 +7,9 @@ plan_quality_control <- list(
     qc_metrics,
     {
       # Load the RNA-seq data from file
-      if (!is.null(raw_rnaseq) && file.exists(raw_rnaseq)) {
-        se_data <- readRDS(raw_rnaseq)
+      rnaseq_file <- "data/raw/gdc/rnaseq_se.rds"
+      if (file.exists(rnaseq_file)) {
+        se_data <- readRDS(rnaseq_file)
         calculate_qc_metrics(se_data)
       } else {
         warning("RNA-seq data file not found")
@@ -23,8 +24,9 @@ plan_quality_control <- list(
     filtered_data,
     {
       # Load the RNA-seq data from file
-      if (!is.null(raw_rnaseq) && file.exists(raw_rnaseq)) {
-        se_data <- readRDS(raw_rnaseq)
+      rnaseq_file <- "data/raw/gdc/rnaseq_se.rds"
+      if (file.exists(rnaseq_file)) {
+        se_data <- readRDS(rnaseq_file)
         filter_low_quality(
           se_data,
           min_counts = 10,

@@ -186,8 +186,10 @@ plan_data_cleaning <- list(
     expression_data_clean,
     {
       # Load expression data from saved file
-      if (!is.null(raw_rnaseq) && file.exists(raw_rnaseq)) {
-        se_data <- readRDS(raw_rnaseq)
+      # In compute workflow, data is downloaded to _targets/objects/
+      rnaseq_file <- "data/raw/gdc/rnaseq_se.rds"
+      if (file.exists(rnaseq_file)) {
+        se_data <- readRDS(rnaseq_file)
         # Extract counts matrix from SummarizedExperiment
         if (inherits(se_data, "SummarizedExperiment")) {
           expr_matrix <- SummarizedExperiment::assay(se_data, "counts")
@@ -196,6 +198,7 @@ plan_data_cleaning <- list(
           NULL
         }
       } else {
+        # Fallback - no RNA-seq data available
         NULL
       }
     },
