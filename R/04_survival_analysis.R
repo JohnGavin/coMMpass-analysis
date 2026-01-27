@@ -52,14 +52,19 @@ run_cox_regression <- function(surv_data, covariates = c("age", "stage")) {
   log_info("Running Cox regression with covariates: {paste(covariates, collapse=', ')}")
   
   # Placeholder implementation
+  # Generate placeholder HR and p-values matching the number of covariates
+  n_covariates <- length(covariates)
+  placeholder_hr <- runif(n_covariates, min = 0.8, max = 2.0)
+  placeholder_pval <- runif(n_covariates, min = 0.001, max = 0.1)
+
   cox_results <- list(
     covariates = covariates,
     n_samples = nrow(surv_data),
     concordance = 0.75,
     hazard_ratios = data.frame(
       variable = covariates,
-      HR = c(1.02, 1.5),
-      p_value = c(0.05, 0.001)
+      HR = round(placeholder_hr, 2),
+      p_value = round(placeholder_pval, 3)
     )
   )
   
