@@ -160,18 +160,46 @@ plan_data_cleaning <- list(
   # Clean clinical data
   tar_target(
     clinical_data_clean,
-    clean_clinical_data(clinical_data),
+    {
+      # Load clinical data from the saved files
+      clinical_file <- file.path(clinical_data, "clinical_data.rds")
+      if (file.exists(clinical_file)) {
+        clinical_raw <- readRDS(clinical_file)
+        clean_clinical_data(clinical_raw)
+      } else {
+        # Fallback to CSV if RDS doesn't exist
+        clinical_csv <- file.path(clinical_data, "clinical_data.csv")
+        if (file.exists(clinical_csv)) {
+          clinical_raw <- read.csv(clinical_csv, stringsAsFactors = FALSE)
+          clean_clinical_data(clinical_raw)
+        } else {
+          warning("No clinical data file found")
+          NULL
+        }
+      }
+    },
     packages = c("dplyr")
   ),
 
-  # Clean expression data (placeholder - will be updated when expression data available)
+  # Clean expression data
   tar_target(
     expression_data_clean,
     {
-      # For now, return NULL as expression data processing is handled elsewhere
-      # This will be updated when we have actual expression data targets
-      NULL
-    }
+      # Load expression data from saved file
+      if (!is.null(raw_rnaseq) && file.exists(raw_rnaseq)) {
+        se_data <- readRDS(raw_rnaseq)
+        # Extract counts matrix from SummarizedExperiment
+        if (inherits(se_data, "SummarizedExperiment")) {
+          expr_matrix <- SummarizedExperiment::assay(se_data, "counts")
+          clean_expression_data(expr_matrix)
+        } else {
+          NULL
+        }
+      } else {
+        NULL
+      }
+    },
+    packages = c("SummarizedExperiment")
   ),
 
   # Create integrated dataset

@@ -5,10 +5,27 @@ plan_survival_analysis <- list(
   # Prepare survival data
   tar_target(
     survival_data,
-    prepare_survival_data(
-      clinical_data,
-      normalized_data
-    )
+    {
+      # Load clinical data from file
+      clinical_df <- if (!is.null(clinical_data) && is.character(clinical_data)) {
+        clinical_file <- file.path(clinical_data, "clinical_data.rds")
+        if (file.exists(clinical_file)) {
+          readRDS(clinical_file)
+        } else {
+          clinical_csv <- file.path(clinical_data, "clinical_data.csv")
+          if (file.exists(clinical_csv)) {
+            read.csv(clinical_csv, stringsAsFactors = FALSE)
+          } else {
+            NULL
+          }
+        }
+      } else {
+        NULL
+      }
+
+      # Use normalized_data directly as it's already processed
+      prepare_survival_data(clinical_df, normalized_data)
+    }
   ),
 
   # Kaplan-Meier analysis

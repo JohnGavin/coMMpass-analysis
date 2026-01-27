@@ -5,22 +5,51 @@ plan_quality_control <- list(
   # QC metrics
   tar_target(
     qc_metrics,
-    calculate_qc_metrics(raw_rnaseq)
+    {
+      # Load the RNA-seq data from file
+      if (!is.null(raw_rnaseq) && file.exists(raw_rnaseq)) {
+        se_data <- readRDS(raw_rnaseq)
+        calculate_qc_metrics(se_data)
+      } else {
+        warning("RNA-seq data file not found")
+        NULL
+      }
+    },
+    packages = c("SummarizedExperiment")
   ),
 
   # Filter low quality samples and genes
   tar_target(
     filtered_data,
-    filter_low_quality(
-      raw_rnaseq,
-      min_counts = 10,
-      min_samples = 3
-    )
+    {
+      # Load the RNA-seq data from file
+      if (!is.null(raw_rnaseq) && file.exists(raw_rnaseq)) {
+        se_data <- readRDS(raw_rnaseq)
+        filter_low_quality(
+          se_data,
+          min_counts = 10,
+          min_samples = 3
+        )
+      } else {
+        warning("RNA-seq data file not found")
+        NULL
+      }
+    },
+    packages = c("SummarizedExperiment")
   ),
 
   # Normalize data
   tar_target(
     normalized_data,
-    normalize_rnaseq(filtered_data)
+    {
+      # Use filtered data if available
+      if (!is.null(filtered_data)) {
+        normalize_rnaseq(filtered_data)
+      } else {
+        warning("No filtered data available for normalization")
+        NULL
+      }
+    },
+    packages = c("DESeq2", "edgeR")
   )
 )
