@@ -3,9 +3,23 @@
 # Downloads RNA-seq and clinical data from GDC/AWS
 
 #' Download RNA-seq data from GDC
+#'
+#' Downloads RNA-seq gene expression data from the Genomic Data Commons (GDC)
+#' for the specified project. Data is saved as a SummarizedExperiment object.
+#'
 #' @param project_id Project identifier (default: "MMRF-COMMPASS")
 #' @param data_dir Directory to save data
 #' @param sample_limit Maximum number of samples (NULL for all)
+#' @return Path to the saved RDS file containing the SummarizedExperiment
+#' @export
+#' @examples
+#' \dontrun{
+#' # Download first 10 samples
+#' rnaseq_file <- download_gdc_rnaseq(sample_limit = 10)
+#'
+#' # Load the data
+#' se_data <- readRDS(rnaseq_file)
+#' }
 download_gdc_rnaseq <- function(
   project_id = "MMRF-COMMPASS",
   data_dir = "data/raw/gdc",
@@ -114,8 +128,22 @@ download_aws_data <- function(
 }
 
 #' Download clinical data from GDC
-#' @param project_id Project identifier
+#'
+#' Downloads clinical and biospecimen data from the Genomic Data Commons (GDC)
+#' for the specified project. Data is saved in both CSV and RDS formats.
+#'
+#' @param project_id Project identifier (default: "MMRF-COMMPASS")
 #' @param data_dir Directory to save data
+#' @return Path to the directory containing the saved data files
+#' @export
+#' @examples
+#' \dontrun{
+#' # Download clinical data
+#' clinical_dir <- download_clinical_data()
+#'
+#' # Load the data
+#' clinical <- read.csv(file.path(clinical_dir, "clinical_data.csv"))
+#' }
 download_clinical_data <- function(
   project_id = "MMRF-COMMPASS",
   data_dir = "data/raw/clinical"
@@ -178,10 +206,25 @@ download_clinical_data <- function(
 }
 
 #' Main data acquisition function
+#'
+#' Orchestrates the download of CoMMpass data from various sources including
+#' RNA-seq data from GDC, clinical data, and optionally AWS data.
+#'
 #' @param download_rnaseq Whether to download RNA-seq data
 #' @param download_clinical Whether to download clinical data
 #' @param download_aws Whether to download from AWS
 #' @param sample_limit Limit number of samples (NULL for all)
+#' @return List of file paths to the downloaded data
+#' @export
+#' @examples
+#' \dontrun{
+#' # Download only clinical data
+#' results <- acquire_commpass_data(
+#'   download_rnaseq = FALSE,
+#'   download_clinical = TRUE,
+#'   download_aws = FALSE
+#' )
+#' }
 acquire_commpass_data <- function(
   download_rnaseq = TRUE,
   download_clinical = TRUE,
