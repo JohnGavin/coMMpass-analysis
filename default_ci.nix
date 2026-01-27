@@ -47,6 +47,7 @@ let
       gert
       knitr
       pkgdown
+      quarto
       rmarkdown
       testthat;
   };
