@@ -47,8 +47,26 @@ jobs:
 
       - name: Run Analysis Targets
         run: |
-          # Run the full pipeline (picks up where data left off)
-          nix-shell --pure default_ci.nix --run "Rscript -e 'targets::tar_make(callr_function = NULL)'"
+          # Run only analysis targets (data targets already complete from workflow 02)
+          nix-shell --pure default_ci.nix --run "Rscript -e '
+            targets::tar_make(
+              names = c(
+                \"clinical_data_clean\",
+                \"expression_data_clean\",
+                \"integrated_data\",
+                \"data_quality_report\",
+                \"qc_metrics\",
+                \"filtered_data\",
+                \"normalized_data\",
+                \"deseq2_results\",
+                \"edger_results\",
+                \"limma_results\",
+                \"consensus_de_genes\",
+                \"de_report\"
+              ),
+              callr_function = NULL
+            )
+          '"
 
       - name: Upload Analysis Store
         uses: actions/upload-artifact@v4
