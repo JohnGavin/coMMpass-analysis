@@ -37,20 +37,49 @@ download_gdc_rnaseq <- function(
   # CRITICAL: In CI, use placeholder data immediately to avoid timeouts
   if (Sys.getenv("CI") == "true" || Sys.getenv("GITHUB_ACTIONS") == "true") {
     log_warn("CI environment detected - using placeholder SummarizedExperiment")
+
+    # Create realistic integer count data for RNA-seq
+    set.seed(42)  # For reproducibility
+    n_genes <- 100
+    n_samples <- 10
+
+    # Generate integer counts with realistic distribution
+    # Most genes have low counts, some have high counts
+    base_counts <- matrix(
+      rpois(n_genes * n_samples, lambda = rep(c(5, 50, 500), c(70, 20, 10))),
+      nrow = n_genes,
+      ncol = n_samples
+    )
+
+    # Ensure counts are integers and non-negative
+    counts_matrix <- matrix(as.integer(pmax(base_counts, 0)),
+                           nrow = n_genes,
+                           ncol = n_samples)
+
+    # Set proper dimnames
+    rownames(counts_matrix) <- paste0("ENSG0000000", sprintf("%04d", 1:n_genes))
+    colnames(counts_matrix) <- paste0("SAMPLE_", sprintf("%02d", 1:n_samples))
+
     placeholder_se <- SummarizedExperiment::SummarizedExperiment(
-      assays = list(counts = matrix(runif(1000, min=1, max=1000), ncol = 10, nrow = 100)),
+      assays = list(counts = counts_matrix),
       rowData = data.frame(
-        gene_id = paste0("GENE_", 1:100),
-        gene_name = paste0("Gene_", 1:100)
+        gene_id = rownames(counts_matrix),
+        gene_name = paste0("Gene_", 1:n_genes),
+        gene_type = sample(c("protein_coding", "lncRNA"), n_genes,
+                          replace = TRUE, prob = c(0.8, 0.2)),
+        stringsAsFactors = FALSE
       ),
       colData = data.frame(
-        sample_id = paste0("SAMPLE_", 1:10),
-        patient_id = paste0("PATIENT_", 1:10),
-        condition = rep(c("control", "treatment"), 5)
+        sample_id = colnames(counts_matrix),
+        patient_id = paste0("PATIENT_", sprintf("%02d", 1:n_samples)),
+        condition = rep(c("control", "treatment"), 5),
+        batch = rep(c(1, 2), each = 5),
+        stringsAsFactors = FALSE
       )
     )
+
     saveRDS(placeholder_se, output_file)
-    log_info("Created placeholder SummarizedExperiment in {output_file}")
+    log_info("Created realistic placeholder SummarizedExperiment in {output_file}")
     return(as.character(output_file))
   }
 
@@ -180,20 +209,41 @@ download_clinical_data <- function(
   if (Sys.getenv("CI") == "true" || Sys.getenv("GITHUB_ACTIONS") == "true") {
     log_warn("CI environment detected - using placeholder clinical data")
 
+    set.seed(42)  # For reproducibility
+    n_patients <- 10
+
+    # Generate vital status first
+    vital_status <- sample(c("alive", "dead"), n_patients, replace = TRUE, prob = c(0.7, 0.3))
+
     clinical <- data.frame(
-      submitter_id = paste0("PATIENT_", 1:10),
+      submitter_id = paste0("PATIENT_", sprintf("%02d", 1:n_patients)),
+      patient_id = paste0("PATIENT_", sprintf("%02d", 1:n_patients)),
       project_id = project_id,
-      age_at_diagnosis = sample(50:80, 10),
-      gender = sample(c("male", "female"), 10, replace = TRUE),
-      vital_status = sample(c("alive", "dead"), 10, replace = TRUE),
-      days_to_death = sample(c(NA, 100:1000), 10, replace = TRUE),
+      age_at_diagnosis = sample(50:80, n_patients, replace = TRUE),
+      gender = sample(c("male", "female"), n_patients, replace = TRUE),
+      race = sample(c("white", "black or african american", "asian", "not reported"),
+                   n_patients, replace = TRUE, prob = c(0.6, 0.2, 0.1, 0.1)),
+      ethnicity = sample(c("not hispanic or latino", "hispanic or latino", "not reported"),
+                        n_patients, replace = TRUE, prob = c(0.7, 0.2, 0.1)),
+      vital_status = vital_status,
+      days_to_death = ifelse(vital_status == "dead",
+                            sample(100:1000, n_patients, replace = TRUE), NA),
+      days_to_last_follow_up = ifelse(vital_status == "alive",
+                                     sample(100:1500, n_patients, replace = TRUE), NA),
+      disease_stage = sample(c("Stage I", "Stage II", "Stage III"),
+                           n_patients, replace = TRUE, prob = c(0.3, 0.4, 0.3)),
       stringsAsFactors = FALSE
     )
 
     biospecimen <- data.frame(
-      submitter_id = paste0("SAMPLE_", 1:10),
-      patient_id = paste0("PATIENT_", 1:10),
+      submitter_id = paste0("SAMPLE_", sprintf("%02d", 1:n_patients)),
+      sample_id = paste0("SAMPLE_", sprintf("%02d", 1:n_patients)),
+      patient_id = paste0("PATIENT_", sprintf("%02d", 1:n_patients)),
       sample_type = "Primary Tumor",
+      sample_type_id = "01",
+      tissue_type = "Tumor",
+      preservation_method = "FFPE",
+      tumor_code = "MMRF",
       stringsAsFactors = FALSE
     )
 
