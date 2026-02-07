@@ -45,8 +45,13 @@ download_gdc_rnaseq <- function(
 
     # Generate integer counts with realistic distribution
     # Most genes have low counts, some have high counts
+    # Create lambda values for each gene (recycled across samples)
+    gene_lambdas <- c(rep(5, 70), rep(50, 20), rep(500, 10))  # Length 100
+    # Replicate for all samples (100 genes × 10 samples = 1000 values)
+    all_lambdas <- rep(gene_lambdas, times = n_samples)
+
     base_counts <- matrix(
-      rpois(n_genes * n_samples, lambda = rep(c(5, 50, 500), c(70, 20, 10))),
+      rpois(n_genes * n_samples, lambda = all_lambdas),
       nrow = n_genes,
       ncol = n_samples
     )
@@ -56,9 +61,14 @@ download_gdc_rnaseq <- function(
                            nrow = n_genes,
                            ncol = n_samples)
 
-    # Set proper dimnames
+    # Set proper dimnames - CRITICAL for downstream analysis
     rownames(counts_matrix) <- paste0("ENSG0000000", sprintf("%04d", 1:n_genes))
     colnames(counts_matrix) <- paste0("SAMPLE_", sprintf("%02d", 1:n_samples))
+
+    # Verify dimnames are set (defensive check)
+    if (is.null(rownames(counts_matrix)) || is.null(colnames(counts_matrix))) {
+      stop("Failed to set dimnames on count matrix")
+    }
 
     placeholder_se <- SummarizedExperiment::SummarizedExperiment(
       assays = list(counts = counts_matrix),
