@@ -23,6 +23,7 @@ library(ggplot2)
 library(stringr)
 has_plotly <- requireNamespace("plotly", quietly = TRUE)
 has_DT <- requireNamespace("DT", quietly = TRUE)
+has_SE <- requireNamespace("SummarizedExperiment", quietly = TRUE)
 if (has_plotly) library(plotly)
 if (has_DT) library(DT)
 
@@ -49,180 +50,120 @@ safe_tar_read <- function(name) {
   if (!targets_available) return(NULL)
   tryCatch(tar_read(name), error = function(e) NULL)
 }
+
+# Resolve project root for file paths
+project_root <- if (proj_dir != "") proj_dir else "."
 ```
 
 ## Overview
 
-This report summarizes the initial data acquisition step for the MMRF CoMMpass study. We access Open Access RNA-seq data from the GDC S3 bucket (`s3://gdc-mmrf-commpass-phs000748-2-open/`).
+This report summarizes the initial data acquisition step for the MMRF CoMMpass study. We access Open Access RNA-seq data from the GDC S3 bucket (`s3://gdc-mmrf-commpass-phs000748-2-open/`) via the `targets` pipeline.
 
-## S3 Bucket Status
+## Pipeline Configuration
 
-We query the S3 bucket to get a complete manifest of available files.
+```{r config}
+config <- safe_tar_read("config")
 
-```{r manifest}
-# Load the manifest from the targets pipeline
-manifest_lines <- safe_tar_read("s3_manifest")
-
-if (!is.null(manifest_lines)) {
-  # Parse the ls output
-  # Format: "2022-05-11 10:23:45 123456 filename"
-  manifest_df <- tibble(line = manifest_lines) %>%
-    mutate(
-      date = str_extract(line, "^\\d{4}-\\d{2}-\\d{2}"),
-      time = str_extract(line, "\\d{2}:\\d{2}:\\d{2}"),
-      size = as.numeric(str_extract(line, "(?<=\\s)\\d+(?=\\s)")),
-      file = str_extract(line, "[^\\s]+$")
-    ) %>%
-    filter(!is.na(size))
-
-  # Summary statistics
-  total_size <- sum(manifest_df$size, na.rm = TRUE)
-
-  # Create summary card
-  cat("### S3 Bucket Summary\n\n")
-  cat("- **Total files:**", format_with_commas(nrow(manifest_df)), "\n")
-  cat("- **Total size:**", format_file_size(total_size), "\n")
-  cat("- **Average file size:**", format_file_size(mean(manifest_df$size, na.rm = TRUE)), "\n")
-  cat("- **Date range:**", min(manifest_df$date, na.rm = TRUE), "to", max(manifest_df$date, na.rm = TRUE), "\n\n")
-
-  # File size distribution
-  manifest_df$size_category <- cut(manifest_df$size,
-    breaks = c(0, 1024^2, 10*1024^2, 100*1024^2, 1024^3, Inf),
-    labels = c("< 1 MB", "1-10 MB", "10-100 MB", "100 MB - 1 GB", "> 1 GB"))
-
-  size_dist <- manifest_df %>%
-    count(size_category) %>%
-    mutate(percent = round(100 * n / sum(n), 1))
-
-  knitr::kable(size_dist,
-               col.names = c("File Size Category", "Count", "Percentage"),
-               caption = "File Size Distribution")
+if (!is.null(config)) {
+  config_df <- data.frame(
+    Parameter = c("Project ID", "Sample Limit", "Data Directory",
+                  "Results Directory", "Random Seed"),
+    Value = c(config$project_id, config$sample_limit, config$data_dir,
+              config$results_dir, config$seed),
+    stringsAsFactors = FALSE
+  )
+  knitr::kable(config_df, caption = "Pipeline Configuration")
 } else {
-  cat("*Manifest data not available. Run `tar_make(s3_manifest)` to generate.*\n")
+  cat("*Pipeline configuration not available. Run `tar_make(config)` to generate.*\n")
 }
 ```
 
-### File Type Distribution
+## RNA-seq Data
 
-```{r plot_types, fig.width=10, fig.height=6}
-if (exists("manifest_df") && nrow(manifest_df) > 0) {
-  # Analyze file types
-  type_summary <- manifest_df %>%
-    mutate(
-      extension = str_extract(file, "\\.[^.]+(\\.gz)?$"),
-      extension = ifelse(is.na(extension), "no_extension", extension)
-    ) %>%
-    group_by(extension) %>%
-    summarise(
-      count = n(),
-      total_size = sum(size, na.rm = TRUE),
-      avg_size = mean(size, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    arrange(desc(count))
+RNA-seq gene expression data is downloaded from GDC as a SummarizedExperiment object.
 
-  # Interactive plot with plotly (if available)
-  if (has_plotly) {
-    p <- plot_ly(
-      data = type_summary %>% head(20),
-      x = ~count,
-      y = ~reorder(extension, count),
-      type = 'bar',
-      orientation = 'h',
-      text = ~paste("Count:", format_with_commas(count),
-                    "<br>Total Size:", format_file_size(total_size),
-                    "<br>Avg Size:", format_file_size(avg_size)),
-      hovertemplate = "%{text}<extra></extra>",
-      marker = list(color = 'steelblue')
-    ) %>%
-      layout(
-        title = "Top 20 File Types in CoMMpass S3 Bucket",
-        xaxis = list(title = "Number of Files"),
-        yaxis = list(title = "File Extension"),
-        margin = list(l = 100)
-      )
-    p
+```{r rnaseq}
+# Read the raw_rnaseq target (returns file path to RDS)
+rnaseq_path <- safe_tar_read("raw_rnaseq")
+
+# Try to load the SummarizedExperiment
+se_data <- NULL
+if (!is.null(rnaseq_path)) {
+  # Resolve path relative to project root
+  full_path <- if (file.exists(rnaseq_path)) {
+    rnaseq_path
+  } else {
+    file.path(project_root, rnaseq_path)
   }
 
-  # Summary table
-  cat("\n\n### File Type Summary\n\n")
-  type_table <- type_summary %>%
-    head(10) %>%
-    mutate(
-      count = format_with_commas(count),
-      total_size = format_file_size(total_size),
-      avg_size = format_file_size(avg_size),
-      percent = sprintf("%.1f%%", 100 * as.numeric(gsub(",", "", count)) / nrow(manifest_df))
-    )
-
-  knitr::kable(type_table,
-               col.names = c("Extension", "File Count", "Total Size", "Average Size", "% of Files"),
-               caption = "Top 10 File Types by Count")
+  if (file.exists(full_path) && has_SE) {
+    se_data <- tryCatch(readRDS(full_path), error = function(e) NULL)
+  }
 }
-```
 
-## Downloaded Samples
+if (!is.null(se_data) && has_SE) {
+  counts <- SummarizedExperiment::assay(se_data, "counts")
 
-We downloaded a small subset of RNA-seq files for initial testing.
+  cat("### RNA-seq Data Summary\n\n")
+  cat("- **Samples:**", ncol(counts), "\n")
+  cat("- **Genes:**", format_with_commas(nrow(counts)), "\n")
+  cat("- **Total counts:**", format_with_commas(sum(counts)), "\n")
+  cat("- **Median counts per sample:**",
+      format_with_commas(round(median(colSums(counts)))), "\n")
+  cat("- **Genes detected (>0 in any sample):**",
+      format_with_commas(sum(rowSums(counts) > 0)), "\n")
+  cat("- **Sparsity (% zero entries):**",
+      sprintf("%.1f%%", 100 * mean(counts == 0)), "\n\n")
 
-```{r samples}
-downloaded <- safe_tar_read("rna_sample_files")
-
-if (!is.null(downloaded) && length(downloaded) > 0) {
-  # Get file information
-  file_info <- data.frame(
-    file_name = basename(downloaded),
-    file_size = file.size(downloaded),
+  # Per-sample summary
+  sample_stats <- data.frame(
+    Sample = colnames(counts),
+    Total_Counts = format_with_commas(colSums(counts)),
+    Genes_Detected = format_with_commas(colSums(counts > 0)),
+    Median_Count = round(apply(counts, 2, median)),
+    Max_Count = format_with_commas(apply(counts, 2, max)),
     stringsAsFactors = FALSE
   )
 
-  # Add formatted size
-  file_info$size_formatted <- format_file_size(file_info$file_size)
+  knitr::kable(sample_stats,
+               col.names = c("Sample", "Total Counts", "Genes Detected",
+                             "Median Count", "Max Count"),
+               caption = "Per-Sample Expression Summary")
 
-  # Extract sample IDs from filenames
-  file_info$sample_id <- str_extract(file_info$file_name, "[A-Z0-9]{8}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{12}")
+  # Count distribution plot
+  cat("\n### Count Distribution\n\n")
+  log_counts <- log10(counts + 1)
+  mean_expr <- rowMeans(log_counts)
 
-  # Display summary
-  cat("### Downloaded Files Summary\n\n")
-  cat("- **Total files downloaded:**", length(downloaded), "\n")
-  cat("- **Total size:**", format_file_size(sum(file_info$file_size)), "\n")
-  cat("- **File types:**", paste(unique(tools::file_ext(downloaded)), collapse = ", "), "\n\n")
-
-  # Show sample of files with details
-  cat("### Sample Files (First 5)\n\n")
-  display_df <- file_info %>%
-    head(5) %>%
-    select(sample_id, file_name, size_formatted)
-
-  knitr::kable(display_df,
-               col.names = c("Sample ID", "File Name", "Size"),
-               caption = "Downloaded RNA-seq Files")
-
-  # If we can read one file, show a preview
-  if (file.exists(downloaded[1])) {
-    cat("\n### Preview of First File\n\n")
-    cat("**File:**", basename(downloaded[1]), "\n\n")
-
-    # Read first few lines
-    preview_lines <- readLines(downloaded[1], n = 3, warn = FALSE)
-
-    if (length(preview_lines) > 0) {
-      # Parse as TSV if possible
-      header <- strsplit(preview_lines[1], "\t")[[1]]
-      if (length(header) > 1) {
-        preview_df <- read.table(text = paste(preview_lines, collapse = "\n"),
-                                  sep = "\t", header = TRUE, nrows = 2)
-        knitr::kable(head(preview_df, 2),
-                     caption = "First 2 Rows of Expression Data")
-      } else {
-        cat("```\n")
-        cat(preview_lines, sep = "\n")
-        cat("```\n")
-      }
-    }
+  if (has_plotly) {
+    p <- plot_ly(
+      x = mean_expr,
+      type = "histogram",
+      nbinsx = 50,
+      marker = list(color = "steelblue"),
+      name = "Gene Expression"
+    ) %>%
+      layout(
+        title = "Distribution of Mean Gene Expression",
+        xaxis = list(title = "log10(counts + 1)"),
+        yaxis = list(title = "Number of Genes"),
+        bargap = 0.05
+      )
+    p
+  } else {
+    hist_data <- data.frame(mean_expression = mean_expr)
+    p <- ggplot(hist_data, aes(x = mean_expression)) +
+      geom_histogram(bins = 50, fill = "steelblue", color = "white") +
+      labs(title = "Distribution of Mean Gene Expression",
+           x = "log10(counts + 1)", y = "Number of Genes") +
+      theme_minimal()
+    print(p)
   }
+} else if (!is.null(rnaseq_path)) {
+  cat("*RNA-seq file path found (`", rnaseq_path,
+      "`) but data could not be loaded.*\n", sep = "")
 } else {
-  cat("*No downloaded files found. Run `tar_make(rna_sample_files)` to download sample data.*\n")
+  cat("*RNA-seq data not available. Run `tar_make(raw_rnaseq)` to download.*\n")
 }
 ```
 
@@ -231,18 +172,38 @@ if (!is.null(downloaded) && length(downloaded) > 0) {
 Clinical metadata retrieved from GDC provides patient demographics, disease characteristics, and outcomes.
 
 ```{r clinical}
-# Read cleaned data from the pipeline
+# Try to load clinical data
+# First try clinical_data_clean (from analysis pipeline)
 clinical <- safe_tar_read("clinical_data_clean")
 
-# Fall back to raw data if cleaned version not available
+# Fall back to loading from the clinical_data directory path
 if (is.null(clinical)) {
-  clinical <- safe_tar_read("clinical_data")
-  if (!is.null(clinical)) {
-    names(clinical) <- make.unique(names(clinical))
+  clinical_dir <- safe_tar_read("clinical_data")
+
+  if (!is.null(clinical_dir) && is.character(clinical_dir)) {
+    # clinical_data target returns a directory path - load the RDS or CSV from it
+    dir_path <- if (dir.exists(clinical_dir)) {
+      clinical_dir
+    } else {
+      file.path(project_root, clinical_dir)
+    }
+
+    if (dir.exists(dir_path)) {
+      rds_file <- file.path(dir_path, "clinical_data.rds")
+      csv_file <- file.path(dir_path, "clinical_data.csv")
+
+      if (file.exists(rds_file)) {
+        clinical <- tryCatch(readRDS(rds_file), error = function(e) NULL)
+      } else if (file.exists(csv_file)) {
+        clinical <- tryCatch(read.csv(csv_file), error = function(e) NULL)
+      }
+    }
   }
 }
 
-if (!is.null(clinical)) {
+if (!is.null(clinical) && is.data.frame(clinical)) {
+  # Ensure unique column names
+  names(clinical) <- make.unique(names(clinical))
 
   # Summary statistics
   cat("### Clinical Data Overview\n\n")
@@ -251,7 +212,8 @@ if (!is.null(clinical)) {
   cat("- **Data completeness:**", sprintf("%.1f%%", 100 * mean(!is.na(clinical))), "\n\n")
 
   # Key demographic variables
-  cols_to_show <- c("project", "submitter_id", "gender", "vital_status", "age_at_diagnosis", "race", "ethnicity")
+  cols_to_show <- c("project_id", "submitter_id", "gender", "vital_status",
+                    "age_at_diagnosis", "race", "ethnicity")
   cols_available <- intersect(cols_to_show, names(clinical))
 
   if (length(cols_available) > 0) {
@@ -281,28 +243,25 @@ if (!is.null(clinical)) {
       cat("\n")
     }
 
-    # Age distribution
+    # Age at diagnosis
     if ("age_at_diagnosis" %in% names(clinical) && is.numeric(clinical$age_at_diagnosis)) {
-      age_stats <- summary(clinical$age_at_diagnosis / 365.25)  # Convert days to years
+      # Check if values look like days (>365) or years (<120)
+      age_values <- clinical$age_at_diagnosis[!is.na(clinical$age_at_diagnosis)]
+      is_days <- max(age_values, na.rm = TRUE) > 120
+      age_years <- if (is_days) age_values / 365.25 else age_values
+
       cat("### Age at Diagnosis (years)\n\n")
-      cat("- **Median:**", sprintf("%.1f", median(clinical$age_at_diagnosis / 365.25, na.rm = TRUE)), "\n")
+      cat("- **Median:**", sprintf("%.1f", median(age_years, na.rm = TRUE)), "\n")
       cat("- **Range:**", sprintf("%.1f - %.1f",
-                                   min(clinical$age_at_diagnosis / 365.25, na.rm = TRUE),
-                                   max(clinical$age_at_diagnosis / 365.25, na.rm = TRUE)), "\n")
-      cat("- **IQR:**", sprintf("%.1f - %.1f",
-                                 quantile(clinical$age_at_diagnosis / 365.25, 0.25, na.rm = TRUE),
-                                 quantile(clinical$age_at_diagnosis / 365.25, 0.75, na.rm = TRUE)), "\n\n")
+                                   min(age_years, na.rm = TRUE),
+                                   max(age_years, na.rm = TRUE)), "\n\n")
 
-      # Age distribution plot
-      age_data <- clinical$age_at_diagnosis / 365.25
-      age_data <- age_data[!is.na(age_data)]
-
-      if (length(age_data) > 0 && has_plotly) {
+      if (has_plotly && length(age_years) > 0) {
         p <- plot_ly(
-          x = age_data,
+          x = age_years,
           type = "histogram",
           nbinsx = 30,
-          marker = list(color = 'steelblue'),
+          marker = list(color = "steelblue"),
           name = "Age Distribution"
         ) %>%
           layout(
@@ -316,14 +275,8 @@ if (!is.null(clinical)) {
     }
 
     # Sample of clinical data
-    cat("\n### Sample Clinical Data (First 10 Patients)\n\n")
-    display_clinical <- clinical[1:min(10, nrow(clinical)), cols_available, drop = FALSE]
-
-    # Format age if present
-    if ("age_at_diagnosis" %in% names(display_clinical)) {
-      display_clinical$age_at_diagnosis <- round(display_clinical$age_at_diagnosis / 365.25, 1)
-      names(display_clinical)[names(display_clinical) == "age_at_diagnosis"] <- "age_at_diagnosis_years"
-    }
+    cat("\n### Sample Clinical Data\n\n")
+    display_clinical <- clinical[seq_len(min(10, nrow(clinical))), cols_available, drop = FALSE]
 
     if (has_DT) {
       DT::datatable(display_clinical,
@@ -353,22 +306,62 @@ if (!is.null(clinical)) {
 }
 ```
 
+## Quality Control
+
+```{r qc}
+qc <- safe_tar_read("qc_metrics")
+filtered <- safe_tar_read("filtered_data")
+
+if (!is.null(qc)) {
+  cat("### QC Metrics Summary\n\n")
+  qc_df <- data.frame(
+    Metric = names(qc),
+    Value = unlist(lapply(qc, function(x) {
+      if (is.numeric(x) && length(x) == 1) format_with_commas(round(x, 2))
+      else as.character(x)
+    })),
+    stringsAsFactors = FALSE
+  )
+  knitr::kable(qc_df, caption = "Quality Control Metrics")
+}
+
+if (!is.null(filtered) && has_SE) {
+  filtered_counts <- SummarizedExperiment::assay(filtered, "counts")
+  cat("\n### After Filtering\n\n")
+  cat("- **Samples retained:**", ncol(filtered_counts), "\n")
+  cat("- **Genes retained:**", format_with_commas(nrow(filtered_counts)), "\n")
+
+  if (!is.null(se_data)) {
+    orig_counts <- SummarizedExperiment::assay(se_data, "counts")
+    cat("- **Genes removed:**",
+        format_with_commas(nrow(orig_counts) - nrow(filtered_counts)),
+        sprintf("(%.1f%%)", 100 * (1 - nrow(filtered_counts) / nrow(orig_counts))),
+        "\n")
+  }
+}
+
+if (is.null(qc) && is.null(filtered)) {
+  cat("*QC data not available. Run `tar_make()` to generate.*\n")
+}
+```
+
 ## Reproducibility
 
-### Git Commit Info
+<details>
+<summary>Git Commit Info (click to expand)</summary>
 
 ```{r git-info, echo=FALSE}
 if (requireNamespace("gert", quietly = TRUE)) {
   tryCatch({
-    # We use the current directory assuming the vignette runs in project root
-    # If pkgdown moves it, we might need Sys.getenv("TAR_PROJECT")
     repo_path <- "."
     if (Sys.getenv("TAR_PROJECT") != "") repo_path <- Sys.getenv("TAR_PROJECT")
-    
+
     info <- gert::git_info(repo = repo_path)
+    log1 <- gert::git_log(max = 1, repo = repo_path)
     knitr::kable(data.frame(
       Item = c("Commit Hash", "Author", "Time", "Branch"),
-      Value = c(info$commit, info$author, as.character(info$time), info$shorthand)
+      Value = c(info$commit, log1$author,
+                as.character(log1$time), info$shorthand)
     ))
   }, error = function(e) {
     cat("Git info not available.")
@@ -378,8 +371,13 @@ if (requireNamespace("gert", quietly = TRUE)) {
 }
 ```
 
-### Session Info
+</details>
+
+<details>
+<summary>Session Info (click to expand)</summary>
 
 ```{r session-info}
 sessionInfo()
 ```
+
+</details>

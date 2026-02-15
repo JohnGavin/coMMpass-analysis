@@ -4,21 +4,19 @@
 
 This report summarizes the initial data acquisition step for the MMRF
 CoMMpass study. We access Open Access RNA-seq data from the GDC S3
-bucket (`s3://gdc-mmrf-commpass-phs000748-2-open/`).
+bucket (`s3://gdc-mmrf-commpass-phs000748-2-open/`) via the `targets`
+pipeline.
 
-## S3 Bucket Status
+## Pipeline Configuration
 
-We query the S3 bucket to get a complete manifest of available files.
+    #> *Pipeline configuration not available. Run `tar_make(config)` to generate.*
 
-    #> *Manifest data not available. Run `tar_make(s3_manifest)` to generate.*
+## RNA-seq Data
 
-### File Type Distribution
+RNA-seq gene expression data is downloaded from GDC as a
+SummarizedExperiment object.
 
-## Downloaded Samples
-
-We downloaded a small subset of RNA-seq files for initial testing.
-
-    #> *No downloaded files found. Run `tar_make(rna_sample_files)` to download sample data.*
+    #> *RNA-seq data not available. Run `tar_make(raw_rnaseq)` to download.*
 
 ## Clinical Data
 
@@ -27,18 +25,22 @@ disease characteristics, and outcomes.
 
     #> *Clinical data not available. Run `tar_make(clinical_data)` to retrieve.*
 
+## Quality Control
+
+    #> *QC data not available. Run `tar_make()` to generate.*
+
 ## Reproducibility
 
-### Git Commit Info
+Git Commit Info (click to expand)
 
 | Item        | Value                                    |
 |:------------|:-----------------------------------------|
-| Commit Hash | 4fc983b0c23b71ec233a9307d70a22e13b13822c |
-| Author      | main                                     |
-| Time        | 4fc983b0c23b71ec233a9307d70a22e13b13822c |
+| Commit Hash | 5511edba7dac6e3b8a9336c778bce986385ebffd |
+| Author      | John Gavin <john.b.gavin@gmail.com>      |
+| Time        | 2026-02-15 19:53:06                      |
 | Branch      | main                                     |
 
-### Session Info
+Session Info (click to expand)
 
     #> R version 4.5.2 (2025-10-31)
     #> Platform: aarch64-apple-darwin24.6.0
@@ -62,19 +64,43 @@ disease characteristics, and outcomes.
     #> [6] targets_1.11.4
     #> 
     #> loaded via a namespace (and not attached):
-    #>  [1] tidyr_1.3.2        sass_0.4.10        generics_0.1.4     stringi_1.8.7     
-    #>  [5] digest_0.6.39      magrittr_2.0.4     evaluate_1.0.5     grid_4.5.2        
-    #>  [9] RColorBrewer_1.1-3 fastmap_1.2.0      jsonlite_2.0.0     processx_3.8.6    
-    #> [13] backports_1.5.0    secretbase_1.1.1   ps_1.9.1           httr_1.4.7        
-    #> [17] purrr_1.2.1        viridisLite_0.4.2  scales_1.4.0       lazyeval_0.2.2    
-    #> [21] codetools_0.2-20   textshaping_1.0.4  jquerylib_0.1.4    cli_3.6.5         
-    #> [25] rlang_1.1.7        withr_3.0.2        cachem_1.1.0       yaml_2.3.12       
-    #> [29] otel_0.2.0         tools_4.5.2        base64url_1.4      credentials_2.0.3 
-    #> [33] vctrs_0.7.0        R6_2.6.1           lifecycle_1.0.5    fs_1.6.6          
-    #> [37] htmlwidgets_1.6.4  ragg_1.5.0         pkgconfig_2.0.3    desc_1.4.3        
-    #> [41] callr_3.7.6        pkgdown_2.2.0      pillar_1.11.1      bslib_0.9.0       
-    #> [45] gtable_0.3.6       data.table_1.18.0  glue_1.8.0         systemfonts_1.3.1 
-    #> [49] gert_2.3.1         xfun_0.56          tibble_3.3.1       tidyselect_1.2.1  
-    #> [53] sys_3.4.3          knitr_1.51         farver_2.1.2       htmltools_0.5.9   
-    #> [57] igraph_2.2.1       rmarkdown_2.30     compiler_4.5.2     prettyunits_1.2.0 
-    #> [61] S7_0.2.1           askpass_1.2.1      openssl_2.3.4
+    #>  [1] SummarizedExperiment_1.40.0 gtable_0.3.6               
+    #>  [3] xfun_0.56                   bslib_0.9.0                
+    #>  [5] htmlwidgets_1.6.4           processx_3.8.6             
+    #>  [7] lattice_0.22-7              Biobase_2.70.0             
+    #>  [9] callr_3.7.6                 vctrs_0.7.0                
+    #> [11] tools_4.5.2                 ps_1.9.1                   
+    #> [13] generics_0.1.4              stats4_4.5.2               
+    #> [15] base64url_1.4               tibble_3.3.1               
+    #> [17] pkgconfig_2.0.3             Matrix_1.7-4               
+    #> [19] data.table_1.18.0           secretbase_1.1.1           
+    #> [21] RColorBrewer_1.1-3          S7_0.2.1                   
+    #> [23] desc_1.4.3                  S4Vectors_0.48.0           
+    #> [25] lifecycle_1.0.5             compiler_4.5.2             
+    #> [27] farver_2.1.2                credentials_2.0.3          
+    #> [29] textshaping_1.0.4           Seqinfo_1.0.0              
+    #> [31] codetools_0.2-20            sys_3.4.3                  
+    #> [33] htmltools_0.5.9             sass_0.4.10                
+    #> [35] yaml_2.3.12                 lazyeval_0.2.2             
+    #> [37] pillar_1.11.1               pkgdown_2.2.0              
+    #> [39] jquerylib_0.1.4             tidyr_1.3.2                
+    #> [41] openssl_2.3.4               DelayedArray_0.36.0        
+    #> [43] cachem_1.1.0                abind_1.4-8                
+    #> [45] tidyselect_1.2.1            digest_0.6.39              
+    #> [47] stringi_1.8.7               purrr_1.2.1                
+    #> [49] fastmap_1.2.0               grid_4.5.2                 
+    #> [51] SparseArray_1.10.8          cli_3.6.5                  
+    #> [53] magrittr_2.0.4              S4Arrays_1.10.1            
+    #> [55] withr_3.0.2                 prettyunits_1.2.0          
+    #> [57] scales_1.4.0                backports_1.5.0            
+    #> [59] XVector_0.50.0              rmarkdown_2.30             
+    #> [61] httr_1.4.7                  matrixStats_1.5.0          
+    #> [63] igraph_2.2.1                otel_0.2.0                 
+    #> [65] askpass_1.2.1               ragg_1.5.0                 
+    #> [67] evaluate_1.0.5              knitr_1.51                 
+    #> [69] GenomicRanges_1.62.1        IRanges_2.44.0             
+    #> [71] viridisLite_0.4.2           rlang_1.1.7                
+    #> [73] gert_2.3.1                  glue_1.8.0                 
+    #> [75] BiocGenerics_0.56.0         jsonlite_2.0.0             
+    #> [77] R6_2.6.1                    MatrixGenerics_1.22.0      
+    #> [79] systemfonts_1.3.1           fs_1.6.6
