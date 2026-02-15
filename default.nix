@@ -14,7 +14,7 @@
 # Apple Silicon computers.
 # Report any issues to https://github.com/ropensci/rix
 let
- pkgs = import (fetchTarball "https://github.com/rstats-on-nix/nixpkgs/archive/2026-01-19.tar.gz") {};
+ pkgs = import (fetchTarball "https://github.com/rstats-on-nix/nixpkgs/archive/2026-01-12.tar.gz") {};
  
   rpkgs = builtins.attrValues {
     inherit (pkgs.rPackages) 
@@ -46,6 +46,7 @@ let
       pkgdown
       plotly
       purrr
+      quarto
       readr
       shiny
       shinylive

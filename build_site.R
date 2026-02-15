@@ -15,5 +15,12 @@ if (result != 0) stop("Package installation failed")
 Sys.setenv(TAR_PROJECT = getwd())
 Sys.setenv(HOME = Sys.getenv("HOME", "/tmp"))  # Fix /homeless-shelter warning
 
+# Clean docs/ directory to avoid read-only file permission errors
+# (Nix store copies are read-only and pkgdown can't overwrite them)
+if (dir.exists("docs")) {
+  system("chmod -R u+w docs/")
+  unlink("docs", recursive = TRUE)
+}
+
 # Build the site
 pkgdown::build_site()

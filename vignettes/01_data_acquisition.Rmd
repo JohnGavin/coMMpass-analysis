@@ -11,16 +11,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  echo = FALSE,  # Hide code by default
-  message = FALSE,
-  warning = FALSE,
-  fig.width = 8,
-  fig.height = 5,
-  fig.cap = TRUE  # Enable figure captions
-)
-  collapse = TRUE,
-  comment = "#>",
-  echo = FALSE,  # Hide code by default
+  echo = FALSE,
   message = FALSE,
   warning = FALSE,
   fig.width = 8,
@@ -30,8 +21,10 @@ library(targets)
 library(dplyr)
 library(ggplot2)
 library(stringr)
-library(plotly)
-library(DT)
+has_plotly <- requireNamespace("plotly", quietly = TRUE)
+has_DT <- requireNamespace("DT", quietly = TRUE)
+if (has_plotly) library(plotly)
+if (has_DT) library(DT)
 
 # Source utility functions
 if (file.exists("../R/utils.R")) {
@@ -128,27 +121,28 @@ if (exists("manifest_df") && nrow(manifest_df) > 0) {
     ) %>%
     arrange(desc(count))
 
-  # Interactive plot with plotly
-  p <- plot_ly(
-    data = type_summary %>% head(20),
-    x = ~count,
-    y = ~reorder(extension, count),
-    type = 'bar',
-    orientation = 'h',
-    text = ~paste("Count:", format_with_commas(count),
-                  "<br>Total Size:", format_file_size(total_size),
-                  "<br>Avg Size:", format_file_size(avg_size)),
-    hovertemplate = "%{text}<extra></extra>",
-    marker = list(color = 'steelblue')
-  ) %>%
-    layout(
-      title = "Top 20 File Types in CoMMpass S3 Bucket",
-      xaxis = list(title = "Number of Files"),
-      yaxis = list(title = "File Extension"),
-      margin = list(l = 100)
-    )
-
-  p
+  # Interactive plot with plotly (if available)
+  if (has_plotly) {
+    p <- plot_ly(
+      data = type_summary %>% head(20),
+      x = ~count,
+      y = ~reorder(extension, count),
+      type = 'bar',
+      orientation = 'h',
+      text = ~paste("Count:", format_with_commas(count),
+                    "<br>Total Size:", format_file_size(total_size),
+                    "<br>Avg Size:", format_file_size(avg_size)),
+      hovertemplate = "%{text}<extra></extra>",
+      marker = list(color = 'steelblue')
+    ) %>%
+      layout(
+        title = "Top 20 File Types in CoMMpass S3 Bucket",
+        xaxis = list(title = "Number of Files"),
+        yaxis = list(title = "File Extension"),
+        margin = list(l = 100)
+      )
+    p
+  }
 
   # Summary table
   cat("\n\n### File Type Summary\n\n")
@@ -303,7 +297,7 @@ if (!is.null(clinical)) {
       age_data <- clinical$age_at_diagnosis / 365.25
       age_data <- age_data[!is.na(age_data)]
 
-      if (length(age_data) > 0) {
+      if (length(age_data) > 0 && has_plotly) {
         p <- plot_ly(
           x = age_data,
           type = "histogram",
@@ -331,9 +325,13 @@ if (!is.null(clinical)) {
       names(display_clinical)[names(display_clinical) == "age_at_diagnosis"] <- "age_at_diagnosis_years"
     }
 
-    datatable(display_clinical,
-              options = list(pageLength = 5, scrollX = TRUE),
-              caption = "Sample of Clinical Data")
+    if (has_DT) {
+      DT::datatable(display_clinical,
+                options = list(pageLength = 5, scrollX = TRUE),
+                caption = "Sample of Clinical Data")
+    } else {
+      knitr::kable(display_clinical, caption = "Sample of Clinical Data")
+    }
   }
 
   # Missing data analysis

@@ -4,6 +4,9 @@ Version: 0.0.1
 Authors@R: person("John", "Gavin", email = "john.gavin@example.com", role = c("aut", "cre"))
 Description: A reproducible data acquisition and analysis pipeline for the MMRF CoMMpass study using Targets and Nix.
 License: MIT
+URL: https://JohnGavin.github.io/coMMpass-analysis/,
+    https://github.com/JohnGavin/coMMpass-analysis
+BugReports: https://github.com/JohnGavin/coMMpass-analysis/issues
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.3
