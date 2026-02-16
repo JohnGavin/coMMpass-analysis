@@ -1,0 +1,325 @@
+---
+title: "02. Data Dictionary"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{02. Data Dictionary}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 5
+)
+library(targets)
+library(dplyr)
+has_DT <- requireNamespace("DT", quietly = TRUE)
+if (has_DT) library(DT)
+
+# Source utility functions
+if (file.exists("../R/utils.R")) {
+  source("../R/utils.R")
+} else if (file.exists("R/utils.R")) {
+  source("R/utils.R")
+}
+if (file.exists("../R/data_dictionary.R")) {
+  source("../R/data_dictionary.R")
+} else if (file.exists("R/data_dictionary.R")) {
+  source("R/data_dictionary.R")
+}
+
+key <- "TAR_PROJECT"
+proj_dir <- Sys.getenv(key)
+targets_available <- FALSE
+
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_config_set(store = file.path(proj_dir, "_targets"))
+  targets_available <- TRUE
+} else if (dir.exists("_targets")) {
+  targets_available <- TRUE
+}
+
+safe_tar_read <- function(name) {
+  if (!targets_available) return(NULL)
+  tryCatch(tar_read(name), error = function(e) NULL)
+}
+
+project_root <- if (proj_dir != "") proj_dir else "."
+```
+
+## Overview
+
+This document describes all variables in the MMRF CoMMpass dataset as downloaded from the [Genomic Data Commons (GDC)](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS). The CoMMpass (Relating Clinical Outcomes in Multiple Myeloma to Personal Assessment of Genetic Profile) study is a longitudinal observational study of ~1,000 newly diagnosed multiple myeloma patients.
+
+**Data sources:**
+
+- [GDC Portal - MMRF-COMMPASS](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)
+- [GDC Data Dictionary](https://docs.gdc.cancer.gov/Data_Dictionary/viewer/)
+- [MMRF CoMMpass Study](https://themmrf.org/research/commpass-study/)
+
+## Complete Data Dictionary
+
+```{r dictionary-table}
+dd <- tryCatch(
+  get_commpass_data_dictionary(),
+  error = function(e) NULL
+)
+
+if (!is.null(dd)) {
+  if (has_DT) {
+    DT::datatable(
+      dd,
+      filter = "top",
+      options = list(
+        pageLength = 20,
+        scrollX = TRUE,
+        columnDefs = list(
+          list(width = "150px", targets = 0),
+          list(width = "100px", targets = 1),
+          list(width = "300px", targets = 4)
+        )
+      ),
+      caption = "CoMMpass Data Dictionary - All Variables"
+    )
+  } else {
+    knitr::kable(dd, caption = "CoMMpass Data Dictionary")
+  }
+} else {
+  cat("*Data dictionary function not available.*\n")
+}
+```
+
+## Clinical Data
+
+Clinical data includes patient demographics, disease characteristics, and outcomes. Downloaded via `TCGAbiolinks::GDCquery_clinic()`.
+
+```{r clinical-summary}
+clinical <- safe_tar_read("clinical_data")
+
+if (is.null(clinical)) {
+  # Try loading from parquet directly
+  pq_path <- file.path(project_root, "data", "raw", "clinical", "clinical_data.parquet")
+  if (file.exists(pq_path) && requireNamespace("arrow", quietly = TRUE)) {
+    clinical <- arrow::read_parquet(pq_path)
+  }
+}
+
+if (!is.null(clinical) && is.data.frame(clinical)) {
+  cat("### Summary\n\n")
+  cat("- **Total patients:**", format_with_commas(nrow(clinical)), "\n")
+  cat("- **Variables:**", ncol(clinical), "\n")
+  cat("- **Data completeness:**",
+      sprintf("%.1f%%", 100 * mean(!is.na(clinical))), "\n\n")
+
+  # Column type overview
+  col_types <- data.frame(
+    Column = names(clinical),
+    Type = sapply(clinical, function(x) class(x)[1]),
+    Non_NA = sapply(clinical, function(x) sum(!is.na(x))),
+    Pct_Complete = sprintf("%.0f%%", 100 * sapply(clinical, function(x) mean(!is.na(x)))),
+    stringsAsFactors = FALSE
+  )
+
+  cat("### Column Inventory\n\n")
+  if (has_DT) {
+    DT::datatable(
+      col_types,
+      filter = "top",
+      options = list(pageLength = 15, scrollX = TRUE),
+      caption = "Clinical Data Columns"
+    )
+  } else {
+    knitr::kable(col_types, caption = "Clinical Data Columns", row.names = FALSE)
+  }
+
+  # Sample rows
+  cat("\n### Sample Data (first 5 rows, key columns)\n\n")
+  key_cols <- intersect(
+    c("submitter_id", "age_at_diagnosis", "gender", "race",
+      "vital_status", "days_to_death", "days_to_last_follow_up",
+      "primary_diagnosis"),
+    names(clinical)
+  )
+  if (length(key_cols) > 0) {
+    display <- head(clinical[, key_cols, drop = FALSE], 5)
+    knitr::kable(display, caption = "Sample Clinical Records")
+  }
+} else {
+  cat("*Clinical data not available. Run the pipeline to download.*\n")
+}
+```
+
+## Biospecimen Data
+
+Biospecimen data describes the tissue samples collected from patients.
+
+```{r biospecimen-summary}
+biospecimen <- safe_tar_read("biospecimen_data")
+
+if (is.null(biospecimen)) {
+  pq_path <- file.path(project_root, "data", "raw", "clinical", "biospecimen_data.parquet")
+  if (file.exists(pq_path) && requireNamespace("arrow", quietly = TRUE)) {
+    biospecimen <- arrow::read_parquet(pq_path)
+  }
+}
+
+if (!is.null(biospecimen) && is.data.frame(biospecimen)) {
+  cat("- **Total records:**", format_with_commas(nrow(biospecimen)), "\n")
+  cat("- **Variables:**", ncol(biospecimen), "\n\n")
+
+  bio_cols <- data.frame(
+    Column = names(biospecimen),
+    Type = sapply(biospecimen, function(x) class(x)[1]),
+    Non_NA = sapply(biospecimen, function(x) sum(!is.na(x))),
+    Pct_Complete = sprintf("%.0f%%", 100 * sapply(biospecimen, function(x) mean(!is.na(x)))),
+    stringsAsFactors = FALSE
+  )
+
+  if (has_DT) {
+    DT::datatable(bio_cols, filter = "top",
+                  options = list(pageLength = 10, scrollX = TRUE),
+                  caption = "Biospecimen Data Columns")
+  } else {
+    knitr::kable(bio_cols, caption = "Biospecimen Data Columns", row.names = FALSE)
+  }
+} else {
+  cat("*Biospecimen data not available. Run the pipeline to download.*\n")
+}
+```
+
+## RNA-seq Data
+
+RNA-seq gene expression data is generated using the STAR aligner and quantified against GENCODE annotations. Data is available in multiple quantification types.
+
+```{r rnaseq-summary}
+se_data <- NULL
+rnaseq_path <- safe_tar_read("raw_rnaseq")
+
+if (!is.null(rnaseq_path)) {
+  full_path <- if (file.exists(rnaseq_path)) rnaseq_path else file.path(project_root, rnaseq_path)
+  if (file.exists(full_path) && requireNamespace("SummarizedExperiment", quietly = TRUE)) {
+    se_data <- tryCatch(readRDS(full_path), error = function(e) NULL)
+  }
+}
+
+if (!is.null(se_data) && requireNamespace("SummarizedExperiment", quietly = TRUE)) {
+  cat("### Dimensions\n\n")
+  cat("- **Samples:**", ncol(se_data), "\n")
+  cat("- **Genes:**", format_with_commas(nrow(se_data)), "\n")
+  cat("- **Assays:**", paste(SummarizedExperiment::assayNames(se_data), collapse = ", "), "\n\n")
+
+  # Gene metadata summary
+  gene_meta <- as.data.frame(SummarizedExperiment::rowData(se_data))
+  if ("gene_type" %in% names(gene_meta)) {
+    cat("### Gene Biotypes\n\n")
+    type_counts <- sort(table(gene_meta$gene_type), decreasing = TRUE)
+    type_df <- data.frame(
+      Biotype = names(type_counts),
+      Count = as.integer(type_counts),
+      Percentage = sprintf("%.1f%%", 100 * as.numeric(type_counts) / nrow(gene_meta)),
+      stringsAsFactors = FALSE
+    )
+    knitr::kable(head(type_df, 10), caption = "Top 10 Gene Biotypes", row.names = FALSE)
+  }
+
+  # Sample metadata columns
+  sample_meta <- as.data.frame(SummarizedExperiment::colData(se_data))
+  cat("\n### Sample Metadata Columns\n\n")
+  sample_cols <- data.frame(
+    Column = names(sample_meta),
+    Type = sapply(sample_meta, function(x) class(x)[1]),
+    stringsAsFactors = FALSE
+  )
+  knitr::kable(sample_cols, caption = "RNA-seq Sample Metadata Columns", row.names = FALSE)
+} else {
+  cat("*RNA-seq data not available. Run the pipeline to download.*\n")
+}
+```
+
+## Column Name Mappings
+
+GDC uses standardized column names. Common aliases used in analysis:
+
+| GDC Column | Common Alias | Notes |
+|---|---|---|
+| `submitter_id` | patient_id | Unique patient identifier |
+| `age_at_diagnosis` | age_days | In **days**, not years |
+| `vital_status` | status | Alive/Dead |
+| `days_to_death` | os_time (if dead) | Overall survival time |
+| `days_to_last_follow_up` | os_time (if alive) | Censoring time |
+| `gender` | sex | male/female |
+| `primary_diagnosis` | diagnosis | ICD-O-3 morphology |
+
+## Units Reference
+
+**Age and time variables are stored in DAYS by GDC.** This is the single most common source of errors in GDC analyses.
+
+| Variable | Unit | Conversion |
+|---|---|---|
+| `age_at_diagnosis` | days | `age_years = age_at_diagnosis / 365.25` |
+| `days_to_death` | days | Used directly in survival analysis |
+| `days_to_last_follow_up` | days | Censoring time for survival |
+| `days_to_last_known_disease_status` | days | Disease assessment time |
+| `unstranded` / `stranded_*` | raw integer counts | Input for DESeq2/edgeR |
+| `tpm_unstranded` | TPM | Cross-sample comparison |
+| `fpkm_unstranded` | FPKM | Largely deprecated, use TPM |
+
+## Data Sources & Links
+
+- **GDC Portal**: <https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS>
+- **GDC Data Dictionary**: <https://docs.gdc.cancer.gov/Data_Dictionary/viewer/>
+- **GDC mRNA Analysis Pipeline**: <https://docs.gdc.cancer.gov/Data/Bioinformatics_Pipelines/Expression_mRNA_Pipeline/>
+- **MMRF CoMMpass Study**: <https://themmrf.org/research/commpass-study/>
+- **GENCODE**: <https://www.gencodegenes.org/>
+- **Ensembl**: <https://www.ensembl.org/>
+
+## R Code Examples
+
+### Loading Data
+
+```r
+library(coMMpass)
+
+# Load clinical data from parquet
+clinical <- query_commpass_parquet("clinical")
+
+# Load with DuckDB lazy evaluation
+con <- DBI::dbConnect(duckdb::duckdb())
+clinical_tbl <- get_commpass_tbl("clinical", con = con)
+result <- clinical_tbl |>
+  dplyr::filter(gender == "female") |>
+  dplyr::select(submitter_id, age_at_diagnosis, vital_status) |>
+  dplyr::mutate(age_years = age_at_diagnosis / 365.25) |>
+  dplyr::collect()
+DBI::dbDisconnect(con, shutdown = TRUE)
+```
+
+### Exploring the Dictionary
+
+```r
+dd <- get_commpass_data_dictionary()
+
+# Find all clinical variables
+dplyr::filter(dd, category == "clinical")
+
+# Get detailed docs for a variable
+docs <- get_variable_docs("age_at_diagnosis")
+cat(docs$usage_notes)
+```
+
+## Reproducibility
+
+<details>
+<summary>Session Info (click to expand)</summary>
+
+```{r session-info}
+sessionInfo()
+```
+
+</details>
