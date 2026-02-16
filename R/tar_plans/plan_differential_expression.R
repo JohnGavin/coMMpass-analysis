@@ -2,12 +2,12 @@
 # Differential expression analysis targets
 
 plan_differential_expression <- list(
-  # DESeq2 analysis
+  # DESeq2 analysis (uses cleaned clinical data)
   tar_target(
     deseq2_results,
     run_deseq2(
       normalized_data,
-      clinical_data,
+      clinical_data_clean,
       design_formula = ~ condition
     )
   ),
@@ -17,7 +17,7 @@ plan_differential_expression <- list(
     edger_results,
     run_edger(
       normalized_data,
-      clinical_data,
+      clinical_data_clean,
       design_formula = ~ condition
     )
   ),
@@ -27,7 +27,7 @@ plan_differential_expression <- list(
     limma_results,
     run_limma(
       normalized_data,
-      clinical_data,
+      clinical_data_clean,
       design_formula = ~ condition
     )
   ),

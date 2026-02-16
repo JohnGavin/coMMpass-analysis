@@ -11,12 +11,12 @@ plan_pathway_analysis <- list(
     )
   ),
 
-  # GSEA
+  # GSEA (uses cleaned clinical data)
   tar_target(
     gsea_results,
     run_gsea(
       normalized_data,
-      clinical_data
+      clinical_data_clean
     )
   ),
 

@@ -23,13 +23,20 @@ Imports:
     survival,
     logger,
     dplyr,
-    readr,
     ggplot2,
-    aws.s3
+    aws.s3,
+    arrow,
+    DBI,
+    duckdb,
+    dbplyr,
+    cli,
+    glue,
+    tibble
 Suggests:
     tidyverse,
     knitr,
     rmarkdown,
     pkgdown,
     testthat,
-    gert
+    gert,
+    nanoparquet

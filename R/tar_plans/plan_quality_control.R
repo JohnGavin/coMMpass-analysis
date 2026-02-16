@@ -2,19 +2,12 @@
 # Quality control and normalization targets
 
 plan_quality_control <- list(
-  # QC metrics
+  # QC metrics (raw_rnaseq is the file path to rnaseq_se.rds)
   tar_target(
     qc_metrics,
     {
-      # Load the RNA-seq data from file
-      rnaseq_file <- "data/raw/gdc/rnaseq_se.rds"
-      if (file.exists(rnaseq_file)) {
-        se_data <- readRDS(rnaseq_file)
-        calculate_qc_metrics(se_data)
-      } else {
-        warning("RNA-seq data file not found")
-        NULL
-      }
+      se_data <- readRDS(raw_rnaseq)
+      calculate_qc_metrics(se_data)
     },
     packages = c("SummarizedExperiment")
   ),
@@ -23,19 +16,12 @@ plan_quality_control <- list(
   tar_target(
     filtered_data,
     {
-      # Load the RNA-seq data from file
-      rnaseq_file <- "data/raw/gdc/rnaseq_se.rds"
-      if (file.exists(rnaseq_file)) {
-        se_data <- readRDS(rnaseq_file)
-        filter_low_quality(
-          se_data,
-          min_counts = 10,
-          min_samples = 3
-        )
-      } else {
-        warning("RNA-seq data file not found")
-        NULL
-      }
+      se_data <- readRDS(raw_rnaseq)
+      filter_low_quality(
+        se_data,
+        min_counts = 10,
+        min_samples = 3
+      )
     },
     packages = c("SummarizedExperiment")
   ),

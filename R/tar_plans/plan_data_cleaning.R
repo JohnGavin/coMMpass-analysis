@@ -157,48 +157,30 @@ integrate_clinical_expression <- function(clinical_clean, expr_clean) {
 #'
 #' Returns a list of targets for data cleaning
 plan_data_cleaning <- list(
-  # Clean clinical data
+  # Clean clinical data (clinical_data is a data frame from arrow::read_parquet)
   tar_target(
     clinical_data_clean,
-    {
-      # Load clinical data from the saved files
-      clinical_file <- file.path(clinical_data, "clinical_data.rds")
-      if (file.exists(clinical_file)) {
-        clinical_raw <- readRDS(clinical_file)
-        clean_clinical_data(clinical_raw)
-      } else {
-        # Fallback to CSV if RDS doesn't exist
-        clinical_csv <- file.path(clinical_data, "clinical_data.csv")
-        if (file.exists(clinical_csv)) {
-          clinical_raw <- read.csv(clinical_csv, stringsAsFactors = FALSE)
-          clean_clinical_data(clinical_raw)
-        } else {
-          warning("No clinical data file found")
-          NULL
-        }
-      }
-    },
+    clean_clinical_data(clinical_data),
     packages = c("dplyr")
   ),
 
-  # Clean expression data
+  # Clean expression data (raw_rnaseq is the file path to rnaseq_se.rds)
   tar_target(
     expression_data_clean,
     {
-      # Load expression data from saved file
-      # In compute workflow, data is downloaded to _targets/objects/
-      rnaseq_file <- "data/raw/gdc/rnaseq_se.rds"
-      if (file.exists(rnaseq_file)) {
-        se_data <- readRDS(rnaseq_file)
-        # Extract counts matrix from SummarizedExperiment
-        if (inherits(se_data, "SummarizedExperiment")) {
+      se_data <- readRDS(raw_rnaseq)
+      if (inherits(se_data, "SummarizedExperiment")) {
+        # Try "unstranded" (GDC STAR-Counts), then "counts", then first assay
+        assay_names <- SummarizedExperiment::assayNames(se_data)
+        if ("unstranded" %in% assay_names) {
+          expr_matrix <- SummarizedExperiment::assay(se_data, "unstranded")
+        } else if ("counts" %in% assay_names) {
           expr_matrix <- SummarizedExperiment::assay(se_data, "counts")
-          clean_expression_data(expr_matrix)
         } else {
-          NULL
+          expr_matrix <- SummarizedExperiment::assay(se_data, 1)
         }
+        clean_expression_data(expr_matrix)
       } else {
-        # Fallback - no RNA-seq data available
         NULL
       }
     },

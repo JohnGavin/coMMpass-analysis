@@ -1,200 +1,230 @@
 # R/01_data_acquisition.R
 # Data acquisition functions for CoMMpass analysis
-# Downloads RNA-seq and clinical data from GDC/AWS
+# Downloads RNA-seq and clinical data from GDC
+# Saves in parquet format (primary) + RDS (secondary)
 
 #' Download RNA-seq data from GDC
 #'
 #' Downloads RNA-seq gene expression data from the Genomic Data Commons (GDC)
-#' for the specified project. Data is saved as a SummarizedExperiment object.
+#' for the specified project. Data is saved as a SummarizedExperiment RDS and
+#' as parquet files (counts, sample metadata, gene metadata).
 #'
 #' @param project_id Project identifier (default: "MMRF-COMMPASS")
 #' @param data_dir Directory to save data
-#' @param sample_limit Maximum number of samples (NULL for all)
+#' @param sample_limit Maximum number of samples (NULL for all, default 200)
+#' @param random_sample If TRUE and sample_limit is set, randomly sample
+#'   patients using seed for reproducibility (default TRUE)
+#' @param seed Random seed for reproducible sampling (default 42)
+#' @param use_parquet If TRUE, also save parquet files alongside RDS (default TRUE)
 #' @return Path to the saved RDS file containing the SummarizedExperiment
 #' @export
 #' @examples
 #' \dontrun{
-#' # Download first 10 samples
-#' rnaseq_file <- download_gdc_rnaseq(sample_limit = 10)
+#' # Download 200 random samples with parquet output
+#' rnaseq_file <- download_gdc_rnaseq(sample_limit = 200)
 #'
-#' # Load the data
+#' # Load the SummarizedExperiment
 #' se_data <- readRDS(rnaseq_file)
+#'
+#' # Or load parquet directly
+#' counts <- arrow::read_parquet("data/raw/gdc/rnaseq_counts.parquet")
 #' }
 download_gdc_rnaseq <- function(
   project_id = "MMRF-COMMPASS",
   data_dir = "data/raw/gdc",
-  sample_limit = NULL
+  sample_limit = 200,
+  random_sample = TRUE,
+  seed = 42,
+  use_parquet = TRUE
 ) {
-  library(TCGAbiolinks)
-  library(SummarizedExperiment)
-  library(logger)
-
-  # Create directory if needed
   dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
-
   output_file <- file.path(data_dir, "rnaseq_se.rds")
 
-  # CRITICAL: In CI, use placeholder data immediately to avoid timeouts
+  # In CI, use fewer samples but still real data
   if (Sys.getenv("CI") == "true" || Sys.getenv("GITHUB_ACTIONS") == "true") {
-    log_warn("CI environment detected - using placeholder SummarizedExperiment")
-
-    # Create realistic integer count data for RNA-seq
-    set.seed(42)  # For reproducibility
-    n_genes <- 100
-    n_samples <- 10
-
-    # Generate integer counts with realistic distribution
-    # Most genes have low counts, some have high counts
-    # Create lambda values for each gene (recycled across samples)
-    gene_lambdas <- c(rep(5, 70), rep(50, 20), rep(500, 10))  # Length 100
-    # Replicate for all samples (100 genes × 10 samples = 1000 values)
-    all_lambdas <- rep(gene_lambdas, times = n_samples)
-
-    base_counts <- matrix(
-      rpois(n_genes * n_samples, lambda = all_lambdas),
-      nrow = n_genes,
-      ncol = n_samples
-    )
-
-    # Ensure counts are integers and non-negative
-    counts_matrix <- matrix(as.integer(pmax(base_counts, 0)),
-                           nrow = n_genes,
-                           ncol = n_samples)
-
-    # Set proper dimnames - CRITICAL for downstream analysis
-    rownames(counts_matrix) <- paste0("ENSG0000000", sprintf("%04d", 1:n_genes))
-    colnames(counts_matrix) <- paste0("SAMPLE_", sprintf("%02d", 1:n_samples))
-
-    # Verify dimnames are set (defensive check)
-    if (is.null(rownames(counts_matrix)) || is.null(colnames(counts_matrix))) {
-      stop("Failed to set dimnames on count matrix")
-    }
-
-    placeholder_se <- SummarizedExperiment::SummarizedExperiment(
-      assays = list(counts = counts_matrix),
-      rowData = data.frame(
-        gene_id = rownames(counts_matrix),
-        gene_name = paste0("Gene_", 1:n_genes),
-        gene_type = sample(c("protein_coding", "lncRNA"), n_genes,
-                          replace = TRUE, prob = c(0.8, 0.2)),
-        stringsAsFactors = FALSE
-      ),
-      colData = data.frame(
-        sample_id = colnames(counts_matrix),
-        patient_id = paste0("PATIENT_", sprintf("%02d", 1:n_samples)),
-        condition = rep(c("control", "treatment"), 5),
-        batch = rep(c(1, 2), each = 5),
-        stringsAsFactors = FALSE
-      )
-    )
-
-    saveRDS(placeholder_se, output_file)
-    log_info("Created realistic placeholder SummarizedExperiment in {output_file}")
-    return(as.character(output_file))
+    sample_limit <- min(sample_limit, 10)
+    logger::log_info("CI environment: limiting to {sample_limit} samples")
   }
 
-  log_info("Querying GDC for {project_id} RNA-seq data...")
+  logger::log_info("Querying GDC for {project_id} RNA-seq data...")
 
-  output_file <- file.path(data_dir, "rnaseq_se.rds")
+  # Query GDC
+  query <- TCGAbiolinks::GDCquery(
+    project = project_id,
+    data.category = "Transcriptome Profiling",
+    data.type = "Gene Expression Quantification",
+    workflow.type = "STAR - Counts"
+  )
 
-  tryCatch({
-    # Query GDC
-    query <- GDCquery(
-      project = project_id,
-      data.category = "Transcriptome Profiling",
-      data.type = "Gene Expression Quantification",
-      workflow.type = "STAR - Counts"
-    )
+  # Subset samples if requested
+  if (!is.null(sample_limit)) {
+    query_results <- TCGAbiolinks::getResults(query)
+    n_available <- nrow(query_results)
 
-    # Limit samples if specified
-    if (!is.null(sample_limit)) {
-      query <- query[1:min(sample_limit, nrow(query)), ]
-      log_info("Limited to {sample_limit} samples")
+    if (n_available > sample_limit) {
+      if (random_sample) {
+        set.seed(seed)
+        selected_idx <- sort(sample.int(n_available, sample_limit))
+        logger::log_info(
+          "Randomly sampling {sample_limit} of {n_available} samples (seed={seed})"
+        )
+      } else {
+        selected_idx <- seq_len(sample_limit)
+        logger::log_info("Taking first {sample_limit} of {n_available} samples")
+      }
+      selected_barcodes <- query_results$cases[selected_idx]
+      query <- TCGAbiolinks::GDCquery(
+        project = project_id,
+        data.category = "Transcriptome Profiling",
+        data.type = "Gene Expression Quantification",
+        workflow.type = "STAR - Counts",
+        barcode = selected_barcodes
+      )
     }
+  }
 
-    # Download data
-    log_info("Downloading data to {data_dir}...")
-    GDCdownload(query, directory = data_dir)
+  # Download and prepare
+  logger::log_info("Downloading data to {data_dir}...")
+  TCGAbiolinks::GDCdownload(query, directory = data_dir)
 
-    # Prepare SummarizedExperiment
-    log_info("Preparing SummarizedExperiment object...")
-    data <- GDCprepare(query, directory = data_dir)
+  logger::log_info("Preparing SummarizedExperiment object...")
+  se_data <- TCGAbiolinks::GDCprepare(query, directory = data_dir)
 
-    # Save as RDS for quick loading
-    saveRDS(data, output_file)
-    log_info("Saved SummarizedExperiment to {output_file}")
-  }, error = function(e) {
-    log_error("Error downloading RNA-seq data: {e$message}")
-    # Create placeholder SummarizedExperiment for CI testing
-    placeholder_se <- SummarizedExperiment::SummarizedExperiment(
-      assays = list(counts = matrix(1:100, ncol = 10, nrow = 10))
-    )
-    saveRDS(placeholder_se, output_file)
-    log_warn("Created placeholder SummarizedExperiment in {output_file}")
-  })
+  # Save as RDS (Bioconductor compatibility)
+  saveRDS(se_data, output_file)
+  logger::log_info("Saved SummarizedExperiment to {output_file}")
 
-  # Return file path as character string (targets serialization)
+  # Save parquet files for DuckDB querying
+  if (use_parquet) {
+    save_rnaseq_parquet(se_data, data_dir)
+  }
+
+  # Save download metadata
+  metadata <- list(
+    download_time = Sys.time(),
+    project_id = project_id,
+    n_samples = ncol(se_data),
+    n_genes = nrow(se_data),
+    sample_limit = sample_limit,
+    random_sample = random_sample,
+    seed = seed,
+    assay_names = SummarizedExperiment::assayNames(se_data),
+    coldata_names = names(SummarizedExperiment::colData(se_data)),
+    rowdata_names = names(SummarizedExperiment::rowData(se_data))
+  )
+  saveRDS(metadata, file.path(data_dir, "rnaseq_metadata.rds"))
+
   return(as.character(output_file))
+}
+
+#' Save SummarizedExperiment as parquet files
+#'
+#' Extracts counts matrix, sample metadata, and gene metadata from a
+#' SummarizedExperiment and saves each as a parquet file.
+#'
+#' @param se SummarizedExperiment object
+#' @param data_dir Directory to save parquet files
+#' @return Invisible list of output file paths
+#' @keywords internal
+save_rnaseq_parquet <- function(se, data_dir) {
+  # Counts: wide format with gene_id column for DuckDB queries
+  # Try "unstranded" first (standard GDC STAR-Counts assay name),
+
+  # fall back to "counts" then first assay
+  assay_names <- SummarizedExperiment::assayNames(se)
+  if ("unstranded" %in% assay_names) {
+    counts_mat <- SummarizedExperiment::assay(se, "unstranded")
+  } else if ("counts" %in% assay_names) {
+    counts_mat <- SummarizedExperiment::assay(se, "counts")
+  } else {
+    counts_mat <- SummarizedExperiment::assay(se, 1)
+    logger::log_warn(
+      "Using first assay ({assay_names[1]}) - 'unstranded' not found"
+    )
+  }
+
+  counts_df <- as.data.frame(counts_mat)
+  counts_df$gene_id <- rownames(counts_mat)
+  # Move gene_id to first column
+  counts_df <- counts_df[, c("gene_id", setdiff(names(counts_df), "gene_id"))]
+
+  counts_file <- file.path(data_dir, "rnaseq_counts.parquet")
+  arrow::write_parquet(counts_df, counts_file, compression = "zstd")
+  logger::log_info("Saved counts to {counts_file}")
+
+  # Sample metadata
+  sample_meta <- as.data.frame(SummarizedExperiment::colData(se))
+  sample_file <- file.path(data_dir, "rnaseq_sample_metadata.parquet")
+  arrow::write_parquet(sample_meta, sample_file, compression = "zstd")
+  logger::log_info("Saved sample metadata to {sample_file}")
+
+  # Gene metadata
+  gene_meta <- as.data.frame(SummarizedExperiment::rowData(se))
+  gene_file <- file.path(data_dir, "rnaseq_gene_metadata.parquet")
+  arrow::write_parquet(gene_meta, gene_file, compression = "zstd")
+  logger::log_info("Saved gene metadata to {gene_file}")
+
+  invisible(list(
+    counts = counts_file,
+    sample_metadata = sample_file,
+    gene_metadata = gene_file
+  ))
 }
 
 #' Download data from AWS S3 open access bucket
 #' @param bucket_name S3 bucket name
 #' @param prefix File prefix to filter
 #' @param data_dir Local directory for downloads
+#' @param region AWS region
+#' @return Directory path as character string
 download_aws_data <- function(
   bucket_name = "gdc-mmrf-commpass-phs000748-2-open",
   prefix = NULL,
   data_dir = "data/raw/aws",
   region = "us-east-1"
 ) {
-  library(aws.s3)
-  library(logger)
-  
-  # Create directory if needed
   dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
-  
-  log_info("Listing S3 bucket contents...")
-  
-  # List bucket contents
-  bucket_contents <- get_bucket_df(
+
+  logger::log_info("Listing S3 bucket contents...")
+
+  bucket_contents <- aws.s3::get_bucket_df(
     bucket = bucket_name,
     region = region,
     use_https = TRUE,
     prefix = prefix
   )
-  
-  log_info("Found {nrow(bucket_contents)} files in bucket")
-  
-  # Download files
+
+  logger::log_info("Found {nrow(bucket_contents)} files in bucket")
+
   downloaded_files <- list()
-  for (i in seq_len(min(10, nrow(bucket_contents)))) {  # Limit for demo
+  for (i in seq_len(min(10, nrow(bucket_contents)))) {
     file_key <- bucket_contents$Key[i]
     local_file <- file.path(data_dir, basename(file_key))
-    
-    log_info("Downloading {file_key}...")
-    
-    save_object(
+
+    logger::log_info("Downloading {file_key}...")
+
+    aws.s3::save_object(
       object = file_key,
       bucket = bucket_name,
       file = local_file,
       region = region
     )
-    
+
     downloaded_files[[i]] <- local_file
   }
-  
-  log_info("Downloaded {length(downloaded_files)} files to {data_dir}")
-  # Return directory path as character string (targets serialization)
+
+  logger::log_info("Downloaded {length(downloaded_files)} files to {data_dir}")
   return(as.character(data_dir))
 }
 
 #' Download clinical data from GDC
 #'
 #' Downloads clinical and biospecimen data from the Genomic Data Commons (GDC)
-#' for the specified project. Data is saved in both CSV and RDS formats.
+#' for the specified project. Data is saved in parquet and RDS formats.
 #'
 #' @param project_id Project identifier (default: "MMRF-COMMPASS")
 #' @param data_dir Directory to save data
+#' @param use_parquet If TRUE, also save parquet files (default TRUE)
 #' @return Path to the directory containing the saved data files
 #' @export
 #' @examples
@@ -202,119 +232,75 @@ download_aws_data <- function(
 #' # Download clinical data
 #' clinical_dir <- download_clinical_data()
 #'
-#' # Load the data
-#' clinical <- read.csv(file.path(clinical_dir, "clinical_data.csv"))
+#' # Load from parquet
+#' clinical <- arrow::read_parquet(file.path(clinical_dir, "clinical_data.parquet"))
 #' }
 download_clinical_data <- function(
   project_id = "MMRF-COMMPASS",
-  data_dir = "data/raw/clinical"
+  data_dir = "data/raw/clinical",
+  use_parquet = TRUE
 ) {
-  library(TCGAbiolinks)
-  library(logger)
-
-  # Create directory if needed
   dir.create(data_dir, recursive = TRUE, showWarnings = FALSE)
 
-  # CRITICAL: In CI, use placeholder data immediately to avoid timeouts
-  if (Sys.getenv("CI") == "true" || Sys.getenv("GITHUB_ACTIONS") == "true") {
-    log_warn("CI environment detected - using placeholder clinical data")
+  logger::log_info("Downloading clinical data for {project_id}...")
 
-    set.seed(42)  # For reproducibility
-    n_patients <- 10
+  # Download clinical data from GDC
+  clinical <- TCGAbiolinks::GDCquery_clinic(
+    project = project_id, type = "clinical"
+  )
+  if (is.null(clinical) || nrow(clinical) == 0) {
+    cli::cli_abort(c(
+      "x" = "GDC returned no clinical data for {project_id}.",
+      "i" = "Check your internet connection and GDC API status.",
+      "i" = "GDC status: https://portal.gdc.cancer.gov/"
+    ))
+  }
+  logger::log_info("Retrieved {nrow(clinical)} clinical records")
 
-    # Generate vital status first
-    vital_status <- sample(c("alive", "dead"), n_patients, replace = TRUE, prob = c(0.7, 0.3))
+  # Download biospecimen data
+  biospecimen <- TCGAbiolinks::GDCquery_clinic(
+    project = project_id, type = "biospecimen"
+  )
+  if (is.null(biospecimen) || nrow(biospecimen) == 0) {
+    cli::cli_abort(c(
+      "x" = "GDC returned no biospecimen data for {project_id}.",
+      "i" = "Check your internet connection and GDC API status."
+    ))
+  }
+  logger::log_info("Retrieved {nrow(biospecimen)} biospecimen records")
 
-    clinical <- data.frame(
-      submitter_id = paste0("PATIENT_", sprintf("%02d", 1:n_patients)),
-      patient_id = paste0("PATIENT_", sprintf("%02d", 1:n_patients)),
-      project_id = project_id,
-      age_at_diagnosis = sample(50:80, n_patients, replace = TRUE),
-      gender = sample(c("male", "female"), n_patients, replace = TRUE),
-      race = sample(c("white", "black or african american", "asian", "not reported"),
-                   n_patients, replace = TRUE, prob = c(0.6, 0.2, 0.1, 0.1)),
-      ethnicity = sample(c("not hispanic or latino", "hispanic or latino", "not reported"),
-                        n_patients, replace = TRUE, prob = c(0.7, 0.2, 0.1)),
-      vital_status = vital_status,
-      days_to_death = ifelse(vital_status == "dead",
-                            sample(100:1000, n_patients, replace = TRUE), NA),
-      days_to_last_follow_up = ifelse(vital_status == "alive",
-                                     sample(100:1500, n_patients, replace = TRUE), NA),
-      disease_stage = sample(c("Stage I", "Stage II", "Stage III"),
-                           n_patients, replace = TRUE, prob = c(0.3, 0.4, 0.3)),
-      stringsAsFactors = FALSE
+  # Save as RDS (fast R loading)
+  saveRDS(clinical, file.path(data_dir, "clinical_data.rds"))
+  saveRDS(biospecimen, file.path(data_dir, "biospecimen_data.rds"))
+
+  # Save as parquet (queryable via DuckDB)
+  if (use_parquet) {
+    arrow::write_parquet(
+      clinical,
+      file.path(data_dir, "clinical_data.parquet"),
+      compression = "zstd"
     )
-
-    biospecimen <- data.frame(
-      submitter_id = paste0("SAMPLE_", sprintf("%02d", 1:n_patients)),
-      sample_id = paste0("SAMPLE_", sprintf("%02d", 1:n_patients)),
-      patient_id = paste0("PATIENT_", sprintf("%02d", 1:n_patients)),
-      sample_type = "Primary Tumor",
-      sample_type_id = "01",
-      tissue_type = "Tumor",
-      preservation_method = "FFPE",
-      tumor_code = "MMRF",
-      stringsAsFactors = FALSE
+    arrow::write_parquet(
+      biospecimen,
+      file.path(data_dir, "biospecimen_data.parquet"),
+      compression = "zstd"
     )
-
-    # Save files
-    write.csv(clinical, file.path(data_dir, "clinical_data.csv"), row.names = FALSE)
-    write.csv(biospecimen, file.path(data_dir, "biospecimen_data.csv"), row.names = FALSE)
-    saveRDS(clinical, file.path(data_dir, "clinical_data.rds"))
-    saveRDS(biospecimen, file.path(data_dir, "biospecimen_data.rds"))
-
-    log_info("Created placeholder clinical data in {data_dir}")
-    return(as.character(data_dir))
+    logger::log_info("Saved parquet files to {data_dir}")
   }
 
-  log_info("Downloading clinical data for {project_id}...")
+  # Save download metadata
+  metadata <- list(
+    download_time = Sys.time(),
+    project_id = project_id,
+    n_clinical = nrow(clinical),
+    n_biospecimen = nrow(biospecimen),
+    clinical_columns = names(clinical),
+    biospecimen_columns = names(biospecimen)
+  )
+  saveRDS(metadata, file.path(data_dir, "clinical_metadata.rds"))
 
-  tryCatch({
-    # Get clinical data
-    clinical <- GDCquery_clinic(project = project_id, type = "clinical")
-    biospecimen <- GDCquery_clinic(project = project_id, type = "biospecimen")
+  logger::log_info("Clinical data saved to {data_dir}")
 
-    # Check if data was retrieved
-    if (is.null(clinical) || is.null(biospecimen)) {
-      log_warn("GDC returned NULL data, using placeholder data")
-      # Create placeholder data for CI testing
-      clinical <- data.frame(
-        submitter_id = paste0("PATIENT_", 1:10),
-        project_id = project_id,
-        stringsAsFactors = FALSE
-      )
-      biospecimen <- data.frame(
-        submitter_id = paste0("SAMPLE_", 1:10),
-        project_id = project_id,
-        stringsAsFactors = FALSE
-      )
-    }
-
-    # Save as CSV and RDS
-    output_clinical <- file.path(data_dir, "clinical_data.csv")
-    output_biospec <- file.path(data_dir, "biospecimen_data.csv")
-
-    write.csv(clinical, output_clinical, row.names = FALSE)
-    write.csv(biospecimen, output_biospec, row.names = FALSE)
-
-    # Also save as RDS for faster loading
-    saveRDS(clinical, file.path(data_dir, "clinical_data.rds"))
-    saveRDS(biospecimen, file.path(data_dir, "biospecimen_data.rds"))
-
-    log_info("Clinical data saved to {data_dir}")
-  }, error = function(e) {
-    log_error("Error downloading clinical data: {e$message}")
-    # Create placeholder files so pipeline can continue
-    placeholder <- data.frame(note = "Failed to download from GDC")
-    write.csv(placeholder, file.path(data_dir, "clinical_data.csv"), row.names = FALSE)
-    write.csv(placeholder, file.path(data_dir, "biospecimen_data.csv"), row.names = FALSE)
-    saveRDS(placeholder, file.path(data_dir, "clinical_data.rds"))
-    saveRDS(placeholder, file.path(data_dir, "biospecimen_data.rds"))
-    log_warn("Created placeholder files in {data_dir}")
-  })
-
-  # CRITICAL: Must return a simple string for targets serialization
-  # Return the directory path as a character string
   return(as.character(data_dir))
 }
 
@@ -327,6 +313,9 @@ download_clinical_data <- function(
 #' @param download_clinical Whether to download clinical data
 #' @param download_aws Whether to download from AWS
 #' @param sample_limit Limit number of samples (NULL for all)
+#' @param random_sample If TRUE, randomly sample patients
+#' @param seed Random seed for sampling
+#' @param use_parquet If TRUE, save parquet files
 #' @return List of file paths to the downloaded data
 #' @export
 #' @examples
@@ -342,29 +331,32 @@ acquire_commpass_data <- function(
   download_rnaseq = TRUE,
   download_clinical = TRUE,
   download_aws = FALSE,
-  sample_limit = 10  # Default to 10 for testing
+  sample_limit = 200,
+  random_sample = TRUE,
+  seed = 42,
+  use_parquet = TRUE
 ) {
-  library(logger)
-  
-  log_info("Starting CoMMpass data acquisition...")
-  
+  logger::log_info("Starting CoMMpass data acquisition...")
+
   results <- list()
-  
-  # Download RNA-seq data
-  if (download_rnaseq) {
-    results$rnaseq <- download_gdc_rnaseq(sample_limit = sample_limit)
-  }
-  
-  # Download clinical data
+
   if (download_clinical) {
-    results$clinical <- download_clinical_data()
+    results$clinical <- download_clinical_data(use_parquet = use_parquet)
   }
-  
-  # Download from AWS (optional)
+
+  if (download_rnaseq) {
+    results$rnaseq <- download_gdc_rnaseq(
+      sample_limit = sample_limit,
+      random_sample = random_sample,
+      seed = seed,
+      use_parquet = use_parquet
+    )
+  }
+
   if (download_aws) {
     results$aws_files <- download_aws_data()
   }
-  
-  log_info("Data acquisition complete")
+
+  logger::log_info("Data acquisition complete")
   return(results)
 }
