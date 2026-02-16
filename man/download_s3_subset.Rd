@@ -2,17 +2,35 @@
 % Please edit documentation in R/data_access.R
 \name{download_s3_subset}
 \alias{download_s3_subset}
-\title{Download a sample of RNA-seq files from S3}
+\title{Download a Sample of RNA-seq Files from S3}
 \usage{
 download_s3_subset(s3_paths, dest_dir = "data/raw/rna_seq", n = 3)
 }
 \arguments{
-\item{s3_paths}{Character vector of S3 keys (files)}
+\item{s3_paths}{Character vector of S3 object keys (file paths) to download from}
 
-\item{dest_dir}{Destination directory}
+\item{dest_dir}{Destination directory for downloaded files (default: "data/raw/rna_seq")}
 
-\item{n}{Number of files to download}
+\item{n}{Number of files to download (default: 3)}
+}
+\value{
+Character vector of successfully downloaded file paths
 }
 \description{
-Download a sample of RNA-seq files from S3
+Downloads a subset of RNA-seq files from the public MMRF CoMMpass S3 bucket.
+This function is useful for testing and development with a small sample of
+data before downloading the full dataset. Files are downloaded using
+anonymous access to the public bucket.
+}
+\examples{
+\dontrun{
+# List available files
+s3_files <- list_s3_commpass()
+
+# Download first 3 RNA-seq files
+downloaded <- download_s3_subset(s3_files, n = 3)
+
+# Check what was downloaded
+basename(downloaded)
+}
 }

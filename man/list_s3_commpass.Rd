@@ -2,16 +2,30 @@
 % Please edit documentation in R/data_access.R
 \name{list_s3_commpass}
 \alias{list_s3_commpass}
-\title{List AWS S3 CoMMpass Bucket}
+\title{List AWS S3 CoMMpass Bucket Contents}
 \usage{
 list_s3_commpass(prefix = "")
 }
 \arguments{
-\item{prefix}{Optional prefix to filter}
+\item{prefix}{Optional prefix to filter files (e.g., "RNA-seq/", "clinical/")}
 }
 \value{
-Character vector of file paths
+Character vector of S3 object keys (file paths)
 }
 \description{
-List AWS S3 CoMMpass Bucket
+Lists files available in the public AWS S3 bucket containing MMRF CoMMpass
+data. The bucket contains RNA-seq, genomic, and clinical data files. This
+function uses anonymous access to the public bucket.
+}
+\examples{
+\dontrun{
+# List all available files (limited to first 100)
+files <- list_s3_commpass()
+
+# List only RNA-seq files
+rna_files <- list_s3_commpass(prefix = "RNA-seq/")
+
+# Count available files
+length(files)
+}
 }
