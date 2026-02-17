@@ -1,4 +1,3 @@
-
 url: https://JohnGavin.github.io/coMMpass-analysis/
 template:
   bootstrap: 5
@@ -11,6 +10,67 @@ reference:
   - get_commpass_clinical
   - list_s3_commpass
   - download_s3_subset
+  - download_gdc_rnaseq
+  - download_clinical_data
+  - download_aws_data
+  - acquire_commpass_data
+  - save_rnaseq_parquet
+
+- title: "Data Dictionary"
+  desc: "Variable documentation and metadata"
+  contents:
+  - get_commpass_data_dictionary
+  - get_variable_docs
+
+- title: "Data Querying"
+  desc: "DuckDB-backed parquet querying"
+  contents:
+  - query_commpass_parquet
+  - get_commpass_tbl
+  - resolve_parquet_path
+
+- title: "Quality Control"
+  desc: "QC metrics and filtering"
+  contents:
+  - calculate_qc_metrics
+  - filter_low_quality
+  - normalize_rnaseq
+
+- title: "Differential Expression"
+  desc: "DE analysis with DESeq2, edgeR, and limma"
+  contents:
+  - run_deseq2
+  - run_edger
+  - run_limma
+  - find_consensus_genes
+  - render_de_report
+
+- title: "Survival Analysis"
+  desc: "Kaplan-Meier and Cox regression"
+  contents:
+  - prepare_survival_data
+  - run_kaplan_meier
+  - run_cox_regression
+  - render_survival_report
+
+- title: "Pathway Analysis"
+  desc: "GSEA and pathway enrichment"
+  contents:
+  - run_gsea
+  - run_pathway_analysis
+  - generate_summary_report
+
+- title: "Utilities"
+  desc: "Helper functions for formatting and summaries"
+  contents:
+  - format_file_size
+  - format_with_commas
+  - create_summary_table
+  - setup_logging
+  - create_project_dirs
+  - check_dependencies
+  - save_timestamped
+  - summarize_data
 
 articles:
 - title: "Vignettes"
@@ -23,4 +83,3 @@ navbar:
   structure:
     left: [intro, reference, articles]
     right: [github]
-
