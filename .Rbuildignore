@@ -5,6 +5,8 @@
 ^default\.sh$
 ^default-ci\.nix$
 ^default_ci\.nix$
+^package\.nix$
+^push_to_cachix\.sh$
 
 # Targets pipeline
 ^_targets\.R$
