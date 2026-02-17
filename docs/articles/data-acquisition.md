@@ -35,10 +35,10 @@ Git Commit Info (click to expand)
 
 | Item        | Value                                    |
 |:------------|:-----------------------------------------|
-| Commit Hash | 5511edba7dac6e3b8a9336c778bce986385ebffd |
-| Author      | John Gavin <john.b.gavin@gmail.com>      |
-| Time        | 2026-02-15 19:53:06                      |
-| Branch      | main                                     |
+| Commit Hash | 689c9f1366a38a3e7f6b47b29a0a33cc77c63b49 |
+| Author      | jg <JohnGavin@users.noreply.github.com>  |
+| Time        | 2026-02-17 17:22:19                      |
+| Branch      | fix/issue-29-pkgdown-rebuild             |
 
 Session Info (click to expand)
 
