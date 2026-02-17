@@ -1,0 +1,364 @@
+---
+title: "03. Exploratory Data Analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{03. Exploratory Data Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 5
+)
+library(targets)
+library(dplyr)
+library(ggplot2)
+
+# --- Target store discovery (same pattern as data-acquisition.Rmd) ---
+key <- "TAR_PROJECT"
+proj_dir <- Sys.getenv(key)
+targets_available <- FALSE
+
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_config_set(store = file.path(proj_dir, "_targets"))
+  targets_available <- TRUE
+} else if (dir.exists("_targets")) {
+  targets_available <- TRUE
+}
+
+safe_tar_read <- function(name) {
+  if (!targets_available) return(NULL)
+  tryCatch(tar_read(name), error = function(e) NULL)
+}
+```
+
+## Overview
+
+This vignette provides an exploratory analysis of the MMRF CoMMpass data
+retrieved by the pipeline. It covers patient demographics, biospecimen
+characteristics, RNA-seq quality metrics, and shows how to query the
+underlying parquet files with DuckDB.
+
+All summaries are **pre-computed** as targets (`eda_*`). If you have not
+yet run the pipeline, placeholder messages appear instead of plots.
+Run `targets::tar_make()` to populate the data.
+
+## Clinical Demographics
+
+```{r clinical-demographics}
+clin <- safe_tar_read("eda_clinical_summary")
+
+if (!is.null(clin)) {
+  cat("- **Patients:**", format(clin$n_patients, big.mark = ","), "\n")
+  cat("- **Variables:**", clin$n_variables, "\n")
+  cat("- **Data completeness:**",
+      sprintf("%.1f%%", 100 * clin$completeness), "\n")
+} else {
+  cat("*Clinical summary not available. Run `tar_make()` first.*\n")
+}
+```
+
+### Age at Diagnosis
+
+```{r age-histogram, fig.cap = "Age at diagnosis distribution"}
+if (!is.null(clin) && !is.null(clin$age_years) && length(clin$age_years) > 0) {
+  age_df <- data.frame(age = clin$age_years)
+  ggplot(age_df, aes(x = age)) +
+    geom_histogram(bins = 30, fill = "steelblue", colour = "white") +
+    labs(x = "Age (years)", y = "Number of Patients",
+         title = "Age at Diagnosis") +
+    theme_minimal()
+} else {
+  cat("*Age data not available.*\n")
+}
+```
+
+### Gender Distribution
+
+```{r gender-table}
+if (!is.null(clin) && !is.null(clin$gender_table)) {
+  gt <- clin$gender_table
+  gt$Percentage <- sprintf("%.1f%%", 100 * gt$Freq / sum(gt$Freq))
+  knitr::kable(gt, caption = "Gender Distribution", row.names = FALSE)
+} else {
+  cat("*Gender data not available.*\n")
+}
+```
+
+### Race Distribution
+
+```{r race-table}
+if (!is.null(clin) && !is.null(clin$race_table)) {
+  rt <- clin$race_table
+  rt$Percentage <- sprintf("%.1f%%", 100 * rt$Freq / sum(rt$Freq))
+  knitr::kable(rt, caption = "Race Distribution", row.names = FALSE)
+} else {
+  cat("*Race data not available.*\n")
+}
+```
+
+### Vital Status
+
+```{r vital-status}
+if (!is.null(clin) && !is.null(clin$vital_table)) {
+  vt <- clin$vital_table
+  vt$Percentage <- sprintf("%.1f%%", 100 * vt$Freq / sum(vt$Freq))
+  knitr::kable(vt, caption = "Vital Status", row.names = FALSE)
+} else {
+  cat("*Vital status data not available.*\n")
+}
+```
+
+## Survival Endpoints
+
+```{r survival-endpoints}
+if (!is.null(clin)) {
+  if (!is.null(clin$days_to_death)) {
+    cat("### Days to Death\n\n")
+    cat("```\n")
+    print(clin$days_to_death)
+    cat("```\n\n")
+  }
+
+  if (!is.null(clin$vital_table)) {
+    total <- sum(clin$vital_table$Freq)
+    alive_row <- clin$vital_table[
+      tolower(clin$vital_table$Status) %in% c("alive", "Alive"), , drop = FALSE
+    ]
+    if (nrow(alive_row) > 0) {
+      cat("- **Censoring rate:**",
+          sprintf("%.1f%%", 100 * sum(alive_row$Freq) / total),
+          "(patients still alive at last follow-up)\n")
+    }
+  }
+
+  if (!is.null(clin$days_to_last_followup)) {
+    cat("\n### Days to Last Follow-up\n\n")
+    cat("```\n")
+    print(clin$days_to_last_followup)
+    cat("```\n")
+  }
+} else {
+  cat("*Survival endpoint data not available. Run `tar_make()` first.*\n")
+}
+```
+
+## Biospecimen Overview
+
+```{r biospecimen-overview}
+bio <- safe_tar_read("eda_biospecimen_summary")
+
+if (!is.null(bio)) {
+  cat("- **Total samples:**", format(bio$n_samples, big.mark = ","), "\n")
+  cat("- **Variables:**", bio$n_variables, "\n")
+} else {
+  cat("*Biospecimen summary not available. Run `tar_make()` first.*\n")
+}
+```
+
+### Sample Types
+
+```{r sample-type-bar, fig.cap = "Sample type distribution"}
+if (!is.null(bio) && !is.null(bio$sample_type_table)) {
+  st <- bio$sample_type_table
+  ggplot(st, aes(x = reorder(Sample_Type, Freq), y = Freq)) +
+    geom_col(fill = "steelblue") +
+    coord_flip() +
+    labs(x = NULL, y = "Count", title = "Sample Types") +
+    theme_minimal()
+} else {
+  cat("*Sample type data not available.*\n")
+}
+```
+
+### Samples per Patient
+
+```{r samples-per-patient, fig.cap = "Samples per patient distribution"}
+if (!is.null(bio) && !is.null(bio$samples_per_patient)) {
+  spp_df <- data.frame(n = bio$samples_per_patient)
+  ggplot(spp_df, aes(x = n)) +
+    geom_histogram(binwidth = 1, fill = "steelblue", colour = "white") +
+    labs(x = "Number of Samples", y = "Number of Patients",
+         title = "Samples per Patient") +
+    theme_minimal()
+} else {
+  cat("*Samples-per-patient data not available.*\n")
+}
+```
+
+## RNA-seq Quality
+
+```{r rnaseq-quality}
+rna <- safe_tar_read("eda_rnaseq_summary")
+
+if (!is.null(rna)) {
+  cat("- **Genes:**", format(rna$n_genes, big.mark = ","), "\n")
+  cat("- **Samples:**", rna$n_samples, "\n")
+  cat("- **Total counts:**", format(rna$total_counts, big.mark = ","), "\n")
+  cat("- **Median library size:**",
+      format(rna$median_library_size, big.mark = ","), "\n")
+  cat("- **Sparsity (% zero entries):**",
+      sprintf("%.1f%%", 100 * rna$sparsity), "\n")
+} else {
+  cat("*RNA-seq summary not available. Run `tar_make()` first.*\n")
+}
+```
+
+### Library Size Distribution
+
+```{r library-size-boxplot, fig.cap = "Library sizes across samples"}
+if (!is.null(rna) && !is.null(rna$library_sizes)) {
+  ls_df <- data.frame(library_size = rna$library_sizes / 1e6)
+  ggplot(ls_df, aes(y = library_size)) +
+    geom_boxplot(fill = "steelblue", width = 0.4) +
+    labs(y = "Library Size (millions of reads)",
+         title = "Library Size Distribution") +
+    theme_minimal() +
+    theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+} else {
+  cat("*Library size data not available.*\n")
+}
+```
+
+### Genes Detected per Sample
+
+```{r genes-detected-histogram, fig.cap = "Genes detected per sample"}
+if (!is.null(rna) && !is.null(rna$genes_detected)) {
+  gd_df <- data.frame(genes = rna$genes_detected)
+  ggplot(gd_df, aes(x = genes)) +
+    geom_histogram(bins = 30, fill = "steelblue", colour = "white") +
+    labs(x = "Genes Detected (count > 0)", y = "Number of Samples",
+         title = "Genes Detected per Sample") +
+    theme_minimal()
+} else {
+  cat("*Genes-detected data not available.*\n")
+}
+```
+
+## DuckDB Query Examples
+
+The package provides two functions for querying the parquet files:
+
+- `query_commpass_parquet()` -- one-shot query that returns a data frame
+- `get_commpass_tbl()` -- returns a lazy `dplyr::tbl()` for chained operations
+
+### Example: Simple Query
+
+```r
+# One-shot query (returns data frame)
+clinical <- query_commpass_parquet("clinical")
+head(clinical)
+
+# With filters
+females <- query_commpass_parquet(
+  "clinical",
+  filters = list(gender = "female")
+)
+```
+
+```{r duckdb-demo-simple}
+demo <- safe_tar_read("eda_duckdb_demo")
+
+if (!is.null(demo)) {
+  cat("**SQL equivalent:**\n\n")
+  cat("```sql\n", demo$demo_sql, "\n```\n\n")
+  knitr::kable(demo$demo_result, caption = "Sample query result (first 10 rows)")
+} else {
+  cat("*DuckDB demo not available. Run `tar_make()` first.*\n")
+}
+```
+
+### Example: Aggregation with DuckDB
+
+```r
+# Lazy tbl for dplyr-style queries
+con <- DBI::dbConnect(duckdb::duckdb())
+clinical_tbl <- get_commpass_tbl("clinical", con = con)
+
+result <- clinical_tbl |>
+  filter(!is.na(gender)) |>
+  group_by(gender) |>
+  summarise(
+    n = n(),
+    mean_age_years = mean(age_at_diagnosis / 365.25, na.rm = TRUE)
+  ) |>
+  collect()
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+```
+
+```{r duckdb-demo-agg}
+if (!is.null(demo)) {
+  cat("**SQL equivalent:**\n\n")
+  cat("```sql\n", demo$agg_sql, "\n```\n\n")
+  knitr::kable(demo$agg_result, caption = "Aggregation result")
+} else {
+  cat("*DuckDB demo not available.*\n")
+}
+```
+
+## Cross-dataset Integration
+
+```{r integration}
+integ <- safe_tar_read("eda_integration_summary")
+
+if (!is.null(integ)) {
+  cat("Patient ID overlap between clinical and biospecimen datasets:\n\n")
+  cat("- **Clinical patients:**",
+      format(integ$n_clinical_patients, big.mark = ","), "\n")
+  cat("- **Biospecimen patients:**",
+      format(integ$n_biospecimen_patients, big.mark = ","), "\n")
+  cat("- **Shared (in both):**",
+      format(integ$n_shared, big.mark = ","), "\n")
+  cat("- **Clinical only:**",
+      format(integ$n_clinical_only, big.mark = ","), "\n")
+  cat("- **Biospecimen only:**",
+      format(integ$n_biospecimen_only, big.mark = ","), "\n")
+} else {
+  cat("*Integration summary not available. Run `tar_make()` first.*\n")
+}
+```
+
+## Reproducibility
+
+<details>
+<summary>Git Commit Info (click to expand)</summary>
+
+```{r git-info, echo=FALSE}
+if (requireNamespace("gert", quietly = TRUE)) {
+  tryCatch({
+    repo_path <- "."
+    if (Sys.getenv("TAR_PROJECT") != "") repo_path <- Sys.getenv("TAR_PROJECT")
+
+    info <- gert::git_info(repo = repo_path)
+    log1 <- gert::git_log(max = 1, repo = repo_path)
+    knitr::kable(data.frame(
+      Item = c("Commit Hash", "Author", "Time", "Branch"),
+      Value = c(info$commit, log1$author,
+                as.character(log1$time), info$shorthand)
+    ))
+  }, error = function(e) {
+    cat("Git info not available.")
+  })
+} else {
+  cat("gert package not installed.")
+}
+```
+
+</details>
+
+<details>
+<summary>Session Info (click to expand)</summary>
+
+```{r session-info}
+sessionInfo()
+```
+
+</details>

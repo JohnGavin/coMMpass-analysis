@@ -15,7 +15,9 @@ reference:
 articles:
 - title: "Vignettes"
   contents:
-  - 01_data_acquisition
+  - data-acquisition
+  - data-dictionary
+  - exploratory-analysis
 
 navbar:
   structure:

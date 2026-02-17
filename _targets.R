@@ -39,6 +39,7 @@ for (plan_file in plan_files) {
 c(
   plan_data_acquisition,
   plan_data_cleaning,  # New: Clean and integrate data
+  plan_eda,            # Exploratory data analysis summaries
   plan_quality_control,
   plan_differential_expression,
   plan_survival_analysis,
