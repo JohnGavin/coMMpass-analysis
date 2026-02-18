@@ -13,3 +13,29 @@ generate_summary_report(
   output_dir = "results/reports"
 )
 ```
+
+## Arguments
+
+- qc_metrics:
+
+  QC metrics data frame
+
+- de_genes:
+
+  DE results with consensus gene information
+
+- survival:
+
+  Survival analysis results
+
+- pathways:
+
+  Pathway analysis results
+
+- output_dir:
+
+  Directory for output report
+
+## Value
+
+Path to generated report

@@ -118,10 +118,10 @@ Git Commit Info (click to expand)
 
 | Item        | Value                                    |
 |:------------|:-----------------------------------------|
-| Commit Hash | 689c9f1366a38a3e7f6b47b29a0a33cc77c63b49 |
+| Commit Hash | 677f848b562bc672251a88876baedc0516ec5a67 |
 | Author      | jg <JohnGavin@users.noreply.github.com>  |
-| Time        | 2026-02-17 17:22:19                      |
-| Branch      | fix/issue-29-pkgdown-rebuild             |
+| Time        | 2026-02-18 13:21:27                      |
+| Branch      | fix/issue-33-pkgdown-rebuild             |
 
 Session Info (click to expand)
 
