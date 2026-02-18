@@ -6,6 +6,14 @@
 \usage{
 run_pathway_analysis(de_genes, method = "clusterProfiler")
 }
+\arguments{
+\item{de_genes}{DE results with consensus_genes element}
+
+\item{method}{Analysis method (default: "clusterProfiler")}
+}
+\value{
+List with pathway analysis results
+}
 \description{
 Run pathway enrichment analysis
 }

@@ -2,18 +2,20 @@
 # Utility functions for CoMMpass analysis
 
 #' Setup logging
+#'
+#' @param log_file Optional path to a log file. If NULL, logs to console.
 setup_logging <- function(log_file = NULL) {
-  library(logger)
-  
   if (!is.null(log_file)) {
-    log_appender(appender_file(log_file))
+    logger::log_appender(logger::appender_file(log_file))
   }
-  
-  log_threshold(INFO)
-  log_info("Logging initialized")
+
+  logger::log_threshold(logger::INFO)
+  logger::log_info("Logging initialized")
 }
 
 #' Create project directories
+#'
+#' @param base_dir Base directory path (default: ".")
 create_project_dirs <- function(base_dir = ".") {
   dirs <- c(
     "data/raw/gdc",
@@ -35,6 +37,10 @@ create_project_dirs <- function(base_dir = ".") {
 }
 
 #' Save results with timestamp
+#'
+#' @param object R object to save
+#' @param base_name Base name for the output file
+#' @param dir Directory to save to (default: "results")
 save_timestamped <- function(object, base_name, dir = "results") {
   timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
   filename <- paste0(base_name, "_", timestamp, ".rds")
@@ -47,11 +53,11 @@ save_timestamped <- function(object, base_name, dir = "results") {
 }
 
 #' Generate summary statistics
+#'
+#' @param se_data A SummarizedExperiment object with a "counts" assay
 summarize_data <- function(se_data) {
-  library(SummarizedExperiment)
-  
-  counts <- assay(se_data, "counts")
-  
+  counts <- SummarizedExperiment::assay(se_data, "counts")
+
   summary_stats <- list(
     n_samples = ncol(counts),
     n_genes = nrow(counts),
@@ -112,6 +118,10 @@ format_file_size <- function(size_bytes, digits = 1) {
   for (i in seq_along(size_bytes)) {
     if (is.na(size_bytes[i])) {
       result[i] <- NA_character_
+    } else if (!is.finite(size_bytes[i]) || size_bytes[i] < 0) {
+      result[i] <- as.character(size_bytes[i])
+    } else if (size_bytes[i] < 1) {
+      result[i] <- paste(size_bytes[i], "bytes")
     } else {
       # Find appropriate unit
       unit_idx <- max(which(size_bytes[i] >= thresholds))

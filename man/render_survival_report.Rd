@@ -6,6 +6,16 @@
 \usage{
 render_survival_report(km_results, cox_results, output_dir = "results/reports")
 }
+\arguments{
+\item{km_results}{Kaplan-Meier results from run_kaplan_meier}
+
+\item{cox_results}{Cox regression results from run_cox_regression}
+
+\item{output_dir}{Directory for output report}
+}
+\value{
+Path to generated report
+}
 \description{
 Render survival analysis report
 }

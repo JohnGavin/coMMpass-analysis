@@ -6,6 +6,14 @@
 \usage{
 run_cox_regression(surv_data, covariates = c("age", "stage"))
 }
+\arguments{
+\item{surv_data}{Survival data frame with time and status columns}
+
+\item{covariates}{Character vector of covariate column names}
+}
+\value{
+List with Cox regression results
+}
 \description{
 Run Cox proportional hazards regression
 }

@@ -22,6 +22,13 @@ reference:
   - get_commpass_data_dictionary
   - get_variable_docs
 
+- title: "Data Cleaning"
+  desc: "Clean and integrate clinical and expression data"
+  contents:
+  - clean_clinical_data
+  - clean_expression_data
+  - integrate_clinical_expression
+
 - title: "Data Querying"
   desc: "DuckDB-backed parquet querying"
   contents:

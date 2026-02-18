@@ -6,6 +6,14 @@
 \usage{
 prepare_survival_data(clinical_data, se_data)
 }
+\arguments{
+\item{clinical_data}{Clinical data frame}
+
+\item{se_data}{A SummarizedExperiment object (optional)}
+}
+\value{
+Data frame with survival time, status, and covariates
+}
 \description{
-prepare_survival_data
+Prepare survival data
 }

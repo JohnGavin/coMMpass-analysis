@@ -6,6 +6,13 @@
 \usage{
 save_timestamped(object, base_name, dir = "results")
 }
+\arguments{
+\item{object}{R object to save}
+
+\item{base_name}{Base name for the output file}
+
+\item{dir}{Directory to save to (default: "results")}
+}
 \description{
 Save results with timestamp
 }

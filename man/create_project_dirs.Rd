@@ -6,6 +6,9 @@
 \usage{
 create_project_dirs(base_dir = ".")
 }
+\arguments{
+\item{base_dir}{Base directory path (default: ".")}
+}
 \description{
 Create project directories
 }

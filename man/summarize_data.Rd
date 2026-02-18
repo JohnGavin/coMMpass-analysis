@@ -6,6 +6,9 @@
 \usage{
 summarize_data(se_data)
 }
+\arguments{
+\item{se_data}{A SummarizedExperiment object with a "counts" assay}
+}
 \description{
 Generate summary statistics
 }
