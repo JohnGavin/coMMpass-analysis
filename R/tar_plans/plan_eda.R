@@ -1,5 +1,10 @@
 # R/tar_plans/plan_eda.R
 # Pre-compute EDA summaries consumed by vignettes/exploratory-analysis.Rmd
+#
+# Data architecture: acquisition targets store FILE PATHS, not data frames.
+#   - clinical_data  = "data/raw/clinical" (directory containing .rds/.csv)
+#   - raw_rnaseq     = "data/raw/gdc/rnaseq_se.rds" (path to SE object)
+# Each EDA target loads data from these paths.
 
 plan_eda <- list(
 
@@ -7,10 +12,11 @@ plan_eda <- list(
   tar_target(
     eda_clinical_summary,
     {
-      if (is.null(clinical_data) || !is.data.frame(clinical_data)) {
-        return(NULL)
-      }
-      clin <- clinical_data
+      # clinical_data is a directory path; load the RDS from it
+      rds_path <- file.path(clinical_data, "clinical_data.rds")
+      if (!file.exists(rds_path)) return(NULL)
+      clin <- readRDS(rds_path)
+      if (!is.data.frame(clin) || nrow(clin) == 0) return(NULL)
       names(clin) <- make.unique(names(clin))
 
       # Age in years (GDC stores age_at_diagnosis in days)
@@ -38,22 +44,23 @@ plan_eda <- list(
         days_to_last_followup = if ("days_to_last_follow_up" %in% names(clin))
           summary(clin$days_to_last_follow_up[!is.na(clin$days_to_last_follow_up)]) else NULL
       )
-    },
-    packages = c("dplyr")
+    }
   ),
 
   # --- Biospecimen summary ---
   tar_target(
     eda_biospecimen_summary,
     {
-      if (is.null(biospecimen_data) || !is.data.frame(biospecimen_data)) {
-        return(NULL)
-      }
-      bio <- biospecimen_data
+      # biospecimen lives in the same directory as clinical_data
+      rds_path <- file.path(clinical_data, "biospecimen_data.rds")
+      if (!file.exists(rds_path)) return(NULL)
+      bio <- readRDS(rds_path)
+      if (!is.data.frame(bio) || nrow(bio) == 0) return(NULL)
       names(bio) <- make.unique(names(bio))
 
       # Samples per patient
-      id_col <- intersect(c("submitter_id", "case_submitter_id"), names(bio))
+      id_col <- intersect(c("submitter_id", "case_submitter_id", "patient_id"),
+                          names(bio))
       samples_per_patient <- if (length(id_col) > 0) {
         tbl <- table(bio[[id_col[1]]])
         as.numeric(tbl)
@@ -71,30 +78,33 @@ plan_eda <- list(
         samples_per_patient = samples_per_patient,
         id_col_used   = if (length(id_col) > 0) id_col[1] else NA_character_
       )
-    },
-    packages = c("dplyr")
+    }
   ),
 
   # --- RNA-seq quality summary ---
   tar_target(
     eda_rnaseq_summary,
     {
-      if (is.null(rnaseq_counts) || !is.data.frame(rnaseq_counts)) {
-        return(NULL)
-      }
-      # rnaseq_counts is a data.frame from arrow::read_parquet
-      # Expect gene identifiers in first column, samples in remaining columns
-      count_cols <- names(rnaseq_counts)
+      # raw_rnaseq is the file path to the SummarizedExperiment RDS
+      if (!file.exists(raw_rnaseq)) return(NULL)
+      se <- readRDS(raw_rnaseq)
 
-      # Detect gene ID column (non-numeric or first column)
-      gene_col <- NULL
-      numeric_cols <- sapply(rnaseq_counts, is.numeric)
-      if (!numeric_cols[1]) {
-        gene_col <- count_cols[1]
-        mat <- as.matrix(rnaseq_counts[, numeric_cols, drop = FALSE])
-      } else {
-        mat <- as.matrix(rnaseq_counts)
+      # Extract count matrix from SE
+      mat <- NULL
+      if (inherits(se, "SummarizedExperiment")) {
+        assay_names <- SummarizedExperiment::assayNames(se)
+        if ("unstranded" %in% assay_names) {
+          mat <- SummarizedExperiment::assay(se, "unstranded")
+        } else if ("counts" %in% assay_names) {
+          mat <- SummarizedExperiment::assay(se, "counts")
+        } else if (length(assay_names) > 0) {
+          mat <- SummarizedExperiment::assay(se, 1)
+        }
+      } else if (is.matrix(se)) {
+        mat <- se
       }
+
+      if (is.null(mat) || nrow(mat) == 0) return(NULL)
 
       library_sizes   <- colSums(mat)
       genes_detected  <- colSums(mat > 0)
@@ -106,30 +116,37 @@ plan_eda <- list(
         library_sizes  = library_sizes,
         genes_detected = genes_detected,
         sparsity       = sparsity,
-        total_counts   = sum(mat),
+        total_counts   = sum(as.numeric(mat)),
         median_library_size = median(library_sizes)
       )
-    }
+    },
+    packages = c("SummarizedExperiment")
   ),
 
   # --- DuckDB query demo (pre-run so vignette shows output) ---
   tar_target(
     eda_duckdb_demo,
     {
-      parquet_path <- file.path(
-        config$data_dir, "raw", "clinical", "clinical_data.parquet"
-      )
-      if (!file.exists(parquet_path)) return(NULL)
+      # Load clinical data from RDS, write temp parquet, query with DuckDB
+      rds_path <- file.path(clinical_data, "clinical_data.rds")
+      if (!file.exists(rds_path)) return(NULL)
+      clin <- readRDS(rds_path)
+      if (!is.data.frame(clin) || nrow(clin) == 0) return(NULL)
+
+      # Write to a temporary parquet for the DuckDB demo
+      tmp_parquet <- tempfile(fileext = ".parquet")
+      arrow::write_parquet(clin, tmp_parquet)
+      on.exit(unlink(tmp_parquet), add = TRUE)
 
       con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
       on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
 
       DBI::dbExecute(con, paste0(
         "CREATE VIEW clinical AS SELECT * FROM read_parquet('",
-        parquet_path, "')"
+        tmp_parquet, "')"
       ))
 
-      # Example 1: simple SELECT with filter
+      # Example 1: simple SELECT
       demo_query_sql <- "SELECT submitter_id, gender, vital_status, age_at_diagnosis
                          FROM clinical
                          LIMIT 10"
@@ -150,23 +167,29 @@ plan_eda <- list(
         agg_result  = agg_result
       )
     },
-    packages = c("DBI", "duckdb")
+    packages = c("DBI", "duckdb", "arrow")
   ),
 
   # --- Cross-dataset integration summary ---
   tar_target(
     eda_integration_summary,
     {
-      if (is.null(clinical_data) || !is.data.frame(clinical_data)) return(NULL)
-      if (is.null(biospecimen_data) || !is.data.frame(biospecimen_data)) return(NULL)
+      # Load both clinical and biospecimen from the clinical_data directory
+      clin_path <- file.path(clinical_data, "clinical_data.rds")
+      bio_path  <- file.path(clinical_data, "biospecimen_data.rds")
+      if (!file.exists(clin_path) || !file.exists(bio_path)) return(NULL)
 
-      clin_ids <- unique(clinical_data$submitter_id)
+      clin <- readRDS(clin_path)
+      bio  <- readRDS(bio_path)
+      if (!is.data.frame(clin) || !is.data.frame(bio)) return(NULL)
+
+      clin_ids <- unique(clin$submitter_id)
       bio_id_col <- intersect(
-        c("submitter_id", "case_submitter_id"), names(biospecimen_data)
+        c("submitter_id", "case_submitter_id", "patient_id"), names(bio)
       )
       if (length(bio_id_col) == 0) return(NULL)
 
-      bio_ids <- unique(biospecimen_data[[bio_id_col[1]]])
+      bio_ids <- unique(bio[[bio_id_col[1]]])
       shared  <- intersect(clin_ids, bio_ids)
 
       list(

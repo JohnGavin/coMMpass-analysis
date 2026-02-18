@@ -34,23 +34,26 @@ if (file.exists("../R/data_dictionary.R")) {
   source("R/data_dictionary.R")
 }
 
-key <- "TAR_PROJECT"
-proj_dir <- Sys.getenv(key)
-targets_available <- FALSE
+# Discover targets store and project root
+proj_dir <- Sys.getenv("TAR_PROJECT")
+tar_store <- NULL
+project_root <- "."
 
 if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
-  tar_config_set(store = file.path(proj_dir, "_targets"))
-  targets_available <- TRUE
+  tar_store <- file.path(proj_dir, "_targets")
+  project_root <- proj_dir
 } else if (dir.exists("_targets")) {
-  targets_available <- TRUE
+  tar_store <- "_targets"
+  project_root <- "."
+} else if (dir.exists("../_targets")) {
+  tar_store <- "../_targets"
+  project_root <- ".."
 }
 
 safe_tar_read <- function(name) {
-  if (!targets_available) return(NULL)
-  tryCatch(tar_read(name), error = function(e) NULL)
+  if (is.null(tar_store)) return(NULL)
+  tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
 }
-
-project_root <- if (proj_dir != "") proj_dir else "."
 ```
 
 ## Overview
@@ -79,10 +82,14 @@ if (!is.null(dd)) {
       options = list(
         pageLength = 20,
         scrollX = TRUE,
+        autoWidth = TRUE,
         columnDefs = list(
-          list(width = "150px", targets = 0),
-          list(width = "100px", targets = 1),
-          list(width = "300px", targets = 4)
+          list(width = "120px", targets = which(names(dd) == "variable") - 1),
+          list(width = "80px",  targets = which(names(dd) == "category") - 1),
+          list(width = "60px",  targets = which(names(dd) == "data_type") - 1),
+          list(width = "50px",  targets = which(names(dd) == "units") - 1),
+          list(width = "40%",   targets = which(names(dd) == "description") - 1),
+          list(width = "80px",  targets = which(names(dd) == "typical_range") - 1)
         )
       ),
       caption = "CoMMpass Data Dictionary - All Variables"
@@ -100,13 +107,14 @@ if (!is.null(dd)) {
 Clinical data includes patient demographics, disease characteristics, and outcomes. Downloaded via `TCGAbiolinks::GDCquery_clinic()`.
 
 ```{r clinical-summary}
-clinical <- safe_tar_read("clinical_data")
+# clinical_data target stores a directory path; load the RDS from it
+clinical_dir <- safe_tar_read("clinical_data")
+clinical <- NULL
 
-if (is.null(clinical)) {
-  # Try loading from parquet directly
-  pq_path <- file.path(project_root, "data", "raw", "clinical", "clinical_data.parquet")
-  if (file.exists(pq_path) && requireNamespace("arrow", quietly = TRUE)) {
-    clinical <- arrow::read_parquet(pq_path)
+if (!is.null(clinical_dir) && is.character(clinical_dir)) {
+  rds_path <- file.path(project_root, clinical_dir, "clinical_data.rds")
+  if (file.exists(rds_path)) {
+    clinical <- tryCatch(readRDS(rds_path), error = function(e) NULL)
   }
 }
 
@@ -160,12 +168,12 @@ if (!is.null(clinical) && is.data.frame(clinical)) {
 Biospecimen data describes the tissue samples collected from patients.
 
 ```{r biospecimen-summary}
-biospecimen <- safe_tar_read("biospecimen_data")
-
-if (is.null(biospecimen)) {
-  pq_path <- file.path(project_root, "data", "raw", "clinical", "biospecimen_data.parquet")
-  if (file.exists(pq_path) && requireNamespace("arrow", quietly = TRUE)) {
-    biospecimen <- arrow::read_parquet(pq_path)
+# biospecimen lives in the same directory as clinical_data
+biospecimen <- NULL
+if (!is.null(clinical_dir) && is.character(clinical_dir)) {
+  bio_rds <- file.path(project_root, clinical_dir, "biospecimen_data.rds")
+  if (file.exists(bio_rds)) {
+    biospecimen <- tryCatch(readRDS(bio_rds), error = function(e) NULL)
   }
 }
 

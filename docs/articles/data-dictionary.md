@@ -25,13 +25,33 @@ Clinical data includes patient demographics, disease characteristics,
 and outcomes. Downloaded via
 [`TCGAbiolinks::GDCquery_clinic()`](https://rdrr.io/pkg/TCGAbiolinks/man/GDCquery_clinic.html).
 
-    #> *Clinical data not available. Run the pipeline to download.*
+    #> ### Summary
+    #> 
+    #> - **Total patients:** 10 
+    #> - **Variables:** 11 
+    #> - **Data completeness:** 90.9% 
+    #> 
+    #> ### Column Inventory
+    #> 
+    #> 
+    #> ### Sample Data (first 5 rows, key columns)
+
+| submitter_id | age_at_diagnosis | gender | race | vital_status | days_to_death | days_to_last_follow_up |
+|:---|---:|:---|:---|:---|---:|---:|
+| PATIENT_01 | 64 | male | black or african american | dead | 447 | NA |
+| PATIENT_02 | 73 | male | asian | dead | 296 | NA |
+| PATIENT_03 | 56 | male | white | alive | NA | 1495 |
+| PATIENT_04 | 53 | male | black or african american | dead | 325 | NA |
+| PATIENT_05 | 74 | male | white | alive | NA | 473 |
+
+Sample Clinical Records
 
 ## Biospecimen Data
 
 Biospecimen data describes the tissue samples collected from patients.
 
-    #> *Biospecimen data not available. Run the pipeline to download.*
+    #> - **Total records:** 10 
+    #> - **Variables:** 8
 
 ## RNA-seq Data
 
@@ -39,7 +59,25 @@ RNA-seq gene expression data is generated using the STAR aligner and
 quantified against GENCODE annotations. Data is available in multiple
 quantification types.
 
-    #> *RNA-seq data not available. Run the pipeline to download.*
+    #> ### Dimensions
+    #> 
+    #> - **Samples:** 10 
+    #> - **Genes:** 100 
+    #> - **Assays:** counts 
+    #> 
+    #> ### Gene Biotypes
+    #> 
+    #> 
+    #> ### Sample Metadata Columns
+
+| Column     | Type      |
+|:-----------|:----------|
+| sample_id  | character |
+| patient_id | character |
+| condition  | character |
+| batch      | numeric   |
+
+RNA-seq Sample Metadata Columns
 
 ## Column Name Mappings
 
@@ -141,15 +179,36 @@ Session Info (click to expand)
     #> [1] DT_0.34.0      dplyr_1.1.4    targets_1.11.4
     #> 
     #> loaded via a namespace (and not attached):
-    #>  [1] base64url_1.4     jsonlite_2.0.0    compiler_4.5.2    tidyselect_1.2.1 
-    #>  [5] callr_3.7.6       jquerylib_0.1.4   systemfonts_1.3.1 textshaping_1.0.4
-    #>  [9] yaml_2.3.12       fastmap_1.2.0     R6_2.6.1          generics_0.1.4   
-    #> [13] igraph_2.2.1      knitr_1.51        htmlwidgets_1.6.4 backports_1.5.0  
-    #> [17] tibble_3.3.1      desc_1.4.3        bslib_0.9.0       pillar_1.11.1    
-    #> [21] rlang_1.1.7       cachem_1.1.0      xfun_0.56         fs_1.6.6         
-    #> [25] sass_0.4.10       otel_0.2.0        cli_3.6.5         pkgdown_2.2.0    
-    #> [29] magrittr_2.0.4    crosstalk_1.2.2   ps_1.9.1          digest_0.6.39    
-    #> [33] processx_3.8.6    secretbase_1.1.1  lifecycle_1.0.5   prettyunits_1.2.0
-    #> [37] vctrs_0.7.0       evaluate_1.0.5    glue_1.8.0        data.table_1.18.0
-    #> [41] codetools_0.2-20  ragg_1.5.0        rmarkdown_2.30    tools_4.5.2      
-    #> [45] pkgconfig_2.0.3   htmltools_0.5.9
+    #>  [1] sass_0.4.10                 generics_0.1.4             
+    #>  [3] SparseArray_1.10.8          lattice_0.22-7             
+    #>  [5] digest_0.6.39               magrittr_2.0.4             
+    #>  [7] grid_4.5.2                  evaluate_1.0.5             
+    #>  [9] fastmap_1.2.0               Matrix_1.7-4               
+    #> [11] jsonlite_2.0.0              processx_3.8.6             
+    #> [13] backports_1.5.0             secretbase_1.1.1           
+    #> [15] ps_1.9.1                    crosstalk_1.2.2            
+    #> [17] codetools_0.2-20            textshaping_1.0.4          
+    #> [19] jquerylib_0.1.4             abind_1.4-8                
+    #> [21] cli_3.6.5                   rlang_1.1.7                
+    #> [23] XVector_0.50.0              Biobase_2.70.0             
+    #> [25] DelayedArray_0.36.0         withr_3.0.2                
+    #> [27] cachem_1.1.0                yaml_2.3.12                
+    #> [29] otel_0.2.0                  S4Arrays_1.10.1            
+    #> [31] tools_4.5.2                 base64url_1.4              
+    #> [33] SummarizedExperiment_1.40.0 BiocGenerics_0.56.0        
+    #> [35] vctrs_0.7.0                 R6_2.6.1                   
+    #> [37] matrixStats_1.5.0           stats4_4.5.2               
+    #> [39] lifecycle_1.0.5             Seqinfo_1.0.0              
+    #> [41] S4Vectors_0.48.0            fs_1.6.6                   
+    #> [43] htmlwidgets_1.6.4           IRanges_2.44.0             
+    #> [45] ragg_1.5.0                  pkgconfig_2.0.3            
+    #> [47] desc_1.4.3                  callr_3.7.6                
+    #> [49] pkgdown_2.2.0               pillar_1.11.1              
+    #> [51] bslib_0.9.0                 data.table_1.18.0          
+    #> [53] glue_1.8.0                  systemfonts_1.3.1          
+    #> [55] GenomicRanges_1.62.1        xfun_0.56                  
+    #> [57] tibble_3.3.1                tidyselect_1.2.1           
+    #> [59] MatrixGenerics_1.22.0       knitr_1.51                 
+    #> [61] htmltools_0.5.9             igraph_2.2.1               
+    #> [63] rmarkdown_2.30              compiler_4.5.2             
+    #> [65] prettyunits_1.2.0

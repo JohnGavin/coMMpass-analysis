@@ -70,61 +70,169 @@ to populate the data.</p>
 <div class="section level2">
 <h2 id="clinical-demographics">Clinical Demographics<a class="anchor" aria-label="anchor" href="#clinical-demographics"></a>
 </h2>
-<pre><code><span><span class="co">#&gt; *Clinical summary not available. Run `tar_make()` first.*</span></span></code></pre>
+<pre><code><span><span class="co">#&gt; - **Patients:** 10 </span></span>
+<span><span class="co">#&gt; - **Variables:** 11 </span></span>
+<span><span class="co">#&gt; - **Data completeness:** 90.9%</span></span></code></pre>
 <div class="section level3">
 <h3 id="age-at-diagnosis">Age at Diagnosis<a class="anchor" aria-label="anchor" href="#age-at-diagnosis"></a>
 </h3>
-<pre><code><span><span class="co">#&gt; *Age data not available.*</span></span></code></pre>
+<div class="figure">
+<img src="exploratory-analysis_files/figure-html/age-histogram-1.png" class="r-plt" alt="Age at diagnosis distribution" width="768"><p class="caption">
+Age at diagnosis distribution
+</p>
+</div>
 </div>
 <div class="section level3">
 <h3 id="gender-distribution">Gender Distribution<a class="anchor" aria-label="anchor" href="#gender-distribution"></a>
 </h3>
-<pre><code><span><span class="co">#&gt; *Gender data not available.*</span></span></code></pre>
+<table class="table">
+<caption>Gender Distribution</caption>
+<thead><tr class="header">
+<th align="left">Gender</th>
+<th align="right">Freq</th>
+<th align="left">Percentage</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">female</td>
+<td align="right">1</td>
+<td align="left">10.0%</td>
+</tr>
+<tr class="even">
+<td align="left">male</td>
+<td align="right">9</td>
+<td align="left">90.0%</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level3">
 <h3 id="race-distribution">Race Distribution<a class="anchor" aria-label="anchor" href="#race-distribution"></a>
 </h3>
-<pre><code><span><span class="co">#&gt; *Race data not available.*</span></span></code></pre>
+<table class="table">
+<caption>Race Distribution</caption>
+<thead><tr class="header">
+<th align="left">Race</th>
+<th align="right">Freq</th>
+<th align="left">Percentage</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">asian</td>
+<td align="right">2</td>
+<td align="left">20.0%</td>
+</tr>
+<tr class="even">
+<td align="left">black or african american</td>
+<td align="right">3</td>
+<td align="left">30.0%</td>
+</tr>
+<tr class="odd">
+<td align="left">not reported</td>
+<td align="right">1</td>
+<td align="left">10.0%</td>
+</tr>
+<tr class="even">
+<td align="left">white</td>
+<td align="right">4</td>
+<td align="left">40.0%</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level3">
 <h3 id="vital-status">Vital Status<a class="anchor" aria-label="anchor" href="#vital-status"></a>
 </h3>
-<pre><code><span><span class="co">#&gt; *Vital status data not available.*</span></span></code></pre>
+<table class="table">
+<caption>Vital Status</caption>
+<thead><tr class="header">
+<th align="left">Status</th>
+<th align="right">Freq</th>
+<th align="left">Percentage</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">alive</td>
+<td align="right">5</td>
+<td align="left">50.0%</td>
+</tr>
+<tr class="even">
+<td align="left">dead</td>
+<td align="right">5</td>
+<td align="left">50.0%</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="section level2">
 <h2 id="survival-endpoints">Survival Endpoints<a class="anchor" aria-label="anchor" href="#survival-endpoints"></a>
 </h2>
-<pre><code><span><span class="co">#&gt; *Survival endpoint data not available. Run `tar_make()` first.*</span></span></code></pre>
+<pre><code><span><span class="co">#&gt; ### Days to Death</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ```</span></span>
+<span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
+<span><span class="co">#&gt;     296     325     361     451     447     826 </span></span>
+<span><span class="co">#&gt; ```</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; - **Censoring rate:** 50.0% (patients still alive at last follow-up)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ### Days to Last Follow-up</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ```</span></span>
+<span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
+<span><span class="co">#&gt;   473.0   749.0   797.0   876.6   869.0  1495.0 </span></span>
+<span><span class="co">#&gt; ```</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="biospecimen-overview">Biospecimen Overview<a class="anchor" aria-label="anchor" href="#biospecimen-overview"></a>
 </h2>
-<pre><code><span><span class="co">#&gt; *Biospecimen summary not available. Run `tar_make()` first.*</span></span></code></pre>
+<pre><code><span><span class="co">#&gt; - **Total samples:** 10 </span></span>
+<span><span class="co">#&gt; - **Variables:** 8</span></span></code></pre>
 <div class="section level3">
 <h3 id="sample-types">Sample Types<a class="anchor" aria-label="anchor" href="#sample-types"></a>
 </h3>
-<pre><code><span><span class="co">#&gt; *Sample type data not available.*</span></span></code></pre>
+<div class="figure">
+<img src="exploratory-analysis_files/figure-html/sample-type-bar-1.png" class="r-plt" alt="Sample type distribution" width="768"><p class="caption">
+Sample type distribution
+</p>
+</div>
 </div>
 <div class="section level3">
 <h3 id="samples-per-patient">Samples per Patient<a class="anchor" aria-label="anchor" href="#samples-per-patient"></a>
 </h3>
-<pre><code><span><span class="co">#&gt; *Samples-per-patient data not available.*</span></span></code></pre>
+<div class="figure">
+<img src="exploratory-analysis_files/figure-html/samples-per-patient-1.png" class="r-plt" alt="Samples per patient distribution" width="768"><p class="caption">
+Samples per patient distribution
+</p>
+</div>
 </div>
 </div>
 <div class="section level2">
 <h2 id="rna-seq-quality">RNA-seq Quality<a class="anchor" aria-label="anchor" href="#rna-seq-quality"></a>
 </h2>
-<pre><code><span><span class="co">#&gt; *RNA-seq summary not available. Run `tar_make()` first.*</span></span></code></pre>
+<pre><code><span><span class="co">#&gt; - **Genes:** 100 </span></span>
+<span><span class="co">#&gt; - **Samples:** 10 </span></span>
+<span><span class="co">#&gt; - **Total counts:** 62,993 </span></span>
+<span><span class="co">#&gt; - **Median library size:** 6,287 </span></span>
+<span><span class="co">#&gt; - **Sparsity (% zero entries):** 0.3%</span></span></code></pre>
 <div class="section level3">
 <h3 id="library-size-distribution">Library Size Distribution<a class="anchor" aria-label="anchor" href="#library-size-distribution"></a>
 </h3>
-<pre><code><span><span class="co">#&gt; *Library size data not available.*</span></span></code></pre>
+<div class="figure">
+<img src="exploratory-analysis_files/figure-html/library-size-boxplot-1.png" class="r-plt" alt="Library sizes across samples" width="768"><p class="caption">
+Library sizes across samples
+</p>
+</div>
 </div>
 <div class="section level3">
 <h3 id="genes-detected-per-sample">Genes Detected per Sample<a class="anchor" aria-label="anchor" href="#genes-detected-per-sample"></a>
 </h3>
-<pre><code><span><span class="co">#&gt; *Genes-detected data not available.*</span></span></code></pre>
+<div class="figure">
+<img src="exploratory-analysis_files/figure-html/genes-detected-histogram-1.png" class="r-plt" alt="Genes detected per sample" width="768"><p class="caption">
+Genes detected per sample
+</p>
+</div>
 </div>
 </div>
 <div class="section level2">
@@ -143,7 +251,7 @@ a data frame</li>
 <div class="section level3">
 <h3 id="example-simple-query">Example: Simple Query<a class="anchor" aria-label="anchor" href="#example-simple-query"></a>
 </h3>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># One-shot query (returns data frame)</span></span>
 <span><span class="va">clinical</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/query_commpass_parquet.html">query_commpass_parquet</a></span><span class="op">(</span><span class="st">"clinical"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">clinical</span><span class="op">)</span></span>
@@ -153,12 +261,89 @@ a data frame</li>
 <span>  <span class="st">"clinical"</span>,</span>
 <span>  filters <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>gender <span class="op">=</span> <span class="st">"female"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; *DuckDB demo not available. Run `tar_make()` first.*</span></span></code></pre>
+<pre><code><span><span class="co">#&gt; **SQL equivalent:**</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ```sql</span></span>
+<span><span class="co">#&gt;  SELECT submitter_id, gender, vital_status, age_at_diagnosis</span></span>
+<span><span class="co">#&gt;                          FROM clinical</span></span>
+<span><span class="co">#&gt;                          LIMIT 10 </span></span>
+<span><span class="co">#&gt; ```</span></span></code></pre>
+<table class="table">
+<caption>Sample query result (first 10 rows)</caption>
+<thead><tr class="header">
+<th align="left">submitter_id</th>
+<th align="left">gender</th>
+<th align="left">vital_status</th>
+<th align="right">age_at_diagnosis</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">PATIENT_01</td>
+<td align="left">male</td>
+<td align="left">dead</td>
+<td align="right">64</td>
+</tr>
+<tr class="even">
+<td align="left">PATIENT_02</td>
+<td align="left">male</td>
+<td align="left">dead</td>
+<td align="right">73</td>
+</tr>
+<tr class="odd">
+<td align="left">PATIENT_03</td>
+<td align="left">male</td>
+<td align="left">alive</td>
+<td align="right">56</td>
+</tr>
+<tr class="even">
+<td align="left">PATIENT_04</td>
+<td align="left">male</td>
+<td align="left">dead</td>
+<td align="right">53</td>
+</tr>
+<tr class="odd">
+<td align="left">PATIENT_05</td>
+<td align="left">male</td>
+<td align="left">alive</td>
+<td align="right">74</td>
+</tr>
+<tr class="even">
+<td align="left">PATIENT_06</td>
+<td align="left">female</td>
+<td align="left">alive</td>
+<td align="right">54</td>
+</tr>
+<tr class="odd">
+<td align="left">PATIENT_07</td>
+<td align="left">male</td>
+<td align="left">dead</td>
+<td align="right">63</td>
+</tr>
+<tr class="even">
+<td align="left">PATIENT_08</td>
+<td align="left">male</td>
+<td align="left">alive</td>
+<td align="right">69</td>
+</tr>
+<tr class="odd">
+<td align="left">PATIENT_09</td>
+<td align="left">male</td>
+<td align="left">alive</td>
+<td align="right">75</td>
+</tr>
+<tr class="even">
+<td align="left">PATIENT_10</td>
+<td align="left">male</td>
+<td align="left">dead</td>
+<td align="right">67</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level3">
 <h3 id="example-aggregation-with-duckdb">Example: Aggregation with DuckDB<a class="anchor" aria-label="anchor" href="#example-aggregation-with-duckdb"></a>
 </h3>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Lazy tbl for dplyr-style queries</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect</a></span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">clinical_tbl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_commpass_tbl.html">get_commpass_tbl</a></span><span class="op">(</span><span class="st">"clinical"</span>, con <span class="op">=</span> <span class="va">con</span><span class="op">)</span></span>
@@ -173,13 +358,47 @@ a data frame</li>
 <span>  <span class="fu">collect</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbDisconnect.html" class="external-link">dbDisconnect</a></span><span class="op">(</span><span class="va">con</span>, shutdown <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">#&gt; *DuckDB demo not available.*</span></span></code></pre>
+<pre><code><span><span class="co">#&gt; **SQL equivalent:**</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ```sql</span></span>
+<span><span class="co">#&gt;  SELECT gender, COUNT(*) AS n,</span></span>
+<span><span class="co">#&gt;                           ROUND(AVG(age_at_diagnosis / 365.25), 1) AS mean_age_years</span></span>
+<span><span class="co">#&gt;                         FROM clinical</span></span>
+<span><span class="co">#&gt;                         WHERE gender IS NOT NULL</span></span>
+<span><span class="co">#&gt;                         GROUP BY gender </span></span>
+<span><span class="co">#&gt; ```</span></span></code></pre>
+<table class="table">
+<caption>Aggregation result</caption>
+<thead><tr class="header">
+<th align="left">gender</th>
+<th align="right">n</th>
+<th align="right">mean_age_years</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">female</td>
+<td align="right">1</td>
+<td align="right">0.1</td>
+</tr>
+<tr class="even">
+<td align="left">male</td>
+<td align="right">9</td>
+<td align="right">0.2</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="section level2">
 <h2 id="cross-dataset-integration">Cross-dataset Integration<a class="anchor" aria-label="anchor" href="#cross-dataset-integration"></a>
 </h2>
-<pre><code><span><span class="co">#&gt; *Integration summary not available. Run `tar_make()` first.*</span></span></code></pre>
+<pre><code><span><span class="co">#&gt; Patient ID overlap between clinical and biospecimen datasets:</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; - **Clinical patients:** 10 </span></span>
+<span><span class="co">#&gt; - **Biospecimen patients:** 10 </span></span>
+<span><span class="co">#&gt; - **Shared (in both):** 0 </span></span>
+<span><span class="co">#&gt; - **Clinical only:** 10 </span></span>
+<span><span class="co">#&gt; - **Biospecimen only:** 10</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="reproducibility">Reproducibility<a class="anchor" aria-label="anchor" href="#reproducibility"></a>
@@ -194,7 +413,7 @@ Git Commit Info (click to expand)
 <tbody>
 <tr class="odd">
 <td align="left">Commit Hash</td>
-<td align="left">677f848b562bc672251a88876baedc0516ec5a67</td>
+<td align="left">a631c4a544c36ece578317fa83eef69dd4e2f508</td>
 </tr>
 <tr class="even">
 <td align="left">Author</td>
@@ -203,11 +422,11 @@ Git Commit Info (click to expand)
 </tr>
 <tr class="odd">
 <td align="left">Time</td>
-<td align="left">2026-02-18 13:21:27</td>
+<td align="left">2026-02-18 13:48:02</td>
 </tr>
 <tr class="even">
 <td align="left">Branch</td>
-<td align="left">fix/issue-33-pkgdown-rebuild</td>
+<td align="left">main</td>
 </tr>
 </tbody>
 </table></details><details><summary>
@@ -246,8 +465,8 @@ Session Info (click to expand)
 <span><span class="co">#&gt; [41] glue_1.8.0         systemfonts_1.3.1  gert_2.3.1         xfun_0.56         </span></span>
 <span><span class="co">#&gt; [45] tibble_3.3.1       tidyselect_1.2.1   sys_3.4.3          knitr_1.51        </span></span>
 <span><span class="co">#&gt; [49] farver_2.1.2       htmltools_0.5.9    igraph_2.2.1       rmarkdown_2.30    </span></span>
-<span><span class="co">#&gt; [53] compiler_4.5.2     prettyunits_1.2.0  S7_0.2.1           askpass_1.2.1     </span></span>
-<span><span class="co">#&gt; [57] openssl_2.3.4</span></span></code></pre>
+<span><span class="co">#&gt; [53] labeling_0.4.3     compiler_4.5.2     prettyunits_1.2.0  S7_0.2.1          </span></span>
+<span><span class="co">#&gt; [57] askpass_1.2.1      openssl_2.3.4</span></span></code></pre>
 </details>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
