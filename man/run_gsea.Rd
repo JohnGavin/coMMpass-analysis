@@ -6,6 +6,14 @@
 \usage{
 run_gsea(se_data, clinical_data)
 }
+\arguments{
+\item{se_data}{A SummarizedExperiment object}
+
+\item{clinical_data}{Clinical data frame}
+}
+\value{
+List with GSEA results
+}
 \description{
-run_gsea
+Run Gene Set Enrichment Analysis
 }

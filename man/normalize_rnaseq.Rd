@@ -6,6 +6,14 @@
 \usage{
 normalize_rnaseq(se_data, method = "TMM")
 }
+\arguments{
+\item{se_data}{A SummarizedExperiment object with a "counts" assay}
+
+\item{method}{Normalization method (default: "TMM")}
+}
+\value{
+SummarizedExperiment with added "logCPM" assay
+}
 \description{
 Normalize RNA-seq data
 }

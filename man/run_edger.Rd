@@ -6,6 +6,16 @@
 \usage{
 run_edger(se_data, clinical_data, design_formula = ~condition)
 }
+\arguments{
+\item{se_data}{A SummarizedExperiment object}
+
+\item{clinical_data}{Clinical data frame}
+
+\item{design_formula}{Design formula for the model}
+}
+\value{
+List with DE results
+}
 \description{
 Run edgeR differential expression analysis
 }

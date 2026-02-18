@@ -12,6 +12,20 @@ generate_summary_report(
   output_dir = "results/reports"
 )
 }
+\arguments{
+\item{qc_metrics}{QC metrics data frame}
+
+\item{de_genes}{DE results with consensus gene information}
+
+\item{survival}{Survival analysis results}
+
+\item{pathways}{Pathway analysis results}
+
+\item{output_dir}{Directory for output report}
+}
+\value{
+Path to generated report
+}
 \description{
 Generate summary report
 }

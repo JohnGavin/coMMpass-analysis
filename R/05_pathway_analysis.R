@@ -2,11 +2,13 @@
 # Pathway and enrichment analysis functions
 
 #' Run pathway enrichment analysis
+#'
+#' @param de_genes DE results with consensus_genes element
+#' @param method Analysis method (default: "clusterProfiler")
+#' @return List with pathway analysis results
 run_pathway_analysis <- function(de_genes, method = "clusterProfiler") {
-  library(logger)
-  
-  log_info("Running pathway analysis using {method}...")
-  
+  logger::log_info("Running pathway analysis using {method}...")
+
   # Placeholder implementation
   pathway_results <- list(
     method = method,
@@ -19,19 +21,20 @@ run_pathway_analysis <- function(de_genes, method = "clusterProfiler") {
       gene_count = sample(5:50, 10)
     )
   )
-  
-  log_info("Found {pathway_results$n_pathways_enriched} enriched pathways")
+
+  logger::log_info("Found {pathway_results$n_pathways_enriched} enriched pathways")
   return(pathway_results)
 }
 
 #' Run Gene Set Enrichment Analysis
-#' @description run_gsea
+#'
+#' @param se_data A SummarizedExperiment object
+#' @param clinical_data Clinical data frame
+#' @return List with GSEA results
 #' @export
 run_gsea <- function(se_data, clinical_data) {
-  library(logger)
-  
-  log_info("Running GSEA...")
-  
+  logger::log_info("Running GSEA...")
+
   # Placeholder implementation
   gsea_results <- list(
     n_gene_sets = 50,
@@ -44,20 +47,25 @@ run_gsea <- function(se_data, clinical_data) {
       q_value = runif(10, 0.001, 0.1)
     )
   )
-  
-  log_info("GSEA complete: {gsea_results$n_enriched_positive} positive, {gsea_results$n_enriched_negative} negative")
+
+  logger::log_info("GSEA complete: {gsea_results$n_enriched_positive} positive, {gsea_results$n_enriched_negative} negative")
   return(gsea_results)
 }
 
 #' Generate summary report
-generate_summary_report <- function(qc_metrics, de_genes, survival, pathways, 
+#'
+#' @param qc_metrics QC metrics data frame
+#' @param de_genes DE results with consensus gene information
+#' @param survival Survival analysis results
+#' @param pathways Pathway analysis results
+#' @param output_dir Directory for output report
+#' @return Path to generated report
+generate_summary_report <- function(qc_metrics, de_genes, survival, pathways,
                                    output_dir = "results/reports") {
-  library(logger)
-  
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-  
+
   report_file <- file.path(output_dir, "summary_report.html")
-  
+
   # Create simple summary
   summary_text <- paste(
     "CoMMpass Analysis Summary",
@@ -67,9 +75,9 @@ generate_summary_report <- function(qc_metrics, de_genes, survival, pathways,
     paste("Enriched pathways:", pathways$n_pathways_enriched),
     sep = "\n"
   )
-  
+
   writeLines(summary_text, report_file)
-  
-  log_info("Summary report saved to {report_file}")
+
+  logger::log_info("Summary report saved to {report_file}")
   return(report_file)
 }

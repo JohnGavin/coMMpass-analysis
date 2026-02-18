@@ -6,6 +6,14 @@
 \usage{
 render_de_report(de_results, output_dir = "results/reports")
 }
+\arguments{
+\item{de_results}{DE results object}
+
+\item{output_dir}{Directory for output report}
+}
+\value{
+Path to generated report
+}
 \description{
 Render DE analysis report
 }

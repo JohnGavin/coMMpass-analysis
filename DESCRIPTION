@@ -11,19 +11,11 @@ Encoding: UTF-8
 RoxygenNote: 7.3.3
 VignetteBuilder: knitr
 Imports:
-    targets,
-    tarchetypes,
-    crew,
     TCGAbiolinks,
-    GenomicDataCommons,
     SummarizedExperiment,
-    DESeq2,
     edgeR,
-    limma,
-    survival,
     logger,
     dplyr,
-    ggplot2,
     aws.s3,
     arrow,
     DBI,
@@ -33,10 +25,22 @@ Imports:
     glue,
     tibble
 Suggests:
+    targets,
+    tarchetypes,
+    crew,
+    DESeq2,
+    GenomicDataCommons,
+    ggplot2,
+    limma,
+    survival,
     tidyverse,
     knitr,
     rmarkdown,
     pkgdown,
-    testthat,
+    testthat (>= 3.0.0),
     gert,
-    nanoparquet
+    nanoparquet,
+    DT,
+    plotly,
+    stringr
+Config/testthat/edition: 3

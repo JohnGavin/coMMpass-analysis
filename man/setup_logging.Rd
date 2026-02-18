@@ -6,6 +6,9 @@
 \usage{
 setup_logging(log_file = NULL)
 }
+\arguments{
+\item{log_file}{Optional path to a log file. If NULL, logs to console.}
+}
 \description{
 Setup logging
 }

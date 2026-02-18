@@ -6,6 +6,14 @@
 \usage{
 run_kaplan_meier(surv_data, group_by = "risk_group")
 }
+\arguments{
+\item{surv_data}{Survival data frame with time and status columns}
+
+\item{group_by}{Column name to group by (default: "risk_group")}
+}
+\value{
+List with KM analysis results
+}
 \description{
 Run Kaplan-Meier analysis
 }

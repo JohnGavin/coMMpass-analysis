@@ -6,6 +6,16 @@
 \usage{
 find_consensus_genes(de_results_list, padj_threshold = 0.05, lfc_threshold = 1)
 }
+\arguments{
+\item{de_results_list}{List of DE result objects from different methods}
+
+\item{padj_threshold}{Adjusted p-value threshold (default: 0.05)}
+
+\item{lfc_threshold}{Log2 fold change threshold (default: 1)}
+}
+\value{
+List with consensus gene information
+}
 \description{
 Find consensus DE genes across methods
 }

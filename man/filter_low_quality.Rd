@@ -6,6 +6,16 @@
 \usage{
 filter_low_quality(se_data, min_counts = 10, min_samples = 3)
 }
+\arguments{
+\item{se_data}{A SummarizedExperiment object}
+
+\item{min_counts}{Minimum count threshold per gene}
+
+\item{min_samples}{Minimum samples with counts above threshold}
+}
+\value{
+Filtered SummarizedExperiment
+}
 \description{
 Filter low-quality samples and genes
 }

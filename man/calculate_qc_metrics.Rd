@@ -6,6 +6,12 @@
 \usage{
 calculate_qc_metrics(se_data)
 }
+\arguments{
+\item{se_data}{A SummarizedExperiment object with a "counts" assay}
+}
+\value{
+A data frame with QC metrics per sample
+}
 \description{
-calculate_qc_metrics
+Calculate QC metrics for RNA-seq data
 }
