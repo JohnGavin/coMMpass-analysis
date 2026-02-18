@@ -76,20 +76,26 @@ dd <- tryCatch(
 
 if (!is.null(dd)) {
   if (has_DT) {
+    # Convert gdc_link URLs to short clickable links to save column width
+    dd_display <- dd
+    if ("gdc_link" %in% names(dd_display)) {
+      dd_display$gdc_link <- ifelse(
+        is.na(dd_display$gdc_link) | dd_display$gdc_link == "",
+        "",
+        paste0('<a href="', dd_display$gdc_link, '" target="_blank">GDC</a>')
+      )
+    }
     DT::datatable(
-      dd,
+      dd_display,
       filter = "top",
+      escape = FALSE,  # Allow HTML in gdc_link column
       options = list(
         pageLength = 20,
         scrollX = TRUE,
-        autoWidth = TRUE,
+        autoWidth = FALSE,
         columnDefs = list(
-          list(width = "120px", targets = which(names(dd) == "variable") - 1),
-          list(width = "80px",  targets = which(names(dd) == "category") - 1),
-          list(width = "60px",  targets = which(names(dd) == "data_type") - 1),
-          list(width = "50px",  targets = which(names(dd) == "units") - 1),
-          list(width = "40%",   targets = which(names(dd) == "description") - 1),
-          list(width = "80px",  targets = which(names(dd) == "typical_range") - 1)
+          # Prevent wrapping on narrow columns
+          list(className = "dt-nowrap", targets = "_all")
         )
       ),
       caption = "CoMMpass Data Dictionary - All Variables"
