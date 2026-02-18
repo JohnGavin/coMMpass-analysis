@@ -170,10 +170,10 @@ Git Commit Info (click to expand)
 
 | Item        | Value                                    |
 |:------------|:-----------------------------------------|
-| Commit Hash | a631c4a544c36ece578317fa83eef69dd4e2f508 |
+| Commit Hash | 17ea786e1bc8a1239ef0cf1bcec94edcb40fe9a7 |
 | Author      | jg <JohnGavin@users.noreply.github.com>  |
-| Time        | 2026-02-18 13:48:02                      |
-| Branch      | main                                     |
+| Time        | 2026-02-18 17:44:39                      |
+| Branch      | fix/data-dictionary-column-widths        |
 
 Session Info (click to expand)
 
