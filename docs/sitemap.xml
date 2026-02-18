@@ -6,7 +6,6 @@
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/SHINYLIVE_CONVERSION_SUMMARY.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/SHINYLIVE_EXPORT_REPORT.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/TEST_RESULTS.html</loc></url>
-<url><loc>https://JohnGavin.github.io/coMMpass-analysis/articles/01_data_acquisition.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/articles/data-acquisition.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/articles/data-dictionary.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/articles/exploratory-analysis.html</loc></url>
@@ -17,6 +16,8 @@
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/acquire_commpass_data.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/calculate_qc_metrics.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/check_dependencies.html</loc></url>
+<url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/clean_clinical_data.html</loc></url>
+<url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/clean_expression_data.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/coMMpass-package.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/create_project_dirs.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/create_summary_table.html</loc></url>
@@ -34,6 +35,7 @@
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/get_commpass_tbl.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/get_variable_docs.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/index.html</loc></url>
+<url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/integrate_clinical_expression.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/list_s3_commpass.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/normalize_rnaseq.html</loc></url>
 <url><loc>https://JohnGavin.github.io/coMMpass-analysis/reference/prepare_survival_data.html</loc></url>

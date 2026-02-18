@@ -7,3 +7,9 @@ Generate summary statistics
 ``` r
 summarize_data(se_data)
 ```
+
+## Arguments
+
+- se_data:
+
+  A SummarizedExperiment object with a "counts" assay

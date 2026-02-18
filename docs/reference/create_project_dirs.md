@@ -7,3 +7,9 @@ Create project directories
 ``` r
 create_project_dirs(base_dir = ".")
 ```
+
+## Arguments
+
+- base_dir:
+
+  Base directory path (default: ".")

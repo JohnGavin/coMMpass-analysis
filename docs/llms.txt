@@ -205,6 +205,17 @@ Variable documentation and metadata
 - [`get_variable_docs()`](https://JohnGavin.github.io/coMMpass-analysis/reference/get_variable_docs.md)
   : Get Extended Documentation for a Variable
 
+## Data Cleaning
+
+Clean and integrate clinical and expression data
+
+- [`clean_clinical_data()`](https://JohnGavin.github.io/coMMpass-analysis/reference/clean_clinical_data.md)
+  : Clean Clinical Data
+- [`clean_expression_data()`](https://JohnGavin.github.io/coMMpass-analysis/reference/clean_expression_data.md)
+  : Clean Expression Data
+- [`integrate_clinical_expression()`](https://JohnGavin.github.io/coMMpass-analysis/reference/integrate_clinical_expression.md)
+  : Create Integrated Dataset
+
 ## Data Querying
 
 DuckDB-backed parquet querying

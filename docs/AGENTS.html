@@ -120,6 +120,20 @@
 <p><strong>To add packages:</strong> Edit DESCRIPTION → Run <code>default.R</code> → Exit → Re-enter Nix</p>
 </div>
 <div class="section level3">
+<h3 id="never-use-ide-in-project-specific-nix-shells">NEVER Use IDE in Project-Specific Nix Shells<a class="anchor" aria-label="anchor" href="#never-use-ide-in-project-specific-nix-shells"></a></h3>
+<p><strong>CRITICAL:</strong> Project-specific <code>default.R</code> must ALWAYS use <code>ide = "none"</code>.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># ✗ FORBIDDEN - Builds RStudio/VS Code from source (30+ minutes!)</span></span>
+<span><span class="fu">rix</span><span class="op">(</span><span class="va">...</span>, ide <span class="op">=</span> <span class="st">"rstudio"</span>, <span class="va">...</span><span class="op">)</span>   <span class="co"># NO!</span></span>
+<span><span class="fu">rix</span><span class="op">(</span><span class="va">...</span>, ide <span class="op">=</span> <span class="st">"code"</span>, <span class="va">...</span><span class="op">)</span>      <span class="co"># NO!</span></span>
+<span><span class="fu">rix</span><span class="op">(</span><span class="va">...</span>, ide <span class="op">=</span> <span class="st">"positron"</span>, <span class="va">...</span><span class="op">)</span>  <span class="co"># NO!</span></span>
+<span></span>
+<span><span class="co"># ✓ CORRECT - IDE comes from the development shell, not the project shell</span></span>
+<span><span class="fu">rix</span><span class="op">(</span><span class="va">...</span>, ide <span class="op">=</span> <span class="st">"none"</span>, <span class="va">...</span><span class="op">)</span>      <span class="co"># YES - always use this</span></span></code></pre></div>
+<p><strong>Why:</strong> - The <strong>development shell</strong> (<code>~/docs_gh/rix.setup/default.sh</code>) already provides RStudio/IDE - Project shells only need R + packages from DESCRIPTION - Building an IDE in each project shell wastes 30+ minutes compiling from source - Project shells are entered via <code>nix-shell --run</code> by agents (non-interactive, no IDE needed)</p>
+<p><strong>If you see <code>ide = "rstudio"</code> or any other IDE value in a project’s <code>default.R</code>, fix it immediately.</strong></p>
+</div>
+<div class="section level3">
 <h3 id="warning-nix-segfaults---recurring-issue-must-read">⚠️ Nix Segfaults - RECURRING ISSUE (MUST READ)<a class="anchor" aria-label="anchor" href="#warning-nix-segfaults---recurring-issue-must-read"></a></h3>
 <p><strong>CRITICAL:</strong> <code>dyn.load</code> segfaults in Nix shells are a <strong>PERSISTENT RECURRING ISSUE</strong> caused by R version mismatches!</p>
 <p><strong>The Error:</strong></p>
@@ -135,7 +149,7 @@ Traceback:
 <h3 id="fix-pattern-mandatory">Fix Pattern (MANDATORY)<a class="anchor" aria-label="anchor" href="#fix-pattern-mandatory"></a></h3>
 <ol style="list-style-type: decimal"><li>
 <p><strong>Use <code><a href="https://docs.ropensci.org/rix/reference/available_dates.html" class="external-link">rix::available_dates()</a></code> to find compatible dates:</strong></p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://docs.ropensci.org/rix/" class="external-link">rix</a></span><span class="op">)</span></span>
 <span><span class="va">dates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://docs.ropensci.org/rix/reference/available_dates.html" class="external-link">available_dates</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">dates</span>, <span class="fl">10</span><span class="op">)</span>  <span class="co"># See most recent dates</span></span></code></pre></div>
@@ -147,11 +161,11 @@ Traceback:
 </ul></li>
 <li>
 <p><strong>Regenerate and test:</strong></p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="co"># Regenerate default.nix</span></span>
-<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="ex">Rscript</span> default.R</span>
-<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a></span>
-<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="co"># Test ALL packages load</span></span>
-<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'library(ggplot2); library(dplyr); library(targets)'"</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="co"># Regenerate default.nix</span></span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="ex">Rscript</span> default.R</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a><span class="co"># Test ALL packages load</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'library(ggplot2); library(dplyr); library(targets)'"</span></span></code></pre></div>
 </li>
 </ol></div>
 <div class="section level3">
@@ -159,23 +173,23 @@ Traceback:
 <p>If newest rix date doesn’t have all packages built:</p>
 <ol style="list-style-type: decimal"><li>
 <p><strong>List available dates:</strong></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dates</span> <span class="op">&lt;-</span> <span class="fu">rix</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/rix/reference/available_dates.html" class="external-link">available_dates</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </li>
 <li>
 <p><strong>Test older dates until all packages load:</strong></p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># In default.R, try progressively older dates</span></span>
 <span><span class="fu"><a href="https://docs.ropensci.org/rix/reference/rix.html" class="external-link">rix</a></span><span class="op">(</span>date <span class="op">=</span> <span class="st">"2026-01-05"</span>, <span class="va">...</span><span class="op">)</span>  <span class="co"># If fails, try older</span></span>
 <span><span class="fu"><a href="https://docs.ropensci.org/rix/reference/rix.html" class="external-link">rix</a></span><span class="op">(</span>date <span class="op">=</span> <span class="st">"2025-12-15"</span>, <span class="va">...</span><span class="op">)</span>  <span class="co"># etc.</span></span></code></pre></div>
 </li>
 <li>
 <p><strong>Verify ALL DESCRIPTION packages load:</strong></p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e '</span></span>
-<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="st">  pkgs &lt;- c(</span><span class="dt">\"</span><span class="st">ggplot2</span><span class="dt">\"</span><span class="st">, </span><span class="dt">\"</span><span class="st">dplyr</span><span class="dt">\"</span><span class="st">, </span><span class="dt">\"</span><span class="st">targets</span><span class="dt">\"</span><span class="st">, </span><span class="dt">\"</span><span class="st">crew</span><span class="dt">\"</span><span class="st">)</span></span>
-<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a><span class="st">  for (pkg in pkgs) library(pkg, character.only = TRUE)</span></span>
-<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a><span class="st">  cat(</span><span class="dt">\"</span><span class="st">All packages loaded OK</span><span class="dt">\\</span><span class="st">n</span><span class="dt">\"</span><span class="st">)</span></span>
-<span id="cb14-5"><a href="#cb14-5" tabindex="-1"></a><span class="st">'"</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e '</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="st">  pkgs &lt;- c(</span><span class="dt">\"</span><span class="st">ggplot2</span><span class="dt">\"</span><span class="st">, </span><span class="dt">\"</span><span class="st">dplyr</span><span class="dt">\"</span><span class="st">, </span><span class="dt">\"</span><span class="st">targets</span><span class="dt">\"</span><span class="st">, </span><span class="dt">\"</span><span class="st">crew</span><span class="dt">\"</span><span class="st">)</span></span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a><span class="st">  for (pkg in pkgs) library(pkg, character.only = TRUE)</span></span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="st">  cat(</span><span class="dt">\"</span><span class="st">All packages loaded OK</span><span class="dt">\\</span><span class="st">n</span><span class="dt">\"</span><span class="st">)</span></span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="st">'"</span></span></code></pre></div>
 </li>
 </ol></div>
 <div class="section level3">
@@ -208,10 +222,15 @@ Traceback:
 </tr><tr><td>3</td>
 <td>Make Changes</td>
 <td>Edit, test (RED-GREEN-REFACTOR)</td>
-</tr><tr><td>4</td>
+</tr><tr><td>4a</td>
 <td>Run Checks + QA</td>
 <td>
 <code>document()</code>, <code>test()</code>, <code>check()</code>, adversarial QA, quality gate &gt;= Silver</td>
+</tr><tr><td>4b</td>
+<td>Run Pipeline</td>
+<td>
+<code><a href="https://docs.ropensci.org/targets/reference/tar_make.html" class="external-link">targets::tar_make()</a></code> - <strong>NEVER ask user, always run yourself</strong>
+</td>
 </tr><tr><td>5</td>
 <td>Push Cachix</td>
 <td>
@@ -246,9 +265,10 @@ Traceback:
 </div>
 <div class="section level2">
 <h2 id="testing-before-commit-mandatory">Testing Before Commit (MANDATORY)<a class="anchor" aria-label="anchor" href="#testing-before-commit-mandatory"></a></h2>
-<p><strong>NEVER commit without testing:</strong> 1. Enter project-specific Nix environment (./default.sh or ./default_dev.sh) 2. Run <code>tar_validate()</code> - MUST pass 3. Run <code>tar_make(names = "config")</code> - Test at least one target 4. Check GitHub CI will trigger (modify .github/workflows if needed) 5. Include R/dev/issue/fix_*.R script documenting changes</p>
+<p><strong>NEVER commit without testing:</strong> 1. Enter project-specific Nix environment (./default.sh or ./default_dev.sh) 2. Run <code>tar_validate()</code> - MUST pass 3. Run <code>tar_make()</code> - MUST run the FULL pipeline, not just one target 4. Check GitHub CI will trigger (modify .github/workflows if needed) 5. Include R/dev/issue/fix_*.R script documenting changes</p>
+<p><strong>CRITICAL: tar_make() is YOUR job, NEVER the user’s:</strong> - YOU run <code>tar_make()</code> as part of every PR workflow. NEVER ask the user to run it. - If it fails due to Nix segfaults, document the failure in the commit message. - If new targets save files to <code>inst/extdata/</code>, commit those files. - Use <code>nix-shell default.nix --run "Rscript -e 'targets::tar_make()'"</code> or btw tools.</p>
 <p><strong>CRITICAL Testing Requirements:</strong> 1. <strong>Always test via subagents</strong> - Use <code>verbose-runner</code> for any test that produces output 2. <strong>Verify packages are available</strong> - Test library() calls before claiming packages work 3. <strong>Test ALL README code examples</strong> - Every command in README must be tested before committing 4. <strong>Check CI actually succeeds</strong> - Use <code>gh pr checks</code> or <code>gh workflow view</code> to verify 5. <strong>Verify deployment works</strong> - For GitHub Pages, check the site actually exists after merging</p>
-<p><strong>Common Testing Mistakes:</strong> - ❌ Testing in wrong Nix environment (e.g., llm instead of project) - ❌ Not running tar_validate() before commit - ❌ Assuming CI will run (check workflow triggers!) - ❌ Providing untested commands in README - ❌ Not verifying package dependencies before use - ❌ Assuming GitHub Pages works without checking - ✅ Always test in project-specific Nix shell - ✅ Always delegate tests to appropriate subagents - ✅ Always verify outputs before claiming success</p>
+<p><strong>Common Testing Mistakes:</strong> - ❌ Testing in wrong Nix environment (e.g., llm instead of project) - ❌ Not running tar_validate() before commit - ❌ Not running tar_make() (NEVER defer to user!) - ❌ Assuming CI will run (check workflow triggers!) - ❌ Providing untested commands in README - ❌ Not verifying package dependencies before use - ❌ Assuming GitHub Pages works without checking - ✅ Always test in project-specific Nix shell - ✅ Always run tar_make() yourself before committing - ✅ Always delegate tests to appropriate subagents - ✅ Always verify outputs before claiming success</p>
 </div>
 <div class="section level2">
 <h2 id="mandatory-qa-protocol-critical---no-exceptions">Mandatory QA Protocol (CRITICAL - NO EXCEPTIONS)<a class="anchor" aria-label="anchor" href="#mandatory-qa-protocol-critical---no-exceptions"></a></h2>
@@ -307,14 +327,32 @@ Traceback:
 <div class="section level3">
 <h3 id="cachix-push-rule-absolute---no-exceptions">Cachix Push Rule (ABSOLUTE - NO EXCEPTIONS)<a class="anchor" aria-label="anchor" href="#cachix-push-rule-absolute---no-exceptions"></a></h3>
 <p><strong>Only push THIS PROJECT’S R package to johngavin cachix. NEVER push standard R packages that are already on rstats-on-nix.</strong></p>
-<ul><li>
-<code>echo $RESULT | cachix push johngavin</code> = CORRECT (1 path, this package only)</li>
-<li>
-<code>cachix push johngavin $RESULT</code> = WRONG (pushes entire closure = all deps)</li>
-<li>
-<code>nix-store -qR $RESULT | cachix push johngavin</code> = WRONG (pushes all deps)</li>
-</ul><p>Standard R packages (dplyr, arrow, duckdb, ggplot2, targets, etc.) are ALL available from the public <code>rstats-on-nix</code> cache. Pushing them to johngavin wastes limited quota and is forbidden.</p>
+<p>Standard R packages (dplyr, arrow, duckdb, ggplot2, targets, etc.) are ALL available from the public <code>rstats-on-nix</code> cache. Pushing them to johngavin wastes limited quota and is forbidden.</p>
 <p>When running Step 5, just run <code>./push_to_cachix.sh</code> directly - do not ask the user for confirmation. The script handles validation and errors.</p>
+<div class="section level4">
+<h4 id="correct-method-cachix-watch-exec">Correct Method: <code>cachix watch-exec</code>
+<a class="anchor" aria-label="anchor" href="#correct-method-cachix-watch-exec"></a></h4>
+<p>The script uses <code>cachix watch-exec</code> which pushes ONLY paths that Nix actually <strong>builds</strong> during the wrapped command. Dependencies that are <strong>substituted</strong> (downloaded from rstats-on-nix) are NOT pushed.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a><span class="co"># CORRECT - pushes only the built derivation (1 path)</span></span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="ex">cachix</span> watch-exec johngavin <span class="at">--watch-mode</span> auto <span class="at">--</span> nix-build package.nix <span class="at">--no-out-link</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="what-not-to-do-anti-patterns">What NOT To Do (Anti-Patterns)<a class="anchor" aria-label="anchor" href="#what-not-to-do-anti-patterns"></a></h4>
+<p>All of these push the <strong>entire closure</strong> (all runtime dependencies):</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># WRONG - pushes entire closure (30+ R packages)</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="ex">cachix</span> push johngavin <span class="va">$RESULT</span></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="co"># WRONG - ALSO pushes entire closure despite common misconception</span></span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$RESULT</span> <span class="kw">|</span> <span class="ex">cachix</span> push johngavin</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="co"># WRONG - explicitly pushes all transitive dependencies</span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="ex">nix-store</span> <span class="at">-qR</span> <span class="va">$RESULT</span> <span class="kw">|</span> <span class="ex">cachix</span> push johngavin</span></code></pre></div>
+<p><strong>Key fact</strong>: <code>cachix push</code> has NO flag to prevent closure pushing. The <code>echo $PATH | cachix push</code> trick does NOT limit what gets pushed. Both <code>cachix push cache /path</code> and <code>echo /path | cachix push cache</code> resolve and push the full runtime closure.</p>
+</div>
+<div class="section level4">
+<h4 id="verification">Verification<a class="anchor" aria-label="anchor" href="#verification"></a></h4>
+<p>After pushing, the script counts “Pushing” lines in the log. Expected: 0 (already cached) or 1 (this package only). If &gt; 1: dependencies were built locally instead of substituted. Fix: ensure <code>cachix use rstats-on-nix</code> is configured.</p>
+</div>
 </div>
 </div>
 <div class="section level2">
@@ -361,14 +399,14 @@ Traceback:
 <div class="section level3">
 <h3 id="test-coverage-local-only">Test Coverage (Local Only)<a class="anchor" aria-label="anchor" href="#test-coverage-local-only"></a></h3>
 <p>Use <code>covr</code> for local test coverage analysis - no external service needed:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># Install covr (if not in DESCRIPTION)</span></span>
-<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="ex">install.packages</span><span class="er">(</span><span class="st">"covr"</span><span class="kw">)</span></span>
-<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a></span>
-<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="co"># Generate package coverage report</span></span>
-<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a><span class="fu">covr::package_coverage()</span></span>
-<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a></span>
-<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a><span class="co"># Generate HTML report for detailed inspection</span></span>
-<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a><span class="fu">covr::report()</span></span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="co"># Install covr (if not in DESCRIPTION)</span></span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a><span class="ex">install.packages</span><span class="er">(</span><span class="st">"covr"</span><span class="kw">)</span></span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a><span class="co"># Generate package coverage report</span></span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a><span class="fu">covr::package_coverage()</span></span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a><span class="co"># Generate HTML report for detailed inspection</span></span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a><span class="fu">covr::report()</span></span></code></pre></div>
 <p><strong>Why local coverage only:</strong> - Nix immutability prevents external service uploads - Coverage reports are for development iteration, not CI gates - No token management overhead - Faster feedback during development</p>
 </div>
 </div>
@@ -417,20 +455,20 @@ Traceback:
 </div>
 <div class="section level3">
 <h3 id="generation-commands">Generation Commands<a class="anchor" aria-label="anchor" href="#generation-commands"></a></h3>
-<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># Generate context for current package</span></span>
-<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r . <span class="at">--compact</span> <span class="op">&gt;</span> inst/extdata/ctx/mypackage.ctx.yaml</span>
-<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a></span>
-<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a><span class="co"># Generate context for a CRAN dependency</span></span>
-<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r dplyr <span class="at">--compact</span> <span class="op">&gt;</span> inst/extdata/ctx/dplyr.ctx.yaml</span>
-<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a></span>
-<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="co"># Generate context for Bioconductor package</span></span>
-<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r bioc:GenomicRanges <span class="at">--compact</span> <span class="op">&gt;</span> inst/extdata/ctx/GenomicRanges.ctx.yaml</span>
-<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a></span>
-<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a><span class="co"># Generate context for GitHub package</span></span>
-<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r github:ropensci/rix <span class="at">--compact</span> <span class="op">&gt;</span> inst/extdata/ctx/rix.ctx.yaml</span>
-<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a></span>
-<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="co"># Generate context for Python package</span></span>
-<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> python requests <span class="at">--compact</span> <span class="op">&gt;</span> inst/extdata/ctx/requests.ctx.yaml</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a><span class="co"># Generate context for current package</span></span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r . <span class="at">--compact</span> <span class="op">&gt;</span> inst/extdata/ctx/mypackage.ctx.yaml</span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a><span class="co"># Generate context for a CRAN dependency</span></span>
+<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r dplyr <span class="at">--compact</span> <span class="op">&gt;</span> inst/extdata/ctx/dplyr.ctx.yaml</span>
+<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a><span class="co"># Generate context for Bioconductor package</span></span>
+<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r bioc:GenomicRanges <span class="at">--compact</span> <span class="op">&gt;</span> inst/extdata/ctx/GenomicRanges.ctx.yaml</span>
+<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a></span>
+<span id="cb20-10"><a href="#cb20-10" tabindex="-1"></a><span class="co"># Generate context for GitHub package</span></span>
+<span id="cb20-11"><a href="#cb20-11" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r github:ropensci/rix <span class="at">--compact</span> <span class="op">&gt;</span> inst/extdata/ctx/rix.ctx.yaml</span>
+<span id="cb20-12"><a href="#cb20-12" tabindex="-1"></a></span>
+<span id="cb20-13"><a href="#cb20-13" tabindex="-1"></a><span class="co"># Generate context for Python package</span></span>
+<span id="cb20-14"><a href="#cb20-14" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> python requests <span class="at">--compact</span> <span class="op">&gt;</span> inst/extdata/ctx/requests.ctx.yaml</span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="workflow-integration">Workflow Integration<a class="anchor" aria-label="anchor" href="#workflow-integration"></a></h3>
@@ -450,7 +488,7 @@ Traceback:
 <div class="section level3">
 <h3 id="targets-integration">targets Integration<a class="anchor" aria-label="anchor" href="#targets-integration"></a></h3>
 <p>Add to <code>R/tar_plans/plan_pkgctx.R</code>:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plan_pkgctx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  <span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_target.html" class="external-link">tar_target</a></span><span class="op">(</span></span>
 <span>    <span class="va">pkgctx_self</span>,</span>
@@ -520,23 +558,23 @@ Traceback:
 <div class="section level4">
 <h4 id="id_1-always-use-cheaper-models-where-possible">1. Always Use Cheaper Models Where Possible<a class="anchor" aria-label="anchor" href="#id_1-always-use-cheaper-models-where-possible"></a></h4>
 <p><strong>❌ WRONG:</strong> Using Opus for simple tasks (wastes tokens and money)</p>
-<div class="sourceCode" id="cb19"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a>Task(subagent_type<span class="op">=</span><span class="st">"general-purpose"</span>, prompt<span class="op">=</span><span class="st">"check if file exists"</span>)  <span class="co"># Defaults to Opus!</span></span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a>Task(subagent_type<span class="op">=</span><span class="st">"general-purpose"</span>, prompt<span class="op">=</span><span class="st">"check if file exists"</span>)  <span class="co"># Defaults to Opus!</span></span></code></pre></div>
 <p><strong>✅ CORRECT:</strong> Match model to task complexity</p>
-<div class="sourceCode" id="cb20"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>Task(subagent_type<span class="op">=</span><span class="st">"general-purpose"</span>, model<span class="op">=</span><span class="st">"haiku"</span>, prompt<span class="op">=</span><span class="st">"check if file exists"</span>)  <span class="co"># Simple task</span></span>
-<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>Task(subagent_type<span class="op">=</span><span class="st">"verbose-runner"</span>, model<span class="op">=</span><span class="st">"sonnet"</span>, prompt<span class="op">=</span><span class="st">"run test suite"</span>)  <span class="co"># Medium complexity</span></span>
-<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a>Task(subagent_type<span class="op">=</span><span class="st">"planner"</span>, model<span class="op">=</span><span class="st">"opus"</span>, prompt<span class="op">=</span><span class="st">"design architecture"</span>)  <span class="co"># Complex reasoning</span></span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a>Task(subagent_type<span class="op">=</span><span class="st">"general-purpose"</span>, model<span class="op">=</span><span class="st">"haiku"</span>, prompt<span class="op">=</span><span class="st">"check if file exists"</span>)  <span class="co"># Simple task</span></span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a>Task(subagent_type<span class="op">=</span><span class="st">"verbose-runner"</span>, model<span class="op">=</span><span class="st">"sonnet"</span>, prompt<span class="op">=</span><span class="st">"run test suite"</span>)  <span class="co"># Medium complexity</span></span>
+<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a>Task(subagent_type<span class="op">=</span><span class="st">"planner"</span>, model<span class="op">=</span><span class="st">"opus"</span>, prompt<span class="op">=</span><span class="st">"design architecture"</span>)  <span class="co"># Complex reasoning</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="id_2-run-independent-tasks-in-parallel">2. Run Independent Tasks in Parallel<a class="anchor" aria-label="anchor" href="#id_2-run-independent-tasks-in-parallel"></a></h4>
 <p>Execute independent tasks simultaneously for efficiency:</p>
-<div class="sourceCode" id="cb21"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="co"># ✅ CORRECT - All run simultaneously</span></span>
-<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>Task(model<span class="op">=</span><span class="st">"haiku"</span>, prompt<span class="op">=</span><span class="st">"check logs"</span>),</span>
-<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>Task(model<span class="op">=</span><span class="st">"haiku"</span>, prompt<span class="op">=</span><span class="st">"check status"</span>),</span>
-<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a>Task(model<span class="op">=</span><span class="st">"haiku"</span>, prompt<span class="op">=</span><span class="st">"test endpoint"</span>)</span>
-<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a></span>
-<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a><span class="co"># ❌ WRONG - Sequential (slow)</span></span>
-<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a>Task(prompt<span class="op">=</span><span class="st">"check logs"</span>)     <span class="co"># Waits...</span></span>
-<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a>Task(prompt<span class="op">=</span><span class="st">"check status"</span>)   <span class="co"># Then waits...</span></span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a><span class="co"># ✅ CORRECT - All run simultaneously</span></span>
+<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a>Task(model<span class="op">=</span><span class="st">"haiku"</span>, prompt<span class="op">=</span><span class="st">"check logs"</span>),</span>
+<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a>Task(model<span class="op">=</span><span class="st">"haiku"</span>, prompt<span class="op">=</span><span class="st">"check status"</span>),</span>
+<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a>Task(model<span class="op">=</span><span class="st">"haiku"</span>, prompt<span class="op">=</span><span class="st">"test endpoint"</span>)</span>
+<span id="cb24-5"><a href="#cb24-5" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" tabindex="-1"></a><span class="co"># ❌ WRONG - Sequential (slow)</span></span>
+<span id="cb24-7"><a href="#cb24-7" tabindex="-1"></a>Task(prompt<span class="op">=</span><span class="st">"check logs"</span>)     <span class="co"># Waits...</span></span>
+<span id="cb24-8"><a href="#cb24-8" tabindex="-1"></a>Task(prompt<span class="op">=</span><span class="st">"check status"</span>)   <span class="co"># Then waits...</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level3">
@@ -589,11 +627,11 @@ Traceback:
 <div class="section level2">
 <h2 id="testing-shiny-apps">Testing Shiny Apps<a class="anchor" aria-label="anchor" href="#testing-shiny-apps"></a></h2>
 <p><strong>With Chrome Extension:</strong></p>
-<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="co"># Launch Claude with Chrome extension</span></span>
-<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a><span class="ex">claude</span> <span class="at">--chrome</span></span>
-<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a></span>
-<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a><span class="co"># Then in R:</span></span>
-<span id="cb22-5"><a href="#cb22-5" tabindex="-1"></a><span class="fu">launch_dashboard()</span>  <span class="co"># Can interact with browser</span></span></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="co"># Launch Claude with Chrome extension</span></span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a><span class="ex">claude</span> <span class="at">--chrome</span></span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a><span class="co"># Then in R:</span></span>
+<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a><span class="fu">launch_dashboard()</span>  <span class="co"># Can interact with browser</span></span></code></pre></div>
 <p><strong>Without Chrome Extension:</strong> - Only verify functions exist - Don’t actually launch (will hang waiting for browser)</p>
 </div>
 <div class="section level2">
@@ -650,7 +688,7 @@ README.qmd            # Source for README.md (NEVER edit README.md directly)</co
 <p><strong>All code examples in README.qmd and vignettes MUST be stored as targets:</strong></p>
 <ol style="list-style-type: decimal"><li>
 <p><strong>Store code as text</strong> in <code>R/tar_plans/plan_doc_examples.R</code>:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_target.html" class="external-link">tar_target</a></span><span class="op">(</span></span>
 <span>  <span class="va">code_example_query</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
@@ -662,7 +700,7 @@ README.qmd            # Source for README.md (NEVER edit README.md directly)</co
 </li>
 <li>
 <p><strong>Parse to validate syntax</strong>:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_target.html" class="external-link">tar_target</a></span><span class="op">(</span></span>
 <span>  <span class="va">code_parsed_query</span>,</span>
 <span>  <span class="fu">parse_code_example</span><span class="op">(</span><span class="va">code_example_query</span><span class="op">)</span>  <span class="co"># Returns list(valid, error, code)</span></span>
@@ -670,7 +708,7 @@ README.qmd            # Source for README.md (NEVER edit README.md directly)</co
 </li>
 <li>
 <p><strong>Evaluate with mock data</strong> to verify code runs:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_target.html" class="external-link">tar_target</a></span><span class="op">(</span></span>
 <span>  <span class="va">code_eval_query</span>,</span>
 <span>  <span class="fu">eval_code_with_mock_db</span><span class="op">(</span><span class="va">code_example_query</span><span class="op">)</span>  <span class="co"># Returns list(success, error)</span></span>
@@ -687,7 +725,7 @@ cat("```r\n", paste(code_example_query, collapse = "\n"), "\n```", sep = "")
 </li>
 <li>
 <p><strong>Validation target</strong> to fail pipeline if syntax/eval errors:</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">targets</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/targets/reference/tar_target.html" class="external-link">tar_target</a></span><span class="op">(</span></span>
 <span>  <span class="va">doc_examples_validation</span>,</span>
 <span>  <span class="op">{</span></span>
@@ -704,10 +742,10 @@ cat("```r\n", paste(code_example_query, collapse = "\n"), "\n```", sep = "")
 <div class="section level3">
 <h3 id="readme-project-structure-mandatory">README Project Structure (MANDATORY)<a class="anchor" aria-label="anchor" href="#readme-project-structure-mandatory"></a></h3>
 <p><strong>Always use <code>fs::dir_tree(recurse = 2)</code> in README:</strong></p>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a><span class="st">```</span><span class="at">{r}</span></span>
-<span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a><span class="at">#| echo: false</span></span>
-<span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a><span class="at">#| eval: true</span></span>
-<span id="cb29-4"><a href="#cb29-4" tabindex="-1"></a><span class="at">fs::dir_tree(recurse = 2)</span></span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a><span class="st">```</span><span class="at">{r}</span></span>
+<span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a><span class="at">#| echo: false</span></span>
+<span id="cb32-3"><a href="#cb32-3" tabindex="-1"></a><span class="at">#| eval: true</span></span>
+<span id="cb32-4"><a href="#cb32-4" tabindex="-1"></a><span class="at">fs::dir_tree(recurse = 2)</span></span></code></pre></div>
 <pre><code>
 **Why:** Full recursion shows hundreds of files in deps/, *_files/, etc. Limit to 2 levels for readability.
 
@@ -784,11 +822,11 @@ cat("```r\n", paste(code_example_query, collapse = "\n"), "\n```", sep = "")
 </tr></tbody></table><div class="section level3">
 <h3 id="how-agents-run-project-specific-commands">How Agents Run Project-Specific Commands<a class="anchor" aria-label="anchor" href="#how-agents-run-project-specific-commands"></a></h3>
 <p>Agents run in the development shell by default. To run commands that need project packages (from DESCRIPTION), use <code>nix-shell --run</code>:</p>
-<div class="sourceCode" id="cb31"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a><span class="co"># Pattern: nix-shell default.nix --run "COMMAND"</span></span>
-<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a><span class="bu">cd</span> /path/to/project</span>
-<span id="cb31-3"><a href="#cb31-3" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'devtools::document()'"</span></span>
-<span id="cb31-4"><a href="#cb31-4" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'devtools::test()'"</span></span>
-<span id="cb31-5"><a href="#cb31-5" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'devtools::check()'"</span></span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a><span class="co"># Pattern: nix-shell default.nix --run "COMMAND"</span></span>
+<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a><span class="bu">cd</span> /path/to/project</span>
+<span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'devtools::document()'"</span></span>
+<span id="cb34-4"><a href="#cb34-4" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'devtools::test()'"</span></span>
+<span id="cb34-5"><a href="#cb34-5" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'devtools::check()'"</span></span></code></pre></div>
 <p><strong>Why this works:</strong> - <code>nix-shell --run</code> enters the project shell, runs the command, then exits - Non-interactive - agents can use this - All packages from DESCRIPTION are available</p>
 <p><strong>DO NOT use <code>./default.sh</code></strong> - it spawns an interactive shell that agents cannot control.</p>
 </div>
@@ -815,16 +853,16 @@ cat("```r\n", paste(code_example_query, collapse = "\n"), "\n```", sep = "")
 </tr></tbody></table></div>
 <div class="section level3">
 <h3 id="example-running-check">Example: Running /check<a class="anchor" aria-label="anchor" href="#example-running-check"></a></h3>
-<div class="sourceCode" id="cb32"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a><span class="bu">cd</span> /path/to/project</span>
-<span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a></span>
-<span id="cb32-3"><a href="#cb32-3" tabindex="-1"></a><span class="co"># Document</span></span>
-<span id="cb32-4"><a href="#cb32-4" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'devtools::document()'"</span></span>
-<span id="cb32-5"><a href="#cb32-5" tabindex="-1"></a></span>
-<span id="cb32-6"><a href="#cb32-6" tabindex="-1"></a><span class="co"># Test</span></span>
-<span id="cb32-7"><a href="#cb32-7" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'devtools::test()'"</span></span>
-<span id="cb32-8"><a href="#cb32-8" tabindex="-1"></a></span>
-<span id="cb32-9"><a href="#cb32-9" tabindex="-1"></a><span class="co"># Check</span></span>
-<span id="cb32-10"><a href="#cb32-10" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'devtools::check(args = </span><span class="dt">\"</span><span class="st">--as-cran</span><span class="dt">\"</span><span class="st">)'"</span></span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a><span class="bu">cd</span> /path/to/project</span>
+<span id="cb35-2"><a href="#cb35-2" tabindex="-1"></a></span>
+<span id="cb35-3"><a href="#cb35-3" tabindex="-1"></a><span class="co"># Document</span></span>
+<span id="cb35-4"><a href="#cb35-4" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'devtools::document()'"</span></span>
+<span id="cb35-5"><a href="#cb35-5" tabindex="-1"></a></span>
+<span id="cb35-6"><a href="#cb35-6" tabindex="-1"></a><span class="co"># Test</span></span>
+<span id="cb35-7"><a href="#cb35-7" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'devtools::test()'"</span></span>
+<span id="cb35-8"><a href="#cb35-8" tabindex="-1"></a></span>
+<span id="cb35-9"><a href="#cb35-9" tabindex="-1"></a><span class="co"># Check</span></span>
+<span id="cb35-10"><a href="#cb35-10" tabindex="-1"></a><span class="ex">nix-shell</span> default.nix <span class="at">--run</span> <span class="st">"Rscript -e 'devtools::check(args = </span><span class="dt">\"</span><span class="st">--as-cran</span><span class="dt">\"</span><span class="st">)'"</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -899,14 +937,14 @@ preload error: Error: package 'ggplot2' could not be loaded</code></pre>
 <h3 id="white_check_mark-actual-working-solutions">✅ ACTUAL Working Solutions<a class="anchor" aria-label="anchor" href="#white_check_mark-actual-working-solutions"></a></h3>
 <div class="section level4">
 <h4 id="option-1-dont-use-ggplot2-recommended">Option 1: Don’t Use ggplot2 (RECOMMENDED)<a class="anchor" aria-label="anchor" href="#option-1-dont-use-ggplot2-recommended"></a></h4>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Use plotly instead - it actually works</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://plotly-r.com" class="external-link">plotly</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/plotly/man/plot_ly.html" class="external-link">plot_ly</a></span><span class="op">(</span><span class="va">data</span>, x <span class="op">=</span> <span class="op">~</span><span class="va">x</span>, y <span class="op">=</span> <span class="op">~</span><span class="va">y</span>, type <span class="op">=</span> <span class="st">'scatter'</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="option-2-explicitly-install-dependencies-working-pattern-from-irishbuoys">Option 2: Explicitly Install Dependencies (WORKING PATTERN FROM irishbuoys)<a class="anchor" aria-label="anchor" href="#option-2-explicitly-install-dependencies-working-pattern-from-irishbuoys"></a></h4>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Install munsell FIRST, then ggplot2 - order matters!</span></span>
 <span><span class="fu">webr</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"munsell"</span>, repos <span class="op">=</span> <span class="st">"https://repo.r-wasm.org"</span><span class="op">)</span></span>
 <span><span class="fu">webr</span><span class="fu">::</span><span class="fu">install</span><span class="op">(</span><span class="st">"ggplot2"</span>, repos <span class="op">=</span> <span class="st">"https://repo.r-wasm.org"</span><span class="op">)</span></span>
@@ -958,10 +996,10 @@ preload error: Error: package 'ggplot2' could not be loaded</code></pre>
 </div>
 <div class="section level3">
 <h3 id="pencil-testing-command">📝 Testing Command<a class="anchor" aria-label="anchor" href="#pencil-testing-command"></a></h3>
-<div class="sourceCode" id="cb36"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a><span class="co"># After building, ALWAYS test:</span></span>
-<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a><span class="ex">open</span> dashboard_shinylive.html</span>
-<span id="cb36-3"><a href="#cb36-3" tabindex="-1"></a><span class="co"># Press F12, check Console tab</span></span>
-<span id="cb36-4"><a href="#cb36-4" tabindex="-1"></a><span class="co"># Look for "munsell" or "ggplot2" errors</span></span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" tabindex="-1"></a><span class="co"># After building, ALWAYS test:</span></span>
+<span id="cb39-2"><a href="#cb39-2" tabindex="-1"></a><span class="ex">open</span> dashboard_shinylive.html</span>
+<span id="cb39-3"><a href="#cb39-3" tabindex="-1"></a><span class="co"># Press F12, check Console tab</span></span>
+<span id="cb39-4"><a href="#cb39-4" tabindex="-1"></a><span class="co"># Look for "munsell" or "ggplot2" errors</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -969,12 +1007,12 @@ preload error: Error: package 'ggplot2' could not be loaded</code></pre>
 <p>Generate compact API documentation for R/Python packages to provide Claude with function signatures and documentation. <strong>Reduces token usage by ~67%</strong> while preserving essential API information.</p>
 <div class="section level3">
 <h3 id="quick-usage-no-installation-required">Quick Usage (No Installation Required)<a class="anchor" aria-label="anchor" href="#quick-usage-no-installation-required"></a></h3>
-<div class="sourceCode" id="cb37"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a><span class="co"># Generate context for current package</span></span>
-<span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r . <span class="at">--compact</span> <span class="op">&gt;</span> package.ctx.yaml</span>
-<span id="cb37-3"><a href="#cb37-3" tabindex="-1"></a></span>
-<span id="cb37-4"><a href="#cb37-4" tabindex="-1"></a><span class="co"># Generate context for dependencies</span></span>
-<span id="cb37-5"><a href="#cb37-5" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r dplyr <span class="at">--compact</span> <span class="op">&gt;</span> .claude/context/dplyr.ctx.yaml</span>
-<span id="cb37-6"><a href="#cb37-6" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r targets <span class="at">--compact</span> <span class="at">--hoist-common-args</span> <span class="op">&gt;</span> .claude/context/targets.ctx.yaml</span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" tabindex="-1"></a><span class="co"># Generate context for current package</span></span>
+<span id="cb40-2"><a href="#cb40-2" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r . <span class="at">--compact</span> <span class="op">&gt;</span> package.ctx.yaml</span>
+<span id="cb40-3"><a href="#cb40-3" tabindex="-1"></a></span>
+<span id="cb40-4"><a href="#cb40-4" tabindex="-1"></a><span class="co"># Generate context for dependencies</span></span>
+<span id="cb40-5"><a href="#cb40-5" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r dplyr <span class="at">--compact</span> <span class="op">&gt;</span> .claude/context/dplyr.ctx.yaml</span>
+<span id="cb40-6"><a href="#cb40-6" tabindex="-1"></a><span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r targets <span class="at">--compact</span> <span class="at">--hoist-common-args</span> <span class="op">&gt;</span> .claude/context/targets.ctx.yaml</span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="when-to-use-pkgctx">When to Use pkgctx<a class="anchor" aria-label="anchor" href="#when-to-use-pkgctx"></a></h3>
@@ -989,11 +1027,11 @@ preload error: Error: package 'ggplot2' could not be loaded</code></pre>
 </ul></div>
 <div class="section level3">
 <h3 id="integration-pattern">Integration Pattern<a class="anchor" aria-label="anchor" href="#integration-pattern"></a></h3>
-<div class="sourceCode" id="cb38"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" tabindex="-1"></a><span class="co"># Generate contexts for frequently used packages</span></span>
-<span id="cb38-2"><a href="#cb38-2" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> .claude/context</span>
-<span id="cb38-3"><a href="#cb38-3" tabindex="-1"></a><span class="cf">for</span> pkg <span class="kw">in</span> dplyr tidyr purrr gert gh usethis devtools<span class="kw">;</span> <span class="cf">do</span></span>
-<span id="cb38-4"><a href="#cb38-4" tabindex="-1"></a>  <span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r <span class="st">"</span><span class="va">$pkg</span><span class="st">"</span> <span class="at">--compact</span> <span class="op">&gt;</span> <span class="st">".claude/context/</span><span class="va">${pkg}</span><span class="st">.ctx.yaml"</span></span>
-<span id="cb38-5"><a href="#cb38-5" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" tabindex="-1"></a><span class="co"># Generate contexts for frequently used packages</span></span>
+<span id="cb41-2"><a href="#cb41-2" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> .claude/context</span>
+<span id="cb41-3"><a href="#cb41-3" tabindex="-1"></a><span class="cf">for</span> pkg <span class="kw">in</span> dplyr tidyr purrr gert gh usethis devtools<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb41-4"><a href="#cb41-4" tabindex="-1"></a>  <span class="ex">nix</span> run github:b-rodrigues/pkgctx <span class="at">--</span> r <span class="st">"</span><span class="va">$pkg</span><span class="st">"</span> <span class="at">--compact</span> <span class="op">&gt;</span> <span class="st">".claude/context/</span><span class="va">${pkg}</span><span class="st">.ctx.yaml"</span></span>
+<span id="cb41-5"><a href="#cb41-5" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
 <p><strong>Full details:</strong> See <code>llm-package-context</code> skill for CI workflows, API drift detection, and advanced usage.</p>
 </div>
 </div>
