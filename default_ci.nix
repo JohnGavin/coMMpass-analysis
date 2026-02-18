@@ -34,6 +34,12 @@ let
       tidyr
       forcats
       lubridate
+      # Data querying
+      arrow
+      DBI
+      duckdb
+      dbplyr
+      cli
       # Utilities
       fs
       glue
@@ -42,13 +48,14 @@ let
       mirai
       nanonext
       tictoc
-      # CI-specific: documentation
+      # CI-specific: documentation and testing
       devtools
       gert
       knitr
       pkgdown
       quarto
       rmarkdown
+      spelling
       testthat;
   };
 
