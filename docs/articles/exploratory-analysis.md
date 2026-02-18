@@ -14,51 +14,104 @@ to populate the data.
 
 ## Clinical Demographics
 
-    #> *Clinical summary not available. Run `tar_make()` first.*
+    #> - **Patients:** 10 
+    #> - **Variables:** 11 
+    #> - **Data completeness:** 90.9%
 
 ### Age at Diagnosis
 
-    #> *Age data not available.*
+![Age at diagnosis
+distribution](exploratory-analysis_files/figure-html/age-histogram-1.png)
+
+Age at diagnosis distribution
 
 ### Gender Distribution
 
-    #> *Gender data not available.*
+| Gender | Freq | Percentage |
+|:-------|-----:|:-----------|
+| female |    1 | 10.0%      |
+| male   |    9 | 90.0%      |
+
+Gender Distribution
 
 ### Race Distribution
 
-    #> *Race data not available.*
+| Race                      | Freq | Percentage |
+|:--------------------------|-----:|:-----------|
+| asian                     |    2 | 20.0%      |
+| black or african american |    3 | 30.0%      |
+| not reported              |    1 | 10.0%      |
+| white                     |    4 | 40.0%      |
+
+Race Distribution
 
 ### Vital Status
 
-    #> *Vital status data not available.*
+| Status | Freq | Percentage |
+|:-------|-----:|:-----------|
+| alive  |    5 | 50.0%      |
+| dead   |    5 | 50.0%      |
+
+Vital Status
 
 ## Survival Endpoints
 
-    #> *Survival endpoint data not available. Run `tar_make()` first.*
+    #> ### Days to Death
+    #> 
+    #> ```
+    #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    #>     296     325     361     451     447     826 
+    #> ```
+    #> 
+    #> - **Censoring rate:** 50.0% (patients still alive at last follow-up)
+    #> 
+    #> ### Days to Last Follow-up
+    #> 
+    #> ```
+    #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    #>   473.0   749.0   797.0   876.6   869.0  1495.0 
+    #> ```
 
 ## Biospecimen Overview
 
-    #> *Biospecimen summary not available. Run `tar_make()` first.*
+    #> - **Total samples:** 10 
+    #> - **Variables:** 8
 
 ### Sample Types
 
-    #> *Sample type data not available.*
+![Sample type
+distribution](exploratory-analysis_files/figure-html/sample-type-bar-1.png)
+
+Sample type distribution
 
 ### Samples per Patient
 
-    #> *Samples-per-patient data not available.*
+![Samples per patient
+distribution](exploratory-analysis_files/figure-html/samples-per-patient-1.png)
+
+Samples per patient distribution
 
 ## RNA-seq Quality
 
-    #> *RNA-seq summary not available. Run `tar_make()` first.*
+    #> - **Genes:** 100 
+    #> - **Samples:** 10 
+    #> - **Total counts:** 62,993 
+    #> - **Median library size:** 6,287 
+    #> - **Sparsity (% zero entries):** 0.3%
 
 ### Library Size Distribution
 
-    #> *Library size data not available.*
+![Library sizes across
+samples](exploratory-analysis_files/figure-html/library-size-boxplot-1.png)
+
+Library sizes across samples
 
 ### Genes Detected per Sample
 
-    #> *Genes-detected data not available.*
+![Genes detected per
+sample](exploratory-analysis_files/figure-html/genes-detected-histogram-1.png)
+
+Genes detected per sample
 
 ## DuckDB Query Examples
 
@@ -85,7 +138,28 @@ females <- query_commpass_parquet(
 )
 ```
 
-    #> *DuckDB demo not available. Run `tar_make()` first.*
+    #> **SQL equivalent:**
+    #> 
+    #> ```sql
+    #>  SELECT submitter_id, gender, vital_status, age_at_diagnosis
+    #>                          FROM clinical
+    #>                          LIMIT 10 
+    #> ```
+
+| submitter_id | gender | vital_status | age_at_diagnosis |
+|:-------------|:-------|:-------------|-----------------:|
+| PATIENT_01   | male   | dead         |               64 |
+| PATIENT_02   | male   | dead         |               73 |
+| PATIENT_03   | male   | alive        |               56 |
+| PATIENT_04   | male   | dead         |               53 |
+| PATIENT_05   | male   | alive        |               74 |
+| PATIENT_06   | female | alive        |               54 |
+| PATIENT_07   | male   | dead         |               63 |
+| PATIENT_08   | male   | alive        |               69 |
+| PATIENT_09   | male   | alive        |               75 |
+| PATIENT_10   | male   | dead         |               67 |
+
+Sample query result (first 10 rows)
 
 ### Example: Aggregation with DuckDB
 
@@ -106,11 +180,32 @@ result <- clinical_tbl |>
 DBI::dbDisconnect(con, shutdown = TRUE)
 ```
 
-    #> *DuckDB demo not available.*
+    #> **SQL equivalent:**
+    #> 
+    #> ```sql
+    #>  SELECT gender, COUNT(*) AS n,
+    #>                           ROUND(AVG(age_at_diagnosis / 365.25), 1) AS mean_age_years
+    #>                         FROM clinical
+    #>                         WHERE gender IS NOT NULL
+    #>                         GROUP BY gender 
+    #> ```
+
+| gender |   n | mean_age_years |
+|:-------|----:|---------------:|
+| female |   1 |            0.1 |
+| male   |   9 |            0.2 |
+
+Aggregation result
 
 ## Cross-dataset Integration
 
-    #> *Integration summary not available. Run `tar_make()` first.*
+    #> Patient ID overlap between clinical and biospecimen datasets:
+    #> 
+    #> - **Clinical patients:** 10 
+    #> - **Biospecimen patients:** 10 
+    #> - **Shared (in both):** 0 
+    #> - **Clinical only:** 10 
+    #> - **Biospecimen only:** 10
 
 ## Reproducibility
 
@@ -118,10 +213,10 @@ Git Commit Info (click to expand)
 
 | Item        | Value                                    |
 |:------------|:-----------------------------------------|
-| Commit Hash | 677f848b562bc672251a88876baedc0516ec5a67 |
+| Commit Hash | a631c4a544c36ece578317fa83eef69dd4e2f508 |
 | Author      | jg <JohnGavin@users.noreply.github.com>  |
-| Time        | 2026-02-18 13:21:27                      |
-| Branch      | fix/issue-33-pkgdown-rebuild             |
+| Time        | 2026-02-18 13:48:02                      |
+| Branch      | main                                     |
 
 Session Info (click to expand)
 
@@ -159,5 +254,5 @@ Session Info (click to expand)
     #> [41] glue_1.8.0         systemfonts_1.3.1  gert_2.3.1         xfun_0.56         
     #> [45] tibble_3.3.1       tidyselect_1.2.1   sys_3.4.3          knitr_1.51        
     #> [49] farver_2.1.2       htmltools_0.5.9    igraph_2.2.1       rmarkdown_2.30    
-    #> [53] compiler_4.5.2     prettyunits_1.2.0  S7_0.2.1           askpass_1.2.1     
-    #> [57] openssl_2.3.4
+    #> [53] labeling_0.4.3     compiler_4.5.2     prettyunits_1.2.0  S7_0.2.1          
+    #> [57] askpass_1.2.1      openssl_2.3.4

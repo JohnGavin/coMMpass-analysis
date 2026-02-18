@@ -34,25 +34,27 @@ if (file.exists("../R/utils.R")) {
   source("R/utils.R")
 }
 
-key <- "TAR_PROJECT"
-proj_dir <- Sys.getenv(key)
-targets_available <- FALSE
+# Discover targets store and project root
+proj_dir <- Sys.getenv("TAR_PROJECT")
+tar_store <- NULL
+project_root <- "."
 
 if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
-  tar_config_set(store = file.path(proj_dir, "_targets"))
-  targets_available <- TRUE
+  tar_store <- file.path(proj_dir, "_targets")
+  project_root <- proj_dir
 } else if (dir.exists("_targets")) {
-  targets_available <- TRUE
+  tar_store <- "_targets"
+  project_root <- "."
+} else if (dir.exists("../_targets")) {
+  tar_store <- "../_targets"
+  project_root <- ".."
 }
 
 # Helper to safely read targets (returns NULL if not available)
 safe_tar_read <- function(name) {
-  if (!targets_available) return(NULL)
-  tryCatch(tar_read(name), error = function(e) NULL)
+  if (is.null(tar_store)) return(NULL)
+  tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
 }
-
-# Resolve project root for file paths
-project_root <- if (proj_dir != "") proj_dir else "."
 ```
 
 ## Overview
