@@ -49,15 +49,41 @@ caffeinate -i ./default.sh
 ### In the Nix Shell
 
 ```bash
-# List CoMMpass S3 bucket (no credentials needed)
-aws s3 ls --no-sign-request s3://gdc-mmrf-commpass-phs000748-2-open/
+# Count files in CoMMpass S3 bucket (no credentials needed)
+aws s3 ls --no-sign-request s3://gdc-mmrf-commpass-phs000748-2-open/ | wc
+#       46     230    2627
+# 46 top-level prefixes/files
 
 # Start R
 R
+```
 
-# In R:
+```r
+# For users: library(coMMpass) works if installed via Nix (see default.R git_pkgs)
+library(coMMpass)
+
+# For developers: use load_all() for live source changes
+# devtools::load_all()
+
+# Query GDC directly with TCGAbiolinks
 library(TCGAbiolinks)
-query <- GDCquery(project = "MMRF-COMMPASS", ...)
+system.time({
+  query <- GDCquery(
+    project = "MMRF-COMMPASS",
+    data.category = "Transcriptome Profiling",
+    data.type = "Gene Expression Quantification",
+    workflow.type = "STAR - Counts"
+  )
+})
+#    user  system elapsed
+#   2.858   0.193  12.465
+
+# WARNING: Downloading is ~3.6 GB across 859 files
+# GDCdownload(query)
+# Downloading data for project MMRF-COMMPASS
+# GDCdownload will download 859 files. A total of 3.625715802 GB
+# The total size of files is big. We will download files in chunks
+# Downloading chunk 1 of 4 (236 files, size = 995.931306 MB)
 ```
 
 ## Data Access
@@ -85,14 +111,27 @@ aws s3 cp --no-sign-request \
 ```r
 library(TCGAbiolinks)
 
-query <- GDCquery(
-  project = "MMRF-COMMPASS",
-  data.category = "Transcriptome Profiling",
-  data.type = "Gene Expression Quantification",
-  workflow.type = "STAR - Counts"
-)
+system.time({
+  query <- GDCquery(
+    project = "MMRF-COMMPASS",
+    data.category = "Transcriptome Profiling",
+    data.type = "Gene Expression Quantification",
+    workflow.type = "STAR - Counts"
+  )
+})
+#    user  system elapsed
+#   2.858   0.193  12.465
 
+# WARNING: Downloads 859 files totalling ~3.6 GB
+# Downloads in chunks of ~1 GB each
 GDCdownload(query)
+# Downloading data for project MMRF-COMMPASS
+# GDCdownload will download 859 files. A total of 3.625715802 GB
+# Downloading chunk 1 of 4 (236 files, size = 995.931306 MB) as ...tar.gz
+# Downloading chunk 2 of 4 (233 files, size = 980.248560 MB) as ...tar.gz
+# Downloading chunk 3 of 4 (221 files, size = 919.145699 MB) as ...tar.gz
+# Downloading chunk 4 of 4 (169 files, size = 830.245815 MB) as ...tar.gz
+
 data <- GDCprepare(query)
 ```
 

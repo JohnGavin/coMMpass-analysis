@@ -4,8 +4,8 @@
 #
 # CRITICAL: Only the single project derivation is pushed. Standard R packages
 # (dplyr, arrow, duckdb, etc.) are ALREADY on rstats-on-nix and must NEVER
-# be pushed to johngavin. We use `echo $PATH | cachix push` (single path)
-# instead of `cachix push $PATH` (which pushes the entire closure/all deps).
+# be pushed to johngavin. Uses `cachix watch-exec` which pushes ONLY paths
+# that are actually built (not substituted from rstats-on-nix).
 #
 # Step 5 of 9-step workflow. Builds from package.nix, pushes ONE derivation.
 #
@@ -77,7 +77,7 @@ main() {
   echo ""
 
   # STEP 1: Validate environment
-  log_step "Step 1/5: Validating environment..."
+  log_step "Step 1/4: Validating environment..."
 
   if [ ! -f "DESCRIPTION" ]; then
     log_error "DESCRIPTION not found. Run from coMMpass package root."
@@ -104,7 +104,7 @@ main() {
   echo ""
 
   # STEP 2: Get package info
-  log_step "Step 2/5: Reading package information..."
+  log_step "Step 2/4: Reading package information..."
 
   PKG_NAME=$(grep "^Package:" DESCRIPTION | awk '{print $2}' | tr -d '\r' || echo "")
   PKG_VERSION=$(grep "^Version:" DESCRIPTION | awk '{print $2}' | tr -d '\r' || echo "")
@@ -117,46 +117,43 @@ main() {
   log_success "Package: $PKG_NAME v$PKG_VERSION"
   echo ""
 
-  # STEP 3: Build package
-  log_step "Step 3/5: Building package with nix-build..."
-  log_info "This may take a few minutes on first build..."
+  # STEP 3: Build and push package with cachix watch-exec
+  #
+  # CRITICAL: `echo $PATH | cachix push` and `cachix push $PATH` BOTH
+  # push the ENTIRE closure (all dependencies). This wastes quota pushing
+  # dplyr, arrow, etc. that are already on rstats-on-nix.
+  #
+  # `cachix watch-exec` watches the nix-build and pushes ONLY paths that
+  # are actually BUILT (not substituted from rstats-on-nix). This means
+  # only the coMMpass derivation itself gets pushed.
+  #
+  log_step "Step 3/4: Building and pushing $PKG_NAME via cachix watch-exec..."
+  log_info "Only locally-built paths are pushed (deps substituted from rstats-on-nix are skipped)"
 
-  BUILD_LOG="/tmp/nix-build-${PKG_NAME}.log"
-  if ! nix-build package.nix --no-out-link > "$BUILD_LOG" 2>&1; then
-    log_error "nix-build failed"
-    log_info "Build log: $BUILD_LOG"
+  PUSH_LOG="/tmp/cachix-push-${PKG_NAME}.log"
+  if ! cachix watch-exec johngavin --watch-mode auto -- \
+       nix-build package.nix --no-out-link 2>&1 | tee "$PUSH_LOG"; then
+    log_error "Build or push failed"
+    log_info "Log: $PUSH_LOG"
     log_info "Check syntax: nix-instantiate --parse package.nix"
-    tail -20 "$BUILD_LOG"
     exit 3
   fi
 
-  RESULT=$(nix-build package.nix --no-out-link 2>&1)
-  log_success "Built: $RESULT"
-  echo ""
+  RESULT=$(nix-build package.nix --no-out-link 2>/dev/null)
+  log_success "Built and pushed: $RESULT"
 
-  # STEP 4: Push ONLY this package to cachix (not dependencies!)
-  #
-  # CRITICAL: `cachix push johngavin $PATH` pushes the ENTIRE closure
-  # (all dependencies). That wastes quota pushing dplyr, arrow, etc.
-  # that are already on rstats-on-nix.
-  #
-  # `echo $PATH | cachix push johngavin` pushes ONLY that single path.
-  #
-  log_step "Step 4/5: Pushing ONLY $PKG_NAME to johngavin cachix..."
-  log_info "Single derivation only (dependencies are on rstats-on-nix)"
-
-  if ! retry_command 3 5 "echo '$RESULT' | cachix push johngavin"; then
-    log_error "Failed to push to cachix after 3 attempts"
-    log_info "Check network connection"
-    log_info "Check cachix status: https://status.cachix.org/"
-    exit 4
+  # Verify push count
+  PUSH_COUNT=$(grep -c "^Pushing " "$PUSH_LOG" 2>/dev/null || echo "0")
+  if [ "$PUSH_COUNT" -gt 1 ]; then
+    log_warning "Pushed $PUSH_COUNT paths (expected 0-1). Dependencies may have been built locally."
+    log_info "Ensure 'cachix use rstats-on-nix' is configured for substitution."
+  else
+    log_success "Push count: $PUSH_COUNT (expected: 0 if cached, 1 if new)"
   fi
-
-  log_success "Pushed ONLY $PKG_NAME to johngavin cachix (1 path)"
   echo ""
 
-  # STEP 5: Pin package (only for release versions)
-  log_step "Step 5/5: Pinning $PKG_NAME v$PKG_VERSION..."
+  # STEP 4: Pin package (only for release versions)
+  log_step "Step 4/4: Pinning $PKG_NAME v$PKG_VERSION..."
 
   if [[ "$PKG_VERSION" == *.9000 ]]; then
     log_warning "Development version detected (.9000 suffix)"

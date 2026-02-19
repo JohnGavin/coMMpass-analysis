@@ -1,0 +1,189 @@
+---
+kind: context_header
+llm_instructions: This is an LLM-optimized API specification for the R package 'coMMpass'. Use this context to write correct code using coMMpass functions. Each 'function' record describes a public function with its signature, arguments, and purpose. The 'package' record contains metadata. All listed functions are part of the public API.
+---
+kind: package
+schema_version: '1.1'
+name: coMMpass
+version: 0.1.0
+language: R
+description: MMRF CoMMpass Data Analysis Pipeline
+---
+kind: function
+name: format_file_size
+exported: true
+signature: format_file_size(size_bytes, digits = 1)
+arguments:
+  digits: 'Number of decimal places to show (default: 1)'
+  size_bytes: Numeric vector of file sizes in bytes
+returns: Character vector with formatted file sizes
+---
+kind: function
+name: format_with_commas
+exported: true
+signature: format_with_commas(x)
+arguments:
+  x: Numeric value or vector
+returns: Character vector with formatted numbers
+---
+kind: function
+name: create_summary_table
+exported: true
+signature: create_summary_table(data, vars = NULL)
+arguments:
+  data: Data frame
+  vars: Character vector of variable names (NULL for all numeric)
+returns: Data frame with summary statistics
+---
+kind: function
+name: query_commpass_parquet
+exported: true
+signature: query_commpass_parquet(data_type = c("clinical", "biospecimen", "rnaseq_counts","rnaseq_sample_metadata", "rnaseq_gene_metadata"),data_dir = "data/raw",filters = NULL,collect = TRUE) {data_type <- match.arg(data_type)
+arguments:
+  collect: If TRUE (default), collect results into a data frame.
+  data_dir: Base directory containing parquet files
+  data_type: One of "clinical", "biospecimen", "rnaseq_counts", "rnaseq_sample_metadata", "rnaseq_gene_metadata"
+  filters: Optional named list of filters.
+returns: A data frame (if collect=TRUE) or lazy dbplyr tbl
+---
+kind: function
+name: get_commpass_tbl
+exported: true
+signature: get_commpass_tbl(data_type = c("clinical", "biospecimen", "rnaseq_counts","rnaseq_sample_metadata", "rnaseq_gene_metadata"),data_dir = "data/raw",con = NULL) {data_type <- match.arg(data_type)
+arguments:
+  con: An existing DuckDB connection.
+  data_dir: Base directory containing parquet files
+  data_type: One of "clinical", "biospecimen", "rnaseq_counts", "rnaseq_sample_metadata", "rnaseq_gene_metadata"
+returns: A lazy dbplyr tbl.
+---
+kind: function
+name: download_gdc_rnaseq
+exported: true
+signature: download_gdc_rnaseq(project_id = "MMRF-COMMPASS",data_dir = "data/raw/gdc",sample_limit = 200,random_sample = TRUE,seed = 42,use_parquet = TRUE)
+arguments:
+  data_dir: Directory to save data
+  project_id: 'Project identifier (default: "MMRF-COMMPASS")'
+  random_sample: If TRUE and sample_limit is set, randomly sample patients using seed for reproducibility (default...
+  sample_limit: Maximum number of samples (NULL for all, default 200)
+  seed: Random seed for reproducible sampling (default 42)
+  use_parquet: If TRUE, also save parquet files alongside RDS (default TRUE)
+returns: Path to the saved RDS file containing the SummarizedExperiment
+---
+kind: function
+name: download_clinical_data
+exported: true
+signature: download_clinical_data(project_id = "MMRF-COMMPASS",data_dir = "data/raw/clinical",use_parquet = TRUE)
+arguments:
+  data_dir: Directory to save data
+  project_id: 'Project identifier (default: "MMRF-COMMPASS")'
+  use_parquet: If TRUE, also save parquet files (default TRUE)
+returns: Path to the directory containing the saved data files
+---
+kind: function
+name: acquire_commpass_data
+exported: true
+signature: acquire_commpass_data(download_rnaseq = TRUE,download_clinical = TRUE,download_aws = FALSE,sample_limit = 200,random_sample = TRUE,seed = 42,use_parquet = TRUE)
+arguments:
+  download_aws: Whether to download from AWS
+  download_clinical: Whether to download clinical data
+  download_rnaseq: Whether to download RNA-seq data
+  random_sample: If TRUE, randomly sample patients
+  sample_limit: Limit number of samples (NULL for all)
+  seed: Random seed for sampling
+  use_parquet: If TRUE, save parquet files
+returns: List of file paths to the downloaded data
+---
+kind: function
+name: prepare_survival_data
+exported: true
+signature: prepare_survival_data(clinical_data, se_data)
+arguments:
+  clinical_data: Clinical data frame
+  se_data: A SummarizedExperiment object (optional)
+returns: Data frame with survival time, status, and covariates
+---
+kind: function
+name: run_gsea
+exported: true
+signature: run_gsea(se_data, clinical_data)
+arguments:
+  clinical_data: Clinical data frame
+  se_data: A SummarizedExperiment object
+returns: List with GSEA results
+---
+kind: function
+name: clean_clinical_data
+exported: true
+signature: clean_clinical_data(clinical_raw)
+arguments:
+  clinical_raw: Raw clinical data frame
+returns: Cleaned clinical data frame
+---
+kind: function
+name: clean_expression_data
+exported: true
+signature: clean_expression_data(expr_raw)
+arguments:
+  expr_raw: Raw expression data (matrix or data frame)
+returns: Cleaned expression matrix with gene names as rownames
+---
+kind: function
+name: integrate_clinical_expression
+exported: true
+signature: integrate_clinical_expression(clinical_clean, expr_clean)
+arguments:
+  clinical_clean: Cleaned clinical data
+  expr_clean: Cleaned expression data
+returns: List with matched clinical and expression data
+---
+kind: function
+name: calculate_qc_metrics
+exported: true
+signature: calculate_qc_metrics(se_data)
+arguments:
+  se_data: A SummarizedExperiment object with a "counts" assay
+returns: A data frame with QC metrics per sample
+---
+kind: function
+name: query_commpass_rna
+exported: true
+signature: query_commpass_rna()
+returns: A GDCquery object containing metadata for RNA-seq samples
+---
+kind: function
+name: get_commpass_clinical
+exported: true
+signature: get_commpass_clinical()
+returns: A data frame containing clinical data for CoMMpass patients
+---
+kind: function
+name: list_s3_commpass
+exported: true
+signature: list_s3_commpass(prefix = "")
+arguments:
+  prefix: Optional prefix to filter files (e.g., "RNA-seq/", "clinical/")
+returns: Character vector of S3 object keys (file paths)
+---
+kind: function
+name: download_s3_subset
+exported: true
+signature: download_s3_subset(s3_paths, dest_dir = "data/raw/rna_seq", n = 3)
+arguments:
+  dest_dir: 'Destination directory for downloaded files (default: "data/raw/rna_seq")'
+  n: 'Number of files to download (default: 3)'
+  s3_paths: Character vector of S3 object keys (file paths) to download from
+returns: Character vector of successfully downloaded file paths
+---
+kind: function
+name: get_commpass_data_dictionary
+exported: true
+signature: get_commpass_data_dictionary()
+returns: 'A tibble with columns: variable, category, data_type, units, description, typical_range, gdc_link'
+---
+kind: function
+name: get_variable_docs
+exported: true
+signature: get_variable_docs(variable)
+arguments:
+  variable: Character string naming the variable to document
+returns: 'A list with elements: variable, description, scientific_context, calculation, usage_notes,...'

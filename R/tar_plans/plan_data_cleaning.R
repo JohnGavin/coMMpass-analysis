@@ -6,8 +6,8 @@ plan_data_cleaning <- list(
   # Clean clinical data (clinical_data is a data frame from arrow::read_parquet)
   tar_target(
     clinical_data_clean,
-    clean_clinical_data(clinical_data),
-    packages = c("dplyr")
+    clean_clinical_data(arrow::read_parquet(file.path(clinical_data, "clinical_data.parquet"))),
+    packages = c("arrow", "dplyr")
   ),
 
   # Clean expression data (raw_rnaseq is the file path to rnaseq_se.rds)

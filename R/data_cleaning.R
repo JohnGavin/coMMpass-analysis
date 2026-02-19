@@ -24,7 +24,7 @@ clean_clinical_data <- function(clinical_raw) {
 
   # Convert age from days to years if present
   if ("age_at_diagnosis" %in% names(clinical)) {
-    clinical$age_at_diagnosis_years <- round(clinical$age_at_diagnosis / 365.25, 1)
+    clinical$age_at_diagnosis_years <- round(as.numeric(clinical$age_at_diagnosis) / 365.25, 1)
   }
 
   # Standardize categorical variables

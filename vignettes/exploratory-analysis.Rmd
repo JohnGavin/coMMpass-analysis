@@ -256,16 +256,15 @@ The package provides two functions for querying the parquet files:
 
 ### Example: Simple Query
 
-```r
-# One-shot query (returns data frame)
-clinical <- query_commpass_parquet("clinical")
-head(clinical)
-
-# With filters
-females <- query_commpass_parquet(
-  "clinical",
-  filters = list(gender = "female")
-)
+```{r eda-simple-query-code, results='asis'}
+code <- safe_tar_read("code_eda_simple_query")
+if (!is.null(code)) {
+  cat("<details>\n<summary>Show code</summary>\n\n```r\n")
+  cat(paste(code, collapse = "\n"))
+  cat("\n```\n</details>\n")
+} else {
+  cat("*Code example not available. Run `tar_make()` first.*\n")
+}
 ```
 
 ```{r duckdb-demo-simple}
@@ -282,21 +281,15 @@ if (!is.null(demo)) {
 
 ### Example: Aggregation with DuckDB
 
-```r
-# Lazy tbl for dplyr-style queries
-con <- DBI::dbConnect(duckdb::duckdb())
-clinical_tbl <- get_commpass_tbl("clinical", con = con)
-
-result <- clinical_tbl |>
-  filter(!is.na(gender)) |>
-  group_by(gender) |>
-  summarise(
-    n = n(),
-    mean_age_years = mean(age_at_diagnosis / 365.25, na.rm = TRUE)
-  ) |>
-  collect()
-
-DBI::dbDisconnect(con, shutdown = TRUE)
+```{r eda-aggregation-code, results='asis'}
+code <- safe_tar_read("code_eda_aggregation")
+if (!is.null(code)) {
+  cat("<details>\n<summary>Show code</summary>\n\n```r\n")
+  cat(paste(code, collapse = "\n"))
+  cat("\n```\n</details>\n")
+} else {
+  cat("*Code example not available. Run `tar_make()` first.*\n")
+}
 ```
 
 ```{r duckdb-demo-agg}

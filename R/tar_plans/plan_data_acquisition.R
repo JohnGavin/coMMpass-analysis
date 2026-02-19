@@ -7,7 +7,7 @@ plan_data_acquisition <- list(
     config,
     list(
       project_id = "MMRF-COMMPASS",
-      sample_limit = 10,  # Start small for testing
+      sample_limit = 100,  # 100 patients for meaningful EDA plots/tables
       data_dir = "data",
       results_dir = "results",
       seed = 42

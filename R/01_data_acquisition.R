@@ -273,6 +273,23 @@ download_clinical_data <- function(
   saveRDS(clinical, file.path(data_dir, "clinical_data.rds"))
   saveRDS(biospecimen, file.path(data_dir, "biospecimen_data.rds"))
 
+  # Remove list columns (nested data frames) - parquet doesn't support them
+  if (use_parquet) {
+    clinical <- as.data.frame(clinical)
+    biospecimen <- as.data.frame(biospecimen)
+    
+    for (col in names(clinical)) {
+      if (is.list(clinical[[col]]) && !is.data.frame(clinical[[col]])) {
+        clinical[[col]] <- NULL
+      }
+    }
+    for (col in names(biospecimen)) {
+      if (is.list(biospecimen[[col]]) && !is.data.frame(biospecimen[[col]])) {
+        biospecimen[[col]] <- NULL
+      }
+    }
+  }
+
   # Save as parquet (queryable via DuckDB)
   if (use_parquet) {
     arrow::write_parquet(

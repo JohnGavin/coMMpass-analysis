@@ -33,5 +33,7 @@ vignettes/shinylive-sw.js
 
 # Backup files
 *.backup
+*.bak
+results/
 _targets.yaml
 /.quarto/

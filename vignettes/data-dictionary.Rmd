@@ -297,34 +297,28 @@ GDC uses standardized column names. Common aliases used in analysis:
 
 ### Loading Data
 
-```r
-library(coMMpass)
-
-# Load clinical data from parquet
-clinical <- query_commpass_parquet("clinical")
-
-# Load with DuckDB lazy evaluation
-con <- DBI::dbConnect(duckdb::duckdb())
-clinical_tbl <- get_commpass_tbl("clinical", con = con)
-result <- clinical_tbl |>
-  dplyr::filter(gender == "female") |>
-  dplyr::select(submitter_id, age_at_diagnosis, vital_status) |>
-  dplyr::mutate(age_years = age_at_diagnosis / 365.25) |>
-  dplyr::collect()
-DBI::dbDisconnect(con, shutdown = TRUE)
+```{r dd-load-data-code, results='asis'}
+code <- safe_tar_read("code_dd_load_data")
+if (!is.null(code)) {
+  cat("<details>\n<summary>Show code</summary>\n\n```r\n")
+  cat(paste(code, collapse = "\n"))
+  cat("\n```\n</details>\n")
+} else {
+  cat("*Code example not available. Run `tar_make()` first.*\n")
+}
 ```
 
 ### Exploring the Dictionary
 
-```r
-dd <- get_commpass_data_dictionary()
-
-# Find all clinical variables
-dplyr::filter(dd, category == "clinical")
-
-# Get detailed docs for a variable
-docs <- get_variable_docs("age_at_diagnosis")
-cat(docs$usage_notes)
+```{r dd-explore-dict-code, results='asis'}
+code <- safe_tar_read("code_dd_explore_dict")
+if (!is.null(code)) {
+  cat("<details>\n<summary>Show code</summary>\n\n```r\n")
+  cat(paste(code, collapse = "\n"))
+  cat("\n```\n</details>\n")
+} else {
+  cat("*Code example not available. Run `tar_make()` first.*\n")
+}
 ```
 
 ## Reproducibility

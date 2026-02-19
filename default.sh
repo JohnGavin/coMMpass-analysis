@@ -74,9 +74,9 @@ elif [ ! -s "$NIX_FILE" ]; then
 elif [ "$R_FILE" -nt "$NIX_FILE" ]; then
     echo "default.R has been modified since default.nix was generated."
     NEED_REGEN=true
-# Check 4: packages.R is newer than default.nix
-elif [ "$PROJECT_PATH/R/dev/nix/packages.R" -nt "$NIX_FILE" ]; then
-    echo "packages.R has been modified since default.nix was generated."
+# Check 4: DESCRIPTION is newer than default.nix (single source of truth)
+elif [ "$PROJECT_PATH/DESCRIPTION" -nt "$NIX_FILE" ]; then
+    echo "DESCRIPTION has been modified since default.nix was generated."
     NEED_REGEN=true
 # Check 5: default.nix has invalid Nix syntax
 elif ! nix-instantiate --parse "$NIX_FILE" > /dev/null 2>&1; then
@@ -88,15 +88,19 @@ fi
 
 if [ "$NEED_REGEN" = true ]; then
     echo "Regenerating default.nix from default.R..."
+    # Use import <nixpkgs> instead of curl-fetched rix expression.
+    # This avoids R version mismatch segfaults: the ambient nixpkgs channel
+    # always matches pre-built binaries. Only resolves 5 packages (R, rix,
+    # cli, curl, cacert) -- minimal ABI surface, no network fetch.
+    # --pure removed so rix can find nix-shell for git_pkgs.
     nix-shell \
-        --pure \
         --keep PATH \
         --keep TMPDIR \
         --keep GITHUB_PAT \
         --keep SSL_CERT_FILE \
         --keep CURL_CA_BUNDLE \
         --keep NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM \
-        --expr "$(curl -sl https://raw.githubusercontent.com/b-rodrigues/rix/master/inst/extdata/default.nix)" \
+        --expr "let pkgs = import <nixpkgs> {}; in pkgs.mkShell { buildInputs = [ pkgs.R pkgs.rPackages.rix pkgs.rPackages.cli pkgs.rPackages.curl pkgs.curlMinimal pkgs.cacert ]; }" \
         --command "cd \"$PROJECT_PATH\" && \
             Rscript \
             --vanilla \
