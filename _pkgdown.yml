@@ -58,13 +58,26 @@ reference:
   - prepare_survival_data
   - run_kaplan_meier
   - run_cox_regression
-  - render_survival_report
+
+- title: "DE Visualization"
+  desc: "Volcano, MA, PCA, and heatmap plots for DE results"
+  contents:
+  - plot_volcano
+  - plot_ma
+  - plot_pca
+  - plot_heatmap_de
+  - run_vst
+  - compute_pca
+  - summarize_de_methods
 
 - title: "Pathway Analysis"
   desc: "GSEA and pathway enrichment"
   contents:
   - run_gsea
+  - run_ora
   - run_pathway_analysis
+  - build_gene_ranks
+  - get_msigdb_gene_sets
   - generate_summary_report
 
 - title: "Utilities"
@@ -85,6 +98,7 @@ articles:
   - data-acquisition
   - data-dictionary
   - exploratory-analysis
+  - differential-expression
 
 navbar:
   structure:

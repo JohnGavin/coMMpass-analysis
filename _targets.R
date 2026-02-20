@@ -45,6 +45,7 @@ c(
   plan_doc_examples,   # Code-as-targets for vignette display blocks
   plan_quality_control,
   plan_differential_expression,
+  plan_de_visualization,   # VST, PCA, volcano/MA/heatmap data
   plan_survival_analysis,
   plan_pathway_analysis,
   plan_pkgctx           # Auto-generate .ctx.yaml API context files
