@@ -121,6 +121,66 @@ if (!is.null(clin) && !is.null(clin$vital_table)) {
 }
 ```
 
+## ISS Staging
+
+The International Staging System (ISS) classifies multiple myeloma into three
+stages based on serum beta-2 microglobulin and albumin levels. Higher stages
+indicate more advanced disease and worse prognosis.
+
+```{r iss-distribution}
+iss <- safe_tar_read("eda_iss_summary")
+
+if (!is.null(iss) && isTRUE(iss$available)) {
+  cat("- **Patients with ISS data:**", format(iss$n_with_iss, big.mark = ","), "\n")
+  cat("- **Missing ISS:**", format(iss$n_missing, big.mark = ","), "\n")
+  cat("- **Source column:**", iss$iss_col, "\n")
+} else if (!is.null(iss)) {
+  cat("*", iss$note, "*\n")
+} else {
+  cat("*ISS summary not available. Run `tar_make()` first.*\n")
+}
+```
+
+### ISS Stage Distribution
+
+```{r iss-table}
+if (!is.null(iss) && isTRUE(iss$available)) {
+  knitr::kable(iss$iss_table, caption = "ISS Stage Distribution", row.names = FALSE)
+}
+```
+
+```{r iss-barplot, fig.cap = "ISS stage distribution"}
+if (!is.null(iss) && isTRUE(iss$available) && nrow(iss$iss_table) > 0) {
+  iss_plot <- iss$iss_table[!is.na(iss$iss_table$ISS_Stage), ]
+  if (nrow(iss_plot) > 0) {
+    ggplot(iss_plot, aes(x = ISS_Stage, y = Freq)) +
+      geom_col(fill = "steelblue") +
+      labs(x = "ISS Stage", y = "Number of Patients",
+           title = "ISS Stage Distribution") +
+      theme_minimal()
+  }
+}
+```
+
+### Age by ISS Stage
+
+```{r iss-age}
+if (!is.null(iss) && isTRUE(iss$available) && !is.null(iss$age_by_iss)) {
+  age_tbl <- do.call(rbind, lapply(names(iss$age_by_iss), function(stage) {
+    x <- iss$age_by_iss[[stage]]
+    data.frame(
+      ISS_Stage = stage, N = x$n,
+      Mean_Age = sprintf("%.1f", x$mean),
+      Median_Age = sprintf("%.1f", x$median),
+      SD = sprintf("%.1f", x$sd)
+    )
+  }))
+  knitr::kable(age_tbl, caption = "Age at Diagnosis by ISS Stage", row.names = FALSE)
+} else if (!is.null(iss) && isTRUE(iss$available)) {
+  cat("*Age by ISS stage not available (age column not found).*\n")
+}
+```
+
 ## Survival Endpoints
 
 ```{r survival-endpoints}

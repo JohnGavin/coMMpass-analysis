@@ -1,8 +1,9 @@
-# R/dev/issues/fix_39_40_41_cytogenetic_paired_de.R
+# R/dev/issues/fix_39_40_41_42_cytogenetic_paired_de.R
 # Implements features from CD70-in-Multiple-Myeloma comparison
 #
 # Issues addressed:
 #   #39 - feat: Add cytogenetic subgroup data acquisition and analysis
+#   #42 - feat: Add ISS staging stratification to EDA
 #   #40 - feat: Add paired longitudinal DE design for within-patient comparisons
 #   #41 - feat: Add apeglm LFC shrinkage to DESeq2 workflow
 #
@@ -44,6 +45,13 @@
 #      - Added failure artifacts + contents:write permissions
 #
 #   8. New tests/testthat/test-cytogenetic.R
+#
+#   9. Updated R/tar_plans/plan_eda.R:
+#      - Added eda_iss_summary target for ISS stage distribution
+#      - Age by ISS stage cross-tabulation
+#
+#   10. Updated vignettes/exploratory-analysis.Rmd:
+#       - Added ISS Staging section with distribution table, barplot, age-by-ISS
 #
 # Note on cytogenetic data access:
 #   SeqFISH files (Pairoscope, GATK CNA) are MMRF Researcher Gateway exclusive.

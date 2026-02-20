@@ -170,6 +170,58 @@ plan_eda <- list(
     packages = c("DBI", "duckdb", "arrow")
   ),
 
+  # --- ISS staging summary (#42) ---
+  tar_target(
+    eda_iss_summary,
+    {
+      rds_path <- file.path(clinical_data, "clinical_data.rds")
+      if (!file.exists(rds_path)) return(NULL)
+      clin <- readRDS(rds_path)
+      if (!is.data.frame(clin) || nrow(clin) == 0) return(NULL)
+      names(clin) <- tolower(make.unique(names(clin)))
+
+      # Find ISS column (various possible names from GDC)
+      iss_col <- grep("^iss|staging_system", names(clin), value = TRUE)
+      if (length(iss_col) == 0) {
+        return(list(available = FALSE, note = "No ISS column found in clinical data"))
+      }
+
+      iss_vals <- clin[[iss_col[1]]]
+      iss_vals[iss_vals %in% c("", "Not Reported", "not reported")] <- NA
+
+      iss_table <- as.data.frame(
+        table(ISS_Stage = iss_vals, useNA = "ifany"),
+        stringsAsFactors = FALSE
+      )
+      iss_table$Percentage <- sprintf("%.1f%%", 100 * iss_table$Freq / sum(iss_table$Freq))
+
+      # Age by ISS (if age available)
+      age_col <- intersect(c("age_at_diagnosis", "age_at_index"), names(clin))
+      age_by_iss <- NULL
+      if (length(age_col) > 0 && sum(!is.na(iss_vals)) > 0) {
+        age_raw <- as.numeric(clin[[age_col[1]]])
+        is_days <- max(age_raw, na.rm = TRUE) > 120
+        age_years <- if (is_days) age_raw / 365.25 else age_raw
+
+        valid <- !is.na(iss_vals) & !is.na(age_years)
+        if (sum(valid) > 0) {
+          age_by_iss <- tapply(age_years[valid], iss_vals[valid], function(x) {
+            list(n = length(x), mean = mean(x), median = median(x), sd = sd(x))
+          })
+        }
+      }
+
+      list(
+        available = TRUE,
+        iss_col = iss_col[1],
+        n_with_iss = sum(!is.na(iss_vals)),
+        n_missing = sum(is.na(iss_vals)),
+        iss_table = iss_table,
+        age_by_iss = age_by_iss
+      )
+    }
+  ),
+
   # --- Cross-dataset integration summary ---
   tar_target(
     eda_integration_summary,
