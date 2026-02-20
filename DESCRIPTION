@@ -23,8 +23,10 @@ Imports:
     dbplyr,
     cli,
     glue,
+    stringr,
     tibble
 Suggests:
+    apeglm,
     targets,
     tarchetypes,
     crew,
@@ -41,6 +43,5 @@ Suggests:
     gert,
     nanoparquet,
     DT,
-    plotly,
-    stringr
+    plotly
 Config/testthat/edition: 3

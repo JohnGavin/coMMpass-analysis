@@ -39,7 +39,8 @@ for (plan_file in plan_files) {
 c(
   plan_nix_sync,       # DESCRIPTION -> Nix drift detection
   plan_data_acquisition,
-  plan_data_cleaning,  # New: Clean and integrate data
+  plan_data_cleaning,  # Clean and integrate data
+  plan_cytogenetic,    # Cytogenetic marker extraction from clinical data
   plan_eda,            # Exploratory data analysis summaries
   plan_doc_examples,   # Code-as-targets for vignette display blocks
   plan_quality_control,
