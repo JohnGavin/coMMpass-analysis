@@ -2,18 +2,49 @@
 % Please edit documentation in R/05_pathway_analysis.R
 \name{run_gsea}
 \alias{run_gsea}
-\title{Run Gene Set Enrichment Analysis}
+\title{Run Gene Set Enrichment Analysis (GSEA)}
 \usage{
-run_gsea(se_data, clinical_data)
+run_gsea(
+  de_results,
+  gene_sets = "hallmark",
+  gene_id_type = "ensembl_gene",
+  min_size = 15L,
+  max_size = 500L
+)
 }
 \arguments{
-\item{se_data}{A SummarizedExperiment object}
+\item{de_results}{Data frame of DE results. Must contain gene identifiers
+(as rownames or in a \code{gene}/\code{gene_id} column) and at least one
+of: \code{stat} (DESeq2 Wald statistic), or
+\code{log2FoldChange}/\code{logFC} + \code{pvalue}/\code{PValue}.}
 
-\item{clinical_data}{Clinical data frame}
+\item{gene_sets}{Character string specifying the MSigDB collection:
+\code{"hallmark"} (default), \code{"kegg"}, \code{"reactome"},
+\code{"go_bp"}, \code{"go_mf"}, \code{"go_cc"}, \code{"c2"}, \code{"c7"}.
+Alternatively, a named list of character vectors (custom gene sets).}
+
+\item{gene_id_type}{Type of gene identifiers: \code{"ensembl_gene"}
+(default), \code{"gene_symbol"}, or \code{"entrez_gene"}.}
+
+\item{min_size}{Minimum gene set size (default: 15).}
+
+\item{max_size}{Maximum gene set size (default: 500).}
 }
 \value{
-List with GSEA results
+List with components:
+  \describe{
+    \item{results}{Data frame with pathway, NES, pval, padj, size,
+      leadingEdge columns.}
+    \item{n_gene_sets}{Number of gene sets tested.}
+    \item{n_significant}{Number significant at padj < 0.05.}
+    \item{top_gene_sets}{Top 20 enriched gene sets as a data frame.}
+    \item{ranked_genes}{Named numeric vector of gene ranks used.}
+    \item{collection}{Gene set collection used.}
+  }
 }
 \description{
-Run Gene Set Enrichment Analysis
+Performs pre-ranked GSEA using fgsea on differential expression results.
+Genes are ranked by their test statistic (DESeq2 Wald stat or
+\code{-log10(pvalue) * sign(log2FC)}). Gene sets come from MSigDB via
+msigdbr.
 }

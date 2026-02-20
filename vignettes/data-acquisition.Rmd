@@ -59,7 +59,7 @@ safe_tar_read <- function(name) {
 
 ## Overview
 
-This report summarizes the initial data acquisition step for the MMRF CoMMpass study. We access Open Access RNA-seq data from the GDC S3 bucket (`s3://gdc-mmrf-commpass-phs000748-2-open/`) via the `targets` pipeline.
+This report summarizes the initial data acquisition step for the MMRF CoMMpass study. We access Open Access RNA-seq data from the GDC S3 bucket (`s3://gdc-mmrf-commpass-phs000748-2-open/`) via the [`targets` pipeline](https://github.com/JohnGavin/coMMpass-analysis/tree/main/R/tar_plans).
 
 ## Pipeline Configuration
 
@@ -67,22 +67,37 @@ This report summarizes the initial data acquisition step for the MMRF CoMMpass s
 config <- safe_tar_read("config")
 
 if (!is.null(config)) {
-  config_df <- data.frame(
-    Parameter = c("Project ID", "Sample Limit", "Data Directory",
-                  "Results Directory", "Random Seed"),
-    Value = c(config$project_id, config$sample_limit, config$data_dir,
-              config$results_dir, config$seed),
-    stringsAsFactors = FALSE
-  )
-  knitr::kable(config_df, caption = "Pipeline Configuration")
+  is_ci <- Sys.getenv("CI") == "true" || Sys.getenv("GITHUB_ACTIONS") == "true"
+  cat(paste0(
+    "The pipeline downloads RNA-seq and clinical data from the ",
+    "[GDC portal](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS) ",
+    "for the **", config$project_id, "** project.\n\n"
+  ))
+  cat(paste0(
+    "- **Sample limit:** ", config$sample_limit,
+    " patients (GDC has ~900; subsetting speeds local development). ",
+    "In CI, this is [capped at 10 samples]",
+    "(https://github.com/JohnGavin/coMMpass-analysis/blob/main/",
+    "R/01_data_acquisition.R#L44-L47) to keep build times under 5 minutes.\n"
+  ))
+  cat(paste0(
+    "- **Random seed:** ", config$seed,
+    " --- ensures reproducible patient selection when `random_sample = TRUE`.\n"
+  ))
+  cat(paste0(
+    "- **Data directory:** `", config$data_dir,
+    "` | **Results directory:** `", config$results_dir, "`\n"
+  ))
 } else {
   cat("*Pipeline configuration not available. Run `tar_make(config)` to generate.*\n")
 }
 ```
 
+> **Note:** This vignette was built with `sample_limit = `r if (!is.null(config)) config$sample_limit else "?"`` patients. Numbers below reflect this subset, not the full ~900-patient CoMMpass cohort. For pipeline execution details, see [issue #46 (telemetry vignette)](https://github.com/JohnGavin/coMMpass-analysis/issues/46).
+
 ## RNA-seq Data
 
-RNA-seq gene expression data is downloaded from GDC as a SummarizedExperiment object.
+RNA-seq gene expression data is downloaded from GDC as a [SummarizedExperiment](https://bioconductor.org/packages/SummarizedExperiment/) object containing [STAR-Counts](https://docs.gdc.cancer.gov/Data/Bioinformatics_Pipelines/Expression_mRNA_Pipeline/).
 
 ```{r rnaseq}
 # Read the raw_rnaseq target (returns file path to RDS)
@@ -122,18 +137,35 @@ if (!is.null(se_data) && has_SE) {
     Sample = colnames(counts),
     Total_Counts = format_with_commas(colSums(counts)),
     Genes_Detected = format_with_commas(colSums(counts > 0)),
-    Median_Count = round(apply(counts, 2, median)),
+    Median_Count = sprintf("%.1f", apply(counts, 2, median)),
     Max_Count = format_with_commas(apply(counts, 2, max)),
     stringsAsFactors = FALSE
   )
 
-  knitr::kable(sample_stats,
-               col.names = c("Sample", "Total Counts", "Genes Detected",
-                             "Median Count", "Max Count"),
-               caption = "Per-Sample Expression Summary")
+  knitr::kable(
+    sample_stats,
+    col.names = c("Sample", "Total Counts", "Genes Detected",
+                   "Median Count", "Max Count"),
+    row.names = FALSE,
+    caption = paste0(
+      "Per-sample expression summary for ", ncol(counts), " samples. ",
+      "Total Counts = library size, Genes Detected = genes with >0 counts. ",
+      "Sample IDs are GDC barcodes. ",
+      "Data: [GDC STAR-Counts](https://docs.gdc.cancer.gov/Data/",
+      "Bioinformatics_Pipelines/Expression_mRNA_Pipeline/)."
+    )
+  )
+} else if (!is.null(rnaseq_path)) {
+  cat("*RNA-seq file path found (`", rnaseq_path,
+      "`) but data could not be loaded.*\n", sep = "")
+} else {
+  cat("*RNA-seq data not available. Run `tar_make(raw_rnaseq)` to download.*\n")
+}
+```
 
-  # Count distribution plot
-  cat("\n### Count Distribution\n\n")
+```{r count-distribution, fig.cap = "Distribution of mean gene expression (log10 scale) across all genes. Bimodal shape reflects expressed vs. unexpressed genes. Data: GDC STAR-Counts."}
+if (!is.null(se_data) && has_SE) {
+  counts <- SummarizedExperiment::assay(se_data, "counts")
   log_counts <- log10(counts + 1)
   mean_expr <- rowMeans(log_counts)
 
@@ -146,7 +178,11 @@ if (!is.null(se_data) && has_SE) {
       name = "Gene Expression"
     ) %>%
       layout(
-        title = "Distribution of Mean Gene Expression",
+        title = list(text = paste0(
+          "Distribution of Mean Gene Expression<br>",
+          "<sup>", format_with_commas(nrow(counts)), " genes, ",
+          ncol(counts), " samples</sup>"
+        )),
         xaxis = list(title = "log10(counts + 1)"),
         yaxis = list(title = "Number of Genes"),
         bargap = 0.05
@@ -154,24 +190,25 @@ if (!is.null(se_data) && has_SE) {
     p
   } else {
     hist_data <- data.frame(mean_expression = mean_expr)
-    p <- ggplot(hist_data, aes(x = mean_expression)) +
+    ggplot(hist_data, aes(x = mean_expression)) +
       geom_histogram(bins = 50, fill = "steelblue", color = "white") +
-      labs(title = "Distribution of Mean Gene Expression",
-           x = "log10(counts + 1)", y = "Number of Genes") +
+      labs(
+        title = "Distribution of Mean Gene Expression",
+        subtitle = paste0(
+          format_with_commas(nrow(counts)), " genes, ",
+          ncol(counts), " samples"
+        ),
+        x = "log10(counts + 1)", y = "Number of Genes",
+        caption = "Data: GDC STAR-Counts"
+      ) +
       theme_minimal()
-    print(p)
   }
-} else if (!is.null(rnaseq_path)) {
-  cat("*RNA-seq file path found (`", rnaseq_path,
-      "`) but data could not be loaded.*\n", sep = "")
-} else {
-  cat("*RNA-seq data not available. Run `tar_make(raw_rnaseq)` to download.*\n")
 }
 ```
 
 ## Clinical Data
 
-Clinical metadata retrieved from GDC provides patient demographics, disease characteristics, and outcomes.
+Clinical metadata retrieved from [GDC](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS) provides patient demographics, disease characteristics, and outcomes. See the [data dictionary](data-dictionary.html) for variable definitions.
 
 ```{r clinical}
 # Try to load clinical data
@@ -183,7 +220,6 @@ if (is.null(clinical)) {
   clinical_dir <- safe_tar_read("clinical_data")
 
   if (!is.null(clinical_dir) && is.character(clinical_dir)) {
-    # clinical_data target returns a directory path - load the RDS or CSV from it
     dir_path <- if (dir.exists(clinical_dir)) {
       clinical_dir
     } else {
@@ -206,10 +242,11 @@ if (is.null(clinical)) {
 if (!is.null(clinical) && is.data.frame(clinical)) {
   # Ensure unique column names
   names(clinical) <- make.unique(names(clinical))
+  n_patients <- nrow(clinical)
 
   # Summary statistics
   cat("### Clinical Data Overview\n\n")
-  cat("- **Total patients:**", format_with_commas(nrow(clinical)), "\n")
+  cat("- **Total patients:**", format_with_commas(n_patients), "\n")
   cat("- **Number of variables:**", ncol(clinical), "\n")
   cat("- **Data completeness:**", sprintf("%.1f%%", 100 * mean(!is.na(clinical))), "\n\n")
 
@@ -227,9 +264,17 @@ if (!is.null(clinical) && is.data.frame(clinical)) {
       gender_df <- data.frame(
         Gender = names(gender_table),
         Count = as.numeric(gender_table),
-        Percentage = sprintf("%.1f%%", 100 * as.numeric(gender_table) / nrow(clinical))
+        Percentage = sprintf("%.1f%%", 100 * as.numeric(gender_table) / n_patients)
       )
-      knitr::kable(gender_df, caption = "Gender Distribution")
+      knitr::kable(
+        gender_df, row.names = FALSE,
+        caption = paste0(
+          "Gender distribution for ", n_patients, " patients. ",
+          "Data: [GDC clinical](https://portal.gdc.cancer.gov/",
+          "projects/MMRF-COMMPASS). ",
+          "See [data dictionary](data-dictionary.html) for definitions."
+        )
+      )
       cat("\n")
     }
 
@@ -239,15 +284,21 @@ if (!is.null(clinical) && is.data.frame(clinical)) {
       vital_df <- data.frame(
         Status = names(vital_table),
         Count = as.numeric(vital_table),
-        Percentage = sprintf("%.1f%%", 100 * as.numeric(vital_table) / nrow(clinical))
+        Percentage = sprintf("%.1f%%", 100 * as.numeric(vital_table) / n_patients)
       )
-      knitr::kable(vital_df, caption = "Vital Status Distribution")
+      knitr::kable(
+        vital_df, row.names = FALSE,
+        caption = paste0(
+          "Vital status for ", n_patients, " patients. ",
+          "Alive = censored at last follow-up. ",
+          "See [data dictionary](data-dictionary.html)."
+        )
+      )
       cat("\n")
     }
 
     # Age at diagnosis
     if ("age_at_diagnosis" %in% names(clinical) && is.numeric(clinical$age_at_diagnosis)) {
-      # Check if values look like days (>365) or years (<120)
       age_values <- clinical$age_at_diagnosis[!is.na(clinical$age_at_diagnosis)]
       is_days <- max(age_values, na.rm = TRUE) > 120
       age_years <- if (is_days) age_values / 365.25 else age_values
@@ -257,52 +308,87 @@ if (!is.null(clinical) && is.data.frame(clinical)) {
       cat("- **Range:**", sprintf("%.1f - %.1f",
                                    min(age_years, na.rm = TRUE),
                                    max(age_years, na.rm = TRUE)), "\n\n")
-
-      if (has_plotly && length(age_years) > 0) {
-        p <- plot_ly(
-          x = age_years,
-          type = "histogram",
-          nbinsx = 30,
-          marker = list(color = "steelblue"),
-          name = "Age Distribution"
-        ) %>%
-          layout(
-            title = "Age at Diagnosis Distribution",
-            xaxis = list(title = "Age (years)"),
-            yaxis = list(title = "Number of Patients"),
-            bargap = 0.1
-          )
-        p
-      }
     }
 
     # Sample of clinical data
     cat("\n### Sample Clinical Data\n\n")
-    display_clinical <- clinical[seq_len(min(10, nrow(clinical))), cols_available, drop = FALSE]
+    display_clinical <- clinical[seq_len(min(10, n_patients)), cols_available, drop = FALSE]
 
     if (has_DT) {
-      DT::datatable(display_clinical,
-                options = list(pageLength = 5, scrollX = TRUE),
-                caption = "Sample of Clinical Data")
+      DT::datatable(
+        display_clinical,
+        options = list(pageLength = 5, scrollX = TRUE),
+        caption = paste0(
+          "First ", min(10, n_patients), " of ", n_patients,
+          " patients showing key demographics. ",
+          "age_at_diagnosis is in days (divide by 365.25 for years). ",
+          "See [data dictionary](data-dictionary.html) for all variables."
+        )
+      )
     } else {
-      knitr::kable(display_clinical, caption = "Sample of Clinical Data")
+      knitr::kable(
+        display_clinical, row.names = FALSE,
+        caption = paste0(
+          "First ", min(10, n_patients), " of ", n_patients,
+          " patients showing key demographics."
+        )
+      )
     }
   }
+} else {
+  cat("*Clinical data not available. Run `tar_make(clinical_data)` to retrieve.*\n")
+}
+```
 
-  # Missing data analysis
-  cat("\n### Data Completeness Analysis\n\n")
-  missing_summary <- data.frame(
-    Variable = names(clinical),
-    Missing_Count = colSums(is.na(clinical)),
-    Missing_Percent = sprintf("%.1f%%", 100 * colSums(is.na(clinical)) / nrow(clinical)),
-    stringsAsFactors = FALSE
-  ) %>%
-    arrange(desc(Missing_Count)) %>%
-    head(20)
+### Data Completeness
 
-  knitr::kable(missing_summary,
-               row.names = FALSE,
-               caption = "Variables with Most Missing Data (Top 20)")
+```{r missing-data}
+missing <- safe_tar_read("eda_missing_summary")
+
+if (!is.null(missing)) {
+  if (isTRUE(missing$all_complete)) {
+    cat(missing$caption, "\n")
+  } else {
+    cat(paste0(
+      missing$n_complete, " of ", missing$n_vars,
+      " variables are fully complete. ",
+      "Only variables **with** missing data are shown below. ",
+      "See [data dictionary](data-dictionary.html) for variable definitions.\n\n"
+    ))
+    knitr::kable(
+      missing$missing_table, row.names = FALSE,
+      caption = paste0(
+        "Variables with missing data (", nrow(missing$missing_table),
+        " of ", missing$n_vars, " total). ",
+        missing$n_complete, " variables are fully complete and omitted. ",
+        "See [data dictionary](data-dictionary.html) for definitions."
+      )
+    )
+  }
+} else if (!is.null(clinical) && is.data.frame(clinical)) {
+  # Fallback: compute inline if target not available
+  missing_counts <- colSums(is.na(clinical))
+  has_missing <- missing_counts > 0
+  if (sum(has_missing) == 0) {
+    cat("All", ncol(clinical), "variables are fully complete (0% missing).\n")
+  } else {
+    missing_df <- data.frame(
+      Variable = names(missing_counts[has_missing]),
+      Missing_Count = as.integer(missing_counts[has_missing]),
+      Missing_Percent = sprintf("%.1f%%", 100 * missing_counts[has_missing] / nrow(clinical)),
+      stringsAsFactors = FALSE
+    )
+    missing_df <- missing_df[order(-missing_df$Missing_Count), ]
+    n_complete <- sum(!has_missing)
+    knitr::kable(
+      missing_df, row.names = FALSE,
+      caption = paste0(
+        "Variables with missing data. ",
+        n_complete, " of ", ncol(clinical),
+        " variables are fully complete and omitted."
+      )
+    )
+  }
 } else {
   cat("*Clinical data not available. Run `tar_make(clinical_data)` to retrieve.*\n")
 }
@@ -310,22 +396,61 @@ if (!is.null(clinical) && is.data.frame(clinical)) {
 
 ## Quality Control
 
-```{r qc}
-qc <- safe_tar_read("qc_metrics")
-filtered <- safe_tar_read("filtered_data")
+Quality control identifies outlier samples based on library size and gene detection rate. Samples in the bottom 5% on either metric are flagged. See [`R/02_quality_control.R`](https://github.com/JohnGavin/coMMpass-analysis/blob/main/R/02_quality_control.R) for filtering criteria.
 
-if (!is.null(qc)) {
+**Variable definitions:**
+
+- **Total Counts** --- library size (sum of all read counts per sample)
+- **Detected Genes** --- number of genes with at least 1 read
+- **Median Count** --- median read count across all genes in a sample
+- **MAD Count** --- median absolute deviation of counts (spread measure)
+- **Size Factor** --- library size / median library size across all samples
+- **Outlier** --- flagged if in bottom 5% by library size OR genes detected
+
+```{r qc}
+qc_summary <- safe_tar_read("eda_qc_summary")
+
+if (!is.null(qc_summary)) {
   cat("### QC Metrics Summary\n\n")
-  qc_df <- data.frame(
-    Metric = names(qc),
-    Value = unlist(lapply(qc, function(x) {
-      if (is.numeric(x) && length(x) == 1) format_with_commas(round(x, 2))
-      else as.character(x)
-    })),
-    stringsAsFactors = FALSE
+  cat(paste0(
+    "- **Samples assessed:** ", qc_summary$n_samples, "\n",
+    "- **Outliers flagged:** ", qc_summary$n_outliers, "\n\n"
+  ))
+  knitr::kable(
+    qc_summary$table, row.names = FALSE,
+    caption = qc_summary$caption
   )
-  knitr::kable(qc_df, caption = "Quality Control Metrics")
+} else {
+  # Fallback: try raw qc_metrics target
+  qc <- safe_tar_read("qc_metrics")
+  if (!is.null(qc) && is.data.frame(qc)) {
+    cat("### QC Metrics Summary\n\n")
+    display_qc <- data.frame(
+      Sample = qc$sample,
+      `Total Counts` = format(qc$total_counts, big.mark = ","),
+      `Detected Genes` = format(qc$detected_genes, big.mark = ","),
+      `Median Count` = sprintf("%.1f", qc$median_count),
+      `MAD Count` = sprintf("%.1f", qc$mad_count),
+      `Size Factor` = sprintf("%.3f", qc$size_factor),
+      Outlier = ifelse(qc$is_outlier, "Yes", "No"),
+      check.names = FALSE,
+      stringsAsFactors = FALSE
+    )
+    knitr::kable(
+      display_qc, row.names = FALSE,
+      caption = paste0(
+        "Per-sample QC metrics for ", nrow(qc), " samples. ",
+        sum(qc$is_outlier), " outlier(s) flagged."
+      )
+    )
+  } else {
+    cat("*QC data not available. Run `tar_make()` to generate.*\n")
+  }
 }
+```
+
+```{r filtered}
+filtered <- safe_tar_read("filtered_data")
 
 if (!is.null(filtered) && has_SE) {
   filtered_counts <- SummarizedExperiment::assay(filtered, "counts")
@@ -340,10 +465,6 @@ if (!is.null(filtered) && has_SE) {
         sprintf("(%.1f%%)", 100 * (1 - nrow(filtered_counts) / nrow(orig_counts))),
         "\n")
   }
-}
-
-if (is.null(qc) && is.null(filtered)) {
-  cat("*QC data not available. Run `tar_make()` to generate.*\n")
 }
 ```
 
@@ -364,7 +485,7 @@ if (requireNamespace("gert", quietly = TRUE)) {
       Item = c("Commit Hash", "Author", "Time", "Branch"),
       Value = c(info$commit, log1$author,
                 as.character(log1$time), info$shorthand)
-    ))
+    ), row.names = FALSE)
   }, error = function(e) {
     cat("Git info not available.")
   })

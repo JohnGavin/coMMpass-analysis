@@ -1,39 +1,84 @@
 # R/tar_plans/plan_survival_analysis.R
-# Survival analysis targets
+# Survival analysis targets using real clinical + cytogenetic data
 
 plan_survival_analysis <- list(
-  # Prepare survival data (clinical_data_clean is a cleaned data frame)
+
+  # Prepare survival data from cleaned clinical + cytogenetic data
   tar_target(
     survival_data,
-    prepare_survival_data(clinical_data_clean, normalized_data)
+    {
+      # clinical_data_clean is a data frame; cytogenetic_data is a file path
+      cyto_path <- NULL
+      if (is.character(cytogenetic_data) && file.exists(cytogenetic_data)) {
+        cyto_path <- cytogenetic_data
+      }
+      prepare_survival_data(clinical_data_clean, cyto_file = cyto_path)
+    },
+    packages = c("survival")
   ),
 
-  # Kaplan-Meier analysis
+  # Overall Kaplan-Meier (no stratification)
   tar_target(
-    km_analysis,
-    run_kaplan_meier(
-      survival_data,
-      group_by = "risk_group"
-    )
+    km_overall,
+    run_kaplan_meier(survival_data, strata = NULL),
+    packages = c("survival")
   ),
 
-  # Cox regression
+  # KM by cytogenetic risk group (high vs standard)
   tar_target(
-    cox_model,
+    km_by_risk,
+    {
+      if ("risk_group" %in% names(survival_data) &&
+          sum(!is.na(survival_data$risk_group)) >= 5) {
+        run_kaplan_meier(survival_data, strata = "risk_group")
+      } else {
+        list(fit = NULL, logrank_p = NA_real_,
+             note = "Cytogenetic risk data not available or too few patients")
+      }
+    },
+    packages = c("survival")
+  ),
+
+  # KM by ISS stage
+  tar_target(
+    km_by_iss,
+    {
+      if ("iss_stage" %in% names(survival_data) &&
+          sum(!is.na(survival_data$iss_stage)) >= 5) {
+        run_kaplan_meier(survival_data, strata = "iss_stage")
+      } else {
+        list(fit = NULL, logrank_p = NA_real_,
+             note = "ISS stage data not available or too few patients")
+      }
+    },
+    packages = c("survival")
+  ),
+
+  # Cox regression: age + gender
+  tar_target(
+    cox_basic,
     run_cox_regression(
       survival_data,
-      covariates = c("age", "stage", "gene_signature")
-    )
+      covariates = c("age_years", "gender")
+    ),
+    packages = c("survival")
   ),
 
-  # Survival report
+  # Cox regression: age + gender + ISS + cytogenetic risk
   tar_target(
-    survival_report,
-    render_survival_report(
-      km_analysis,
-      cox_model,
-      output_dir = config$results_dir
-    ),
-    format = "file"
+    cox_full,
+    {
+      covs <- c("age_years", "gender")
+      if ("iss_stage" %in% names(survival_data) &&
+          sum(!is.na(survival_data$iss_stage)) >= 10) {
+        covs <- c(covs, "iss_stage")
+      }
+      if ("risk_group" %in% names(survival_data) &&
+          sum(!is.na(survival_data$risk_group)) >= 10) {
+        covs <- c(covs, "risk_group")
+      }
+      run_cox_regression(survival_data, covariates = covs)
+    },
+    packages = c("survival")
   )
 )

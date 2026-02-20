@@ -4,16 +4,19 @@
 \alias{run_pathway_analysis}
 \title{Run pathway enrichment analysis}
 \usage{
-run_pathway_analysis(de_genes, method = "clusterProfiler")
+run_pathway_analysis(de_genes, method = "hallmark")
 }
 \arguments{
-\item{de_genes}{DE results with consensus_genes element}
+\item{de_genes}{Consensus DE result from [find_consensus_genes()] with
+\code{consensus_genes} character vector and \code{by_method} list.}
 
-\item{method}{Analysis method (default: "clusterProfiler")}
+\item{method}{Gene set collection: \code{"hallmark"} (default),
+\code{"kegg"}, \code{"reactome"}, \code{"go_bp"}.}
 }
 \value{
-List with pathway analysis results
+List with ORA results (see [run_ora()]).
 }
 \description{
-Run pathway enrichment analysis
+Wrapper that runs ORA on consensus DE genes. Uses MSigDB Hallmark gene
+sets by default.
 }
