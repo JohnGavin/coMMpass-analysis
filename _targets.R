@@ -49,5 +49,6 @@ c(
   plan_survival_analysis,
   plan_pathway_analysis,
   plan_gene_annotation,    # Ensembl -> symbol, enrichment viz data
+  plan_cytogenetic_viz,    # Oncoprint and co-occurrence visualization
   plan_pkgctx           # Auto-generate .ctx.yaml API context files
 )

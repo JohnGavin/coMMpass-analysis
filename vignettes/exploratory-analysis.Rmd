@@ -366,6 +366,93 @@ if (!is.null(rna) && !is.null(rna$genes_detected)) {
 }
 ```
 
+## Cytogenetic Landscape
+
+Cytogenetic markers from FISH testing are key to myeloma risk stratification
+([IMWG 2014 criteria](https://doi.org/10.1200/JCO.2014.55.1519)).
+High-risk alterations include t(4;14), t(14;16), del(17p), and gain(1q).
+
+### Alteration Frequencies
+
+```{r cyto-frequency}
+cyto_freq <- safe_tar_read("cyto_frequency_summary")
+
+if (!is.null(cyto_freq) && nrow(cyto_freq) > 0) {
+  knitr::kable(
+    cyto_freq, row.names = FALSE,
+    caption = paste0(
+      "Cytogenetic alteration frequencies from FISH testing. ",
+      "n_tested = patients with FISH data for that marker. ",
+      "High-risk: t(4;14), t(14;16), del(17p), gain(1q) per IMWG 2014. ",
+      "See [data dictionary](data-dictionary.html) for marker definitions."
+    ),
+    col.names = c("Marker", "Positive", "Tested", "%"),
+    align = "lrrr"
+  )
+} else {
+  cat("*Cytogenetic frequency data not available. Run `tar_make()` first.*\n")
+}
+```
+
+### Oncoprint
+
+```{r cyto-oncoprint, fig.height = 5, fig.cap = "Cytogenetic oncoprint showing alteration landscape across patients. Rows: FISH markers. Columns: patients sorted by alteration frequency. Blue = translocation, red = deletion, green = gain. Percentages show alteration frequency among tested patients."}
+cyto_viz <- safe_tar_read("cyto_viz_data")
+
+if (!is.null(cyto_viz) && nrow(cyto_viz) > 0) {
+  p <- plot_cytogenetic_oncoprint(cyto_viz,
+    title = "CoMMpass Cytogenetic Landscape"
+  )
+  print(p)
+} else {
+  cat("*Cytogenetic data not available. Run `tar_make()` first.*\n")
+}
+```
+
+### Co-occurrence Analysis
+
+```{r cyto-cooccurrence}
+cyto_cooc <- safe_tar_read("cyto_cooccurrence")
+
+if (!is.null(cyto_cooc) && nrow(cyto_cooc) > 0) {
+  # Pretty marker labels for display
+  marker_labels <- c(
+    t_4_14 = "t(4;14)", t_11_14 = "t(11;14)", t_14_16 = "t(14;16)",
+    t_14_20 = "t(14;20)", del_17p = "del(17p)", del_1p = "del(1p)",
+    gain_1q = "gain(1q)"
+  )
+  display <- cyto_cooc
+  display$marker1 <- ifelse(display$marker1 %in% names(marker_labels),
+                             marker_labels[display$marker1], display$marker1)
+  display$marker2 <- ifelse(display$marker2 %in% names(marker_labels),
+                             marker_labels[display$marker2], display$marker2)
+  knitr::kable(
+    display[, c("marker1", "marker2", "odds_ratio", "pvalue", "padj",
+                "n_both", "tendency")],
+    row.names = FALSE, digits = c(0, 0, 2, 4, 4, 0, 0),
+    caption = paste0(
+      "Pairwise co-occurrence analysis of cytogenetic markers ",
+      "(Fisher's exact test, BH-adjusted). ",
+      "odds_ratio > 1 indicates co-occurrence; < 1 indicates mutual exclusivity. ",
+      "* = padj < 0.05."
+    ),
+    col.names = c("Marker 1", "Marker 2", "Odds Ratio", "p-value",
+                   "Adjusted p", "Both+", "Tendency")
+  )
+} else {
+  cat("*Co-occurrence data not available. Run `tar_make()` first.*\n")
+}
+```
+
+```{r cyto-cooccurrence-heatmap, fig.cap = "Pairwise co-occurrence heatmap. Red: co-occurrence (positive association). Blue: mutual exclusivity (negative association). Color intensity: -log10(adjusted p-value). * = significant at padj < 0.05."}
+if (!is.null(cyto_cooc) && nrow(cyto_cooc) > 0) {
+  p <- plot_cooccurrence_heatmap(cyto_cooc)
+  print(p)
+} else {
+  cat("*Co-occurrence heatmap not available.*\n")
+}
+```
+
 ## DuckDB Query Examples
 
 The package provides two functions for querying the parquet files:

@@ -79,6 +79,14 @@ reference:
   - plot_enrichment_barplot
   - plot_gsea_running_score
 
+- title: "Cytogenetic Visualization"
+  desc: "Oncoprint and co-occurrence analysis for cytogenetic markers"
+  contents:
+  - plot_cytogenetic_oncoprint
+  - calculate_cooccurrence
+  - plot_cooccurrence_heatmap
+  - summarize_cytogenetics
+
 - title: "Pathway Analysis"
   desc: "GSEA and pathway enrichment"
   contents:
