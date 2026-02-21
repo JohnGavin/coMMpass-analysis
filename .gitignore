@@ -25,11 +25,25 @@ run.log
 # Local links
 AGENTS.md
 
+# pkgdown site (rebuilt on gh-pages branch)
+docs/
+
 # Shinylive generated files
 vignettes/dashboard_shinylive_files/
 vignettes/_extensions/
 vignettes/dashboard_shinylive.html
 vignettes/shinylive-sw.js
+shinylive-sw.js
+_extensions/
+_quarto.yml
+
+# Scratch/test files
+test_simple*
+test_dashboard.R
+fix_dashboard.R
+render_dashboard.R
+verify_env.R
+build_site.R
 
 # Backup files
 *.backup
