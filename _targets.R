@@ -48,5 +48,6 @@ c(
   plan_de_visualization,   # VST, PCA, volcano/MA/heatmap data
   plan_survival_analysis,
   plan_pathway_analysis,
+  plan_gene_annotation,    # Ensembl -> symbol, enrichment viz data
   plan_pkgctx           # Auto-generate .ctx.yaml API context files
 )

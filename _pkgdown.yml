@@ -70,6 +70,15 @@ reference:
   - compute_pca
   - summarize_de_methods
 
+- title: "Gene Annotation"
+  desc: "Ensembl to gene symbol mapping and enrichment visualization"
+  contents:
+  - annotate_genes
+  - annotate_de_results
+  - plot_enrichment_dotplot
+  - plot_enrichment_barplot
+  - plot_gsea_running_score
+
 - title: "Pathway Analysis"
   desc: "GSEA and pathway enrichment"
   contents:

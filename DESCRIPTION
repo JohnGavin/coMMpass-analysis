@@ -26,6 +26,7 @@ Imports:
     stringr,
     tibble
 Suggests:
+    AnnotationDbi,
     apeglm,
     targets,
     tarchetypes,
@@ -36,6 +37,7 @@ Suggests:
     ggplot2,
     limma,
     msigdbr,
+    org.Hs.eg.db,
     survival,
     tidyverse,
     knitr,

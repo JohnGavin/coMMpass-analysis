@@ -220,9 +220,9 @@ paired_results <- safe_tar_read("deseq2_paired_results")
 
 if (!is.null(paired_results) && !is.null(paired_results$results_table) &&
     nrow(paired_results$results_table) > 0) {
-  n_patients <- paired_results$n_patients %||% NA
-  n_samples <- paired_results$n_samples %||% NA
-  n_deg <- paired_results$n_deg %||% 0
+  n_patients <- if (!is.null(paired_results$n_patients)) paired_results$n_patients else NA
+  n_samples <- if (!is.null(paired_results$n_samples)) paired_results$n_samples else NA
+  n_deg <- if (!is.null(paired_results$n_deg)) paired_results$n_deg else 0
 
   cat(paste0(
     "**Paired analysis**: ", n_patients, " patients, ", n_samples, " samples\n\n",
@@ -240,6 +240,75 @@ if (!is.null(paired_results) && !is.null(paired_results$results_table) &&
   print(p)
 } else {
   cat("*Paired DE results not available (requires patients with >=2 timepoints).*\n")
+}
+```
+
+## Annotated DE Results
+
+Gene symbols make Ensembl IDs interpretable. The `annotate_genes()` function
+maps Ensembl IDs to HGNC symbols using
+[MSigDB gene mappings](https://www.gsea-msigdb.org/gsea/msigdb/).
+
+```{r annotated-de}
+annotated <- safe_tar_read("de_results_annotated")
+
+if (!is.null(annotated) && nrow(annotated) > 0) {
+  # Show top 15 by significance
+  top <- utils::head(annotated[order(annotated$padj), ], 15)
+  display_cols <- intersect(
+    c("gene_symbol", "log2FoldChange", "baseMean", "padj"),
+    names(top)
+  )
+  knitr::kable(
+    top[, display_cols],
+    caption = paste0(
+      "Top 15 DE genes by adjusted p-value (DESeq2). ",
+      "Gene symbols mapped from Ensembl IDs via MSigDB. ",
+      "log2FoldChange: positive = upregulated in tumor/relapse. ",
+      "See [data dictionary](data-dictionary.html) for gene ID details."
+    ),
+    digits = c(0, 2, 1, 4),
+    row.names = FALSE
+  )
+} else {
+  cat("*Annotated DE results not available. Run `tar_make()` to build targets.*\n")
+}
+```
+
+## Pathway Enrichment Visualizations
+
+### GSEA Enrichment Dot Plot
+
+```{r gsea-dotplot, fig.cap = "GSEA enrichment dot plot of MSigDB Hallmark pathways. Dot color: -log10(adjusted p-value). Dot size: number of genes in the pathway. Pathways sorted by significance. See [MSigDB Hallmark](https://www.gsea-msigdb.org/gsea/msigdb/human/collections.jsp#H) for pathway definitions."}
+dotplot_data <- safe_tar_read("enrichment_dotplot_data")
+
+if (!is.null(dotplot_data) && nrow(dotplot_data) > 0) {
+  p <- plot_enrichment_dotplot(
+    dotplot_data,
+    n = 15,
+    color_by = "NES",
+    title = "GSEA Hallmark Pathways"
+  )
+  print(p)
+} else {
+  cat("*GSEA results not available. Run `tar_make()` with fgsea/msigdbr installed.*\n")
+}
+```
+
+### ORA Enrichment Bar Plot
+
+```{r ora-barplot, fig.cap = "Over-representation analysis (ORA) of consensus DE genes in MSigDB Hallmark pathways. Bar length: -log10(adjusted p-value). Fisher's exact test (hypergeometric). Only consensus genes (significant in DESeq2, edgeR, and limma) are tested."}
+barplot_data <- safe_tar_read("enrichment_barplot_data")
+
+if (!is.null(barplot_data) && nrow(barplot_data) > 0) {
+  p <- plot_enrichment_barplot(
+    barplot_data,
+    n = 15,
+    title = "ORA: Consensus DE Genes in Hallmark Pathways"
+  )
+  print(p)
+} else {
+  cat("*ORA results not available. Run `tar_make()` with msigdbr installed.*\n")
 }
 ```
 
