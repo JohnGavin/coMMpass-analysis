@@ -80,5 +80,12 @@ plan_survival_analysis <- list(
       run_cox_regression(survival_data, covariates = covs)
     },
     packages = c("survival")
+  ),
+
+  # KM by individual cytogenetic markers
+  tar_target(
+    km_by_markers,
+    run_km_by_markers(survival_data, min_positive = 3L),
+    packages = c("survival")
   )
 )

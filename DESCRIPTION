@@ -38,6 +38,7 @@ Suggests:
     limma,
     msigdbr,
     org.Hs.eg.db,
+    scales,
     survival,
     tidyverse,
     knitr,

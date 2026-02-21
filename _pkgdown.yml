@@ -58,6 +58,9 @@ reference:
   - prepare_survival_data
   - run_kaplan_meier
   - run_cox_regression
+  - plot_km
+  - plot_forest
+  - run_km_by_markers
 
 - title: "DE Visualization"
   desc: "Volcano, MA, PCA, and heatmap plots for DE results"
@@ -116,6 +119,7 @@ articles:
   - data-dictionary
   - exploratory-analysis
   - differential-expression
+  - survival-analysis
 
 navbar:
   structure:
