@@ -2,18 +2,24 @@
 % Please edit documentation in R/04_survival_analysis.R
 \name{prepare_survival_data}
 \alias{prepare_survival_data}
-\title{Prepare survival data}
+\title{Prepare survival data from clinical and cytogenetic data}
 \usage{
-prepare_survival_data(clinical_data, se_data)
+prepare_survival_data(clinical_data, cyto_file = NULL)
 }
 \arguments{
-\item{clinical_data}{Clinical data frame}
+\item{clinical_data}{Cleaned clinical data frame (from clean_clinical_data)}
 
-\item{se_data}{A SummarizedExperiment object (optional)}
+\item{cyto_file}{Path to cytogenetic parquet file (from extract_cytogenetic_data),
+or NULL to skip cytogenetic integration}
 }
 \value{
-Data frame with survival time, status, and covariates
+Data frame with columns: patient_id, time_days, status (0=censored,
+  1=dead), age_years, gender, iss_stage, risk_group, plus individual
+  cytogenetic markers
 }
 \description{
-Prepare survival data
+Constructs a data frame suitable for survival analysis from GDC clinical
+data. Uses `days_to_death` for deceased patients and
+`days_to_last_follow_up` for censored (alive) patients. Merges with
+cytogenetic risk groups when available.
 }

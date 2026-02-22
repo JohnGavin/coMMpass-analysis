@@ -4,16 +4,25 @@
 \alias{run_kaplan_meier}
 \title{Run Kaplan-Meier analysis}
 \usage{
-run_kaplan_meier(surv_data, group_by = "risk_group")
+run_kaplan_meier(surv_data, strata = NULL)
 }
 \arguments{
-\item{surv_data}{Survival data frame with time and status columns}
+\item{surv_data}{Data frame from [prepare_survival_data()] with columns
+`time_days` and `status`}
 
-\item{group_by}{Column name to group by (default: "risk_group")}
+\item{strata}{Column name to stratify by (e.g. "risk_group", "iss_stage",
+"gender"), or NULL for overall curve}
 }
 \value{
-List with KM analysis results
+List with components:
+  - `fit`: survfit object
+  - `logrank`: survdiff result (NULL if no strata)
+  - `logrank_p`: log-rank p-value (NA if no strata)
+  - `median_survival`: named vector of median survival times
+  - `n_per_group`: sample sizes per stratum
+  - `strata`: the stratification variable used
 }
 \description{
-Run Kaplan-Meier analysis
+Fits a Kaplan-Meier survival curve, optionally stratified by a grouping
+variable. Returns the survfit object, log-rank test, and summary statistics.
 }

@@ -39,12 +39,16 @@ for (plan_file in plan_files) {
 c(
   plan_nix_sync,       # DESCRIPTION -> Nix drift detection
   plan_data_acquisition,
-  plan_data_cleaning,  # New: Clean and integrate data
+  plan_data_cleaning,  # Clean and integrate data
+  plan_cytogenetic,    # Cytogenetic marker extraction from clinical data
   plan_eda,            # Exploratory data analysis summaries
   plan_doc_examples,   # Code-as-targets for vignette display blocks
   plan_quality_control,
   plan_differential_expression,
+  plan_de_visualization,   # VST, PCA, volcano/MA/heatmap data
   plan_survival_analysis,
   plan_pathway_analysis,
+  plan_gene_annotation,    # Ensembl -> symbol, enrichment viz data
+  plan_cytogenetic_viz,    # Oncoprint and co-occurrence visualization
   plan_pkgctx           # Auto-generate .ctx.yaml API context files
 )

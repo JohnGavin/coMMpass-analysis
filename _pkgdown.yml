@@ -58,13 +58,46 @@ reference:
   - prepare_survival_data
   - run_kaplan_meier
   - run_cox_regression
-  - render_survival_report
+  - plot_km
+  - plot_forest
+  - run_km_by_markers
+
+- title: "DE Visualization"
+  desc: "Volcano, MA, PCA, and heatmap plots for DE results"
+  contents:
+  - plot_volcano
+  - plot_ma
+  - plot_pca
+  - plot_heatmap_de
+  - run_vst
+  - compute_pca
+  - summarize_de_methods
+
+- title: "Gene Annotation"
+  desc: "Ensembl to gene symbol mapping and enrichment visualization"
+  contents:
+  - annotate_genes
+  - annotate_de_results
+  - plot_enrichment_dotplot
+  - plot_enrichment_barplot
+  - plot_gsea_running_score
+
+- title: "Cytogenetic Visualization"
+  desc: "Oncoprint and co-occurrence analysis for cytogenetic markers"
+  contents:
+  - plot_cytogenetic_oncoprint
+  - calculate_cooccurrence
+  - plot_cooccurrence_heatmap
+  - summarize_cytogenetics
 
 - title: "Pathway Analysis"
   desc: "GSEA and pathway enrichment"
   contents:
   - run_gsea
+  - run_ora
   - run_pathway_analysis
+  - build_gene_ranks
+  - get_msigdb_gene_sets
   - generate_summary_report
 
 - title: "Utilities"
@@ -85,6 +118,8 @@ articles:
   - data-acquisition
   - data-dictionary
   - exploratory-analysis
+  - differential-expression
+  - survival-analysis
 
 navbar:
   structure:

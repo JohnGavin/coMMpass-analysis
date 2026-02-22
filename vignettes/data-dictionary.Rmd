@@ -101,7 +101,7 @@ if (!is.null(dd)) {
       caption = "CoMMpass Data Dictionary - All Variables"
     )
   } else {
-    knitr::kable(dd, caption = "CoMMpass Data Dictionary")
+    knitr::kable(dd, row.names = FALSE, caption = "CoMMpass Data Dictionary")
   }
 } else {
   cat("*Data dictionary function not available.*\n")
@@ -162,7 +162,8 @@ if (!is.null(clinical) && is.data.frame(clinical)) {
   )
   if (length(key_cols) > 0) {
     display <- head(clinical[, key_cols, drop = FALSE], 5)
-    knitr::kable(display, caption = "Sample Clinical Records")
+    knitr::kable(display, row.names = FALSE,
+                 caption = "Sample clinical records (first 5 rows, key columns). age_at_diagnosis is in days.")
   }
 } else {
   cat("*Clinical data not available. Run the pipeline to download.*\n")

@@ -72,13 +72,19 @@ if (!is.null(clin)) {
 
 ### Age at Diagnosis
 
-```{r age-histogram, fig.cap = "Age at diagnosis distribution"}
+```{r age-histogram, fig.cap = "Age at diagnosis distribution for CoMMpass patients. GDC stores age in days; values are converted to years (age / 365.25). Data: GDC clinical endpoint."}
 if (!is.null(clin) && !is.null(clin$age_years) && length(clin$age_years) > 0) {
   age_df <- data.frame(age = clin$age_years)
+  med_age <- sprintf("%.1f", median(clin$age_years, na.rm = TRUE))
   ggplot(age_df, aes(x = age)) +
     geom_histogram(bins = 30, fill = "steelblue", colour = "white") +
+    geom_vline(xintercept = median(clin$age_years, na.rm = TRUE),
+               linetype = "dashed", colour = "red") +
     labs(x = "Age (years)", y = "Number of Patients",
-         title = "Age at Diagnosis") +
+         title = "Age at Diagnosis",
+         subtitle = paste0("n = ", length(clin$age_years),
+                           " patients, median = ", med_age, " years"),
+         caption = "Data: GDC clinical. Dashed red line = median.") +
     theme_minimal()
 } else {
   cat("*Age data not available.*\n")
@@ -91,7 +97,14 @@ if (!is.null(clin) && !is.null(clin$age_years) && length(clin$age_years) > 0) {
 if (!is.null(clin) && !is.null(clin$gender_table)) {
   gt <- clin$gender_table
   gt$Percentage <- sprintf("%.1f%%", 100 * gt$Freq / sum(gt$Freq))
-  knitr::kable(gt, caption = "Gender Distribution", row.names = FALSE)
+  knitr::kable(
+    gt, row.names = FALSE,
+    caption = paste0(
+      "Gender distribution for ", clin$n_patients,
+      " CoMMpass patients. Data: [GDC clinical]",
+      "(https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)."
+    )
+  )
 } else {
   cat("*Gender data not available.*\n")
 }
@@ -103,7 +116,13 @@ if (!is.null(clin) && !is.null(clin$gender_table)) {
 if (!is.null(clin) && !is.null(clin$race_table)) {
   rt <- clin$race_table
   rt$Percentage <- sprintf("%.1f%%", 100 * rt$Freq / sum(rt$Freq))
-  knitr::kable(rt, caption = "Race Distribution", row.names = FALSE)
+  knitr::kable(
+    rt, row.names = FALSE,
+    caption = paste0(
+      "Race distribution for ", clin$n_patients,
+      " CoMMpass patients. Categories from GDC clinical data."
+    )
+  )
 } else {
   cat("*Race data not available.*\n")
 }
@@ -115,9 +134,95 @@ if (!is.null(clin) && !is.null(clin$race_table)) {
 if (!is.null(clin) && !is.null(clin$vital_table)) {
   vt <- clin$vital_table
   vt$Percentage <- sprintf("%.1f%%", 100 * vt$Freq / sum(vt$Freq))
-  knitr::kable(vt, caption = "Vital Status", row.names = FALSE)
+  knitr::kable(
+    vt, row.names = FALSE,
+    caption = paste0(
+      "Vital status for ", clin$n_patients,
+      " CoMMpass patients. Alive = censored at last follow-up. ",
+      "Data: GDC clinical."
+    )
+  )
 } else {
   cat("*Vital status data not available.*\n")
+}
+```
+
+## ISS Staging
+
+The International Staging System (ISS) classifies multiple myeloma into three
+stages based on serum beta-2 microglobulin and albumin levels. Higher stages
+indicate more advanced disease and worse prognosis.
+
+```{r iss-distribution}
+iss <- safe_tar_read("eda_iss_summary")
+
+if (!is.null(iss) && isTRUE(iss$available)) {
+  cat("- **Patients with ISS data:**", format(iss$n_with_iss, big.mark = ","), "\n")
+  cat("- **Missing ISS:**", format(iss$n_missing, big.mark = ","), "\n")
+  cat("- **Source column:**", iss$iss_col, "\n")
+} else if (!is.null(iss)) {
+  cat("*", iss$note, "*\n")
+} else {
+  cat("*ISS summary not available. Run `tar_make()` first.*\n")
+}
+```
+
+### ISS Stage Distribution
+
+```{r iss-table}
+if (!is.null(iss) && isTRUE(iss$available)) {
+  knitr::kable(
+    iss$iss_table, row.names = FALSE,
+    caption = paste0(
+      "ISS stage distribution for ", iss$n_with_iss,
+      " patients with staging data (",
+      iss$n_missing, " missing). ",
+      "ISS = [International Staging System]",
+      "(https://doi.org/10.1200/JCO.2005.04.242) ",
+      "based on serum beta-2 microglobulin and albumin."
+    )
+  )
+}
+```
+
+```{r iss-barplot, fig.cap = "ISS stage distribution across CoMMpass patients. Higher stages indicate more advanced disease. ISS = International Staging System."}
+if (!is.null(iss) && isTRUE(iss$available) && nrow(iss$iss_table) > 0) {
+  iss_plot <- iss$iss_table[!is.na(iss$iss_table$ISS_Stage), ]
+  if (nrow(iss_plot) > 0) {
+    ggplot(iss_plot, aes(x = ISS_Stage, y = Freq)) +
+      geom_col(fill = "steelblue") +
+      labs(x = "ISS Stage", y = "Number of Patients",
+           title = "ISS Stage Distribution",
+           subtitle = paste0("n = ", sum(iss_plot$Freq), " patients with staging data"),
+           caption = "ISS: International Staging System (Greipp et al., 2005)") +
+      theme_minimal()
+  }
+}
+```
+
+### Age by ISS Stage
+
+```{r iss-age}
+if (!is.null(iss) && isTRUE(iss$available) && !is.null(iss$age_by_iss)) {
+  age_tbl <- do.call(rbind, lapply(names(iss$age_by_iss), function(stage) {
+    x <- iss$age_by_iss[[stage]]
+    data.frame(
+      ISS_Stage = stage, N = x$n,
+      Mean_Age = sprintf("%.1f", x$mean),
+      Median_Age = sprintf("%.1f", x$median),
+      SD = sprintf("%.1f", x$sd)
+    )
+  }))
+  knitr::kable(
+    age_tbl, row.names = FALSE,
+    caption = paste0(
+      "Age at diagnosis (years) by ISS stage. ",
+      "GDC stores age in days; converted via age / 365.25. ",
+      "SD = standard deviation."
+    )
+  )
+} else if (!is.null(iss) && isTRUE(iss$available)) {
+  cat("*Age by ISS stage not available (age column not found).*\n")
 }
 ```
 
@@ -170,13 +275,16 @@ if (!is.null(bio)) {
 
 ### Sample Types
 
-```{r sample-type-bar, fig.cap = "Sample type distribution"}
+```{r sample-type-bar, fig.cap = "Sample type distribution across all CoMMpass biospecimens. Data: GDC biospecimen endpoint."}
 if (!is.null(bio) && !is.null(bio$sample_type_table)) {
   st <- bio$sample_type_table
   ggplot(st, aes(x = reorder(Sample_Type, Freq), y = Freq)) +
     geom_col(fill = "steelblue") +
     coord_flip() +
-    labs(x = NULL, y = "Count", title = "Sample Types") +
+    labs(x = NULL, y = "Count",
+         title = "Sample Types",
+         subtitle = paste0("n = ", sum(st$Freq), " total biospecimens"),
+         caption = "Data: GDC biospecimen") +
     theme_minimal()
 } else {
   cat("*Sample type data not available.*\n")
@@ -185,13 +293,17 @@ if (!is.null(bio) && !is.null(bio$sample_type_table)) {
 
 ### Samples per Patient
 
-```{r samples-per-patient, fig.cap = "Samples per patient distribution"}
+```{r samples-per-patient, fig.cap = "Number of biospecimen samples per patient. Most patients have multiple samples (longitudinal collection). Data: GDC biospecimen."}
 if (!is.null(bio) && !is.null(bio$samples_per_patient)) {
   spp_df <- data.frame(n = bio$samples_per_patient)
   ggplot(spp_df, aes(x = n)) +
     geom_histogram(binwidth = 1, fill = "steelblue", colour = "white") +
     labs(x = "Number of Samples", y = "Number of Patients",
-         title = "Samples per Patient") +
+         title = "Samples per Patient",
+         subtitle = paste0("n = ", length(bio$samples_per_patient),
+                           " patients, median = ",
+                           median(bio$samples_per_patient), " samples"),
+         caption = "Data: GDC biospecimen") +
     theme_minimal()
 } else {
   cat("*Samples-per-patient data not available.*\n")
@@ -218,13 +330,16 @@ if (!is.null(rna)) {
 
 ### Library Size Distribution
 
-```{r library-size-boxplot, fig.cap = "Library sizes across samples"}
+```{r library-size-boxplot, fig.cap = "Library sizes (millions of reads) across RNA-seq samples. Library size = total mapped read counts per sample. Data: GDC STAR-Counts."}
 if (!is.null(rna) && !is.null(rna$library_sizes)) {
   ls_df <- data.frame(library_size = rna$library_sizes / 1e6)
   ggplot(ls_df, aes(y = library_size)) +
     geom_boxplot(fill = "steelblue", width = 0.4) +
     labs(y = "Library Size (millions of reads)",
-         title = "Library Size Distribution") +
+         title = "Library Size Distribution",
+         subtitle = paste0("n = ", rna$n_samples, " samples, median = ",
+                           sprintf("%.1f", median(rna$library_sizes) / 1e6), "M"),
+         caption = "Data: GDC STAR-Counts") +
     theme_minimal() +
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 } else {
@@ -234,16 +349,107 @@ if (!is.null(rna) && !is.null(rna$library_sizes)) {
 
 ### Genes Detected per Sample
 
-```{r genes-detected-histogram, fig.cap = "Genes detected per sample"}
+```{r genes-detected-histogram, fig.cap = "Number of genes detected (count > 0) per RNA-seq sample. Samples with unusually low detection may be outliers. Data: GDC STAR-Counts."}
 if (!is.null(rna) && !is.null(rna$genes_detected)) {
   gd_df <- data.frame(genes = rna$genes_detected)
   ggplot(gd_df, aes(x = genes)) +
     geom_histogram(bins = 30, fill = "steelblue", colour = "white") +
     labs(x = "Genes Detected (count > 0)", y = "Number of Samples",
-         title = "Genes Detected per Sample") +
+         title = "Genes Detected per Sample",
+         subtitle = paste0("n = ", rna$n_samples, " samples, median = ",
+                           format(median(rna$genes_detected), big.mark = ","),
+                           " genes"),
+         caption = "Data: GDC STAR-Counts") +
     theme_minimal()
 } else {
   cat("*Genes-detected data not available.*\n")
+}
+```
+
+## Cytogenetic Landscape
+
+Cytogenetic markers from FISH testing are key to myeloma risk stratification
+([IMWG 2014 criteria](https://doi.org/10.1200/JCO.2014.55.1519)).
+High-risk alterations include t(4;14), t(14;16), del(17p), and gain(1q).
+
+### Alteration Frequencies
+
+```{r cyto-frequency}
+cyto_freq <- safe_tar_read("cyto_frequency_summary")
+
+if (!is.null(cyto_freq) && nrow(cyto_freq) > 0) {
+  knitr::kable(
+    cyto_freq, row.names = FALSE,
+    caption = paste0(
+      "Cytogenetic alteration frequencies from FISH testing. ",
+      "n_tested = patients with FISH data for that marker. ",
+      "High-risk: t(4;14), t(14;16), del(17p), gain(1q) per IMWG 2014. ",
+      "See [data dictionary](data-dictionary.html) for marker definitions."
+    ),
+    col.names = c("Marker", "Positive", "Tested", "%"),
+    align = "lrrr"
+  )
+} else {
+  cat("*Cytogenetic frequency data not available. Run `tar_make()` first.*\n")
+}
+```
+
+### Oncoprint
+
+```{r cyto-oncoprint, fig.height = 5, fig.cap = "Cytogenetic oncoprint showing alteration landscape across patients. Rows: FISH markers. Columns: patients sorted by alteration frequency. Blue = translocation, red = deletion, green = gain. Percentages show alteration frequency among tested patients."}
+cyto_viz <- safe_tar_read("cyto_viz_data")
+
+if (!is.null(cyto_viz) && nrow(cyto_viz) > 0) {
+  p <- plot_cytogenetic_oncoprint(cyto_viz,
+    title = "CoMMpass Cytogenetic Landscape"
+  )
+  print(p)
+} else {
+  cat("*Cytogenetic data not available. Run `tar_make()` first.*\n")
+}
+```
+
+### Co-occurrence Analysis
+
+```{r cyto-cooccurrence}
+cyto_cooc <- safe_tar_read("cyto_cooccurrence")
+
+if (!is.null(cyto_cooc) && nrow(cyto_cooc) > 0) {
+  # Pretty marker labels for display
+  marker_labels <- c(
+    t_4_14 = "t(4;14)", t_11_14 = "t(11;14)", t_14_16 = "t(14;16)",
+    t_14_20 = "t(14;20)", del_17p = "del(17p)", del_1p = "del(1p)",
+    gain_1q = "gain(1q)"
+  )
+  display <- cyto_cooc
+  display$marker1 <- ifelse(display$marker1 %in% names(marker_labels),
+                             marker_labels[display$marker1], display$marker1)
+  display$marker2 <- ifelse(display$marker2 %in% names(marker_labels),
+                             marker_labels[display$marker2], display$marker2)
+  knitr::kable(
+    display[, c("marker1", "marker2", "odds_ratio", "pvalue", "padj",
+                "n_both", "tendency")],
+    row.names = FALSE, digits = c(0, 0, 2, 4, 4, 0, 0),
+    caption = paste0(
+      "Pairwise co-occurrence analysis of cytogenetic markers ",
+      "(Fisher's exact test, BH-adjusted). ",
+      "odds_ratio > 1 indicates co-occurrence; < 1 indicates mutual exclusivity. ",
+      "* = padj < 0.05."
+    ),
+    col.names = c("Marker 1", "Marker 2", "Odds Ratio", "p-value",
+                   "Adjusted p", "Both+", "Tendency")
+  )
+} else {
+  cat("*Co-occurrence data not available. Run `tar_make()` first.*\n")
+}
+```
+
+```{r cyto-cooccurrence-heatmap, fig.cap = "Pairwise co-occurrence heatmap. Red: co-occurrence (positive association). Blue: mutual exclusivity (negative association). Color intensity: -log10(adjusted p-value). * = significant at padj < 0.05."}
+if (!is.null(cyto_cooc) && nrow(cyto_cooc) > 0) {
+  p <- plot_cooccurrence_heatmap(cyto_cooc)
+  print(p)
+} else {
+  cat("*Co-occurrence heatmap not available.*\n")
 }
 ```
 
@@ -273,7 +479,10 @@ demo <- safe_tar_read("eda_duckdb_demo")
 if (!is.null(demo)) {
   cat("**SQL equivalent:**\n\n")
   cat("```sql\n", demo$demo_sql, "\n```\n\n")
-  knitr::kable(demo$demo_result, caption = "Sample query result (first 10 rows)")
+  knitr::kable(
+    demo$demo_result, row.names = FALSE,
+    caption = "First 10 patients from clinical data via DuckDB query. age_at_diagnosis is in days."
+  )
 } else {
   cat("*DuckDB demo not available. Run `tar_make()` first.*\n")
 }
@@ -296,7 +505,10 @@ if (!is.null(code)) {
 if (!is.null(demo)) {
   cat("**SQL equivalent:**\n\n")
   cat("```sql\n", demo$agg_sql, "\n```\n\n")
-  knitr::kable(demo$agg_result, caption = "Aggregation result")
+  knitr::kable(
+    demo$agg_result, row.names = FALSE,
+    caption = "Patient count and mean age (years) by gender via DuckDB aggregation."
+  )
 } else {
   cat("*DuckDB demo not available.*\n")
 }
@@ -341,7 +553,7 @@ if (requireNamespace("gert", quietly = TRUE)) {
       Item = c("Commit Hash", "Author", "Time", "Branch"),
       Value = c(info$commit, log1$author,
                 as.character(log1$time), info$shorthand)
-    ))
+    ), row.names = FALSE)
   }, error = function(e) {
     cat("Git info not available.")
   })

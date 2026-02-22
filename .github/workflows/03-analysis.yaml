@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@v9
@@ -22,57 +24,71 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
           extraPullNames: rstats-on-nix
 
-      - name: Download Data
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_run" ]; then
-             RUN_ID=${{ github.event.workflow_run.id }}
-          else
-             # Find latest success for Data workflow
-             RUN_ID=$(gh run list --workflow 02-data.yaml --status success --limit 1 --json databaseId --jq '.[0].databaseId')
-          fi
-          
-          echo "Downloading data from Run ID: $RUN_ID"
-          gh run download $RUN_ID -n raw-data-store
-          
-          # gh run download might put it in a subdir 'raw-data-store'
-          if [ -d "raw-data-store" ]; then
-             cp -r raw-data-store/* .
-             rm -rf raw-data-store
-          fi
-          
-          ls -R data/
-          ls -F _targets/
+      - name: Check if previous runs exist
+        id: runs-exist
+        run: git ls-remote --exit-code --heads origin targets-runs
+        continue-on-error: true
 
-      - name: Run Analysis Targets
-        run: |
-          # Run only analysis targets (data targets already complete from workflow 02)
-          nix-shell --pure default_ci.nix --run "Rscript -e '
-            targets::tar_make(
-              names = c(
-                \"clinical_data_clean\",
-                \"expression_data_clean\",
-                \"integrated_data\",
-                \"data_quality_report\",
-                \"qc_metrics\",
-                \"filtered_data\",
-                \"normalized_data\",
-                \"deseq2_results\",
-                \"edger_results\",
-                \"limma_results\",
-                \"consensus_de_genes\",
-                \"de_report\"
-              ),
-              callr_function = NULL
-            )
-          '"
+      - name: Checkout previous run
+        if: steps.runs-exist.outcome == 'success'
+        uses: actions/checkout@v4
+        with:
+          ref: targets-runs
+          fetch-depth: 1
+          path: .targets-runs
 
-      - name: Upload Analysis Store
+      - name: Restore output files from previous run
+        if: steps.runs-exist.outcome == 'success'
+        run: |
+          nix-shell --pure default_ci.nix --run "Rscript -e 'for (dest in scan(\".targets-runs/.targets-files\", what = character())) {
+            source <- file.path(\".targets-runs\", dest)
+            if (!file.exists(dirname(dest))) dir.create(dirname(dest), recursive = TRUE)
+            if (file.exists(source)) file.rename(source, dest)
+          }'"
+
+      - name: Run Pipeline
+        run: |
+          nix-shell --pure default_ci.nix --run "CI=true GITHUB_ACTIONS=true Rscript -e 'targets::tar_make(callr_function = NULL)'"
+
+      - name: Identify pipeline output files
+        if: success()
+        run: |
+          # List all modified/untracked files as pipeline outputs.
+          # If data grows large, add exclusions here to keep targets-runs lean:
+          #   git ls-files -mo --exclude=renv --exclude='data/raw/*.parquet' > .targets-files
+          # Or exclude specific patterns:
+          #   --exclude='_targets/objects/large_*'
+          # Current data is ~1MB with sample_limit=10 in CI, so no exclusions needed.
+          git ls-files -mo --exclude=renv > .targets-files
+
+      - name: Create targets-runs branch if needed
+        if: success() && steps.runs-exist.outcome != 'success'
+        run: git checkout --orphan targets-runs
+
+      - name: Switch to targets-runs branch
+        if: success() && steps.runs-exist.outcome == 'success'
+        run: |
+          rm -r .git
+          mv .targets-runs/.git .
+          rm -r .targets-runs
+
+      - name: Push pipeline state
+        if: success()
+        run: |
+          git config --local user.name "GitHub Actions"
+          git config --local user.email "actions@github.com"
+          rm -rf .gitignore .github/workflows
+          git add --all -- ':!renv'
+          for file in $(git ls-files -mo --exclude=renv); do
+            git add --force $file
+          done
+          git commit -am "Run pipeline" || echo "No changes to commit"
+          git push origin targets-runs
+
+      - name: Upload failure artifact
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: analysis-store
-          path: |
-            _targets/
-            data/
-          retention-days: 1
+          name: analysis-failure-${{ github.run_id }}
+          path: _targets/meta/
+          retention-days: 7

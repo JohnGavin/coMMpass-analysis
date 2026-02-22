@@ -4,7 +4,13 @@
 \alias{run_deseq2}
 \title{Run DESeq2 differential expression analysis}
 \usage{
-run_deseq2(se_data, clinical_data, design_formula = ~condition)
+run_deseq2(
+  se_data,
+  clinical_data,
+  design_formula = ~condition,
+  shrink_lfc = TRUE,
+  paired = FALSE
+)
 }
 \arguments{
 \item{se_data}{A SummarizedExperiment object}
@@ -12,10 +18,17 @@ run_deseq2(se_data, clinical_data, design_formula = ~condition)
 \item{clinical_data}{Clinical data frame}
 
 \item{design_formula}{Design formula for the model}
+
+\item{shrink_lfc}{If TRUE, apply apeglm LFC shrinkage (default TRUE)}
+
+\item{paired}{If TRUE, use paired longitudinal design with patient as
+blocking factor. Requires 'patient_id' and 'visit' columns in
+clinical_data. Only patients with >=2 timepoints are included.}
 }
 \value{
-List with DE results
+List with DE results including raw and shrunken (if requested)
 }
 \description{
-Run DESeq2 differential expression analysis
+Runs DESeq2 with optional apeglm log-fold-change shrinkage and optional
+paired longitudinal design for within-patient comparisons.
 }

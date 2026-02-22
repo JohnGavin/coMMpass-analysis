@@ -1,26 +1,8 @@
 # tests/testthat/test-analysis-stubs.R
-# Tests for placeholder analysis functions
+# Tests for analysis functions
 
-test_that("prepare_survival_data returns expected structure", {
-  # These are placeholder implementations that generate fake data
-  result <- prepare_survival_data(
-    clinical_data = data.frame(id = 1:10),
-    se_data = NULL
-  )
-  expect_type(result, "list")
-  expect_s3_class(result, "data.frame")
-  expect_true(all(c("patient_id", "time", "status") %in% names(result)))
-  expect_true(all(result$time >= 0))
-  expect_true(all(result$status %in% c(0, 1)))
-})
-
-test_that("run_gsea returns expected structure", {
-  result <- run_gsea(se_data = NULL, clinical_data = NULL)
-  expect_type(result, "list")
-  expect_true("n_gene_sets" %in% names(result))
-  expect_true("top_gene_sets" %in% names(result))
-  expect_s3_class(result$top_gene_sets, "data.frame")
-})
+# Survival analysis tests in test-survival-analysis.R
+# Pathway analysis tests in test-pathway-analysis.R
 
 test_that("calculate_qc_metrics works with mock SE", {
   skip_if_not_installed("SummarizedExperiment")

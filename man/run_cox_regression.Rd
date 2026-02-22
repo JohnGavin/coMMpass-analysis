@@ -4,16 +4,23 @@
 \alias{run_cox_regression}
 \title{Run Cox proportional hazards regression}
 \usage{
-run_cox_regression(surv_data, covariates = c("age", "stage"))
+run_cox_regression(surv_data, covariates = c("age_years", "gender"))
 }
 \arguments{
-\item{surv_data}{Survival data frame with time and status columns}
+\item{surv_data}{Data frame from [prepare_survival_data()]}
 
 \item{covariates}{Character vector of covariate column names}
 }
 \value{
-List with Cox regression results
+List with components:
+  - `model`: coxph object
+  - `hazard_ratios`: data frame with HR, CI, p-values
+  - `concordance`: C-index
+  - `n`: number of patients in model
+  - `n_events`: number of events
+  - `ph_test`: cox.zph result for PH assumption
 }
 \description{
-Run Cox proportional hazards regression
+Fits a Cox PH model with specified covariates. Returns the model object,
+hazard ratios with confidence intervals, and concordance index.
 }

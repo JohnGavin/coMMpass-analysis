@@ -23,15 +23,22 @@ Imports:
     dbplyr,
     cli,
     glue,
+    stringr,
     tibble
 Suggests:
+    AnnotationDbi,
+    apeglm,
     targets,
     tarchetypes,
     crew,
     DESeq2,
+    fgsea,
     GenomicDataCommons,
     ggplot2,
     limma,
+    msigdbr,
+    org.Hs.eg.db,
+    scales,
     survival,
     tidyverse,
     knitr,
@@ -41,6 +48,5 @@ Suggests:
     gert,
     nanoparquet,
     DT,
-    plotly,
-    stringr
+    plotly
 Config/testthat/edition: 3

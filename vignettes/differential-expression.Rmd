@@ -1,0 +1,322 @@
+---
+title: "04. Differential Expression Analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{04. Differential Expression Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 6
+)
+
+safe_tar_read <- function(name) {
+  tryCatch(
+    targets::tar_read(name = name, store = targets::tar_config_get("store")),
+    error = function(e) NULL
+  )
+}
+```
+
+## Overview
+
+This vignette presents differential expression (DE) results from the CoMMpass
+RNA-seq pipeline, comparing tumor vs normal or baseline vs relapse samples
+using three complementary methods: **DESeq2**, **edgeR**, and **limma-voom**.
+
+Visualizations include:
+
+- **PCA** of VST-transformed counts for sample clustering
+- **Volcano plot** showing fold-change vs significance
+- **MA plot** showing mean expression vs fold-change
+- **Heatmap** of top DE genes across samples
+- **Method comparison** summarizing agreement across DE methods
+
+> **Note:** This vignette was built in CI with `sample_limit=10`. Local builds
+> default to 100 samples. Numbers below reflect the CI subset.
+
+## Method Comparison
+
+```{r method-summary}
+de_summary <- safe_tar_read("de_method_summary")
+
+if (!is.null(de_summary) && nrow(de_summary) > 0) {
+  knitr::kable(
+    de_summary,
+    caption = paste0(
+      "Differential expression results across methods. ",
+      "Significance thresholds: |log2FC| > 1, adjusted p-value < 0.05. ",
+      "DESeq2 uses Wald test with apeglm shrinkage; edgeR uses quasi-likelihood F-test; ",
+      "limma uses empirical Bayes moderated t-test. ",
+      "See [DESeq2 vignette](https://bioconductor.org/packages/DESeq2/) for details."
+    ),
+    col.names = c("Method", "Genes Tested", "Significant", "Up", "Down"),
+    row.names = FALSE,
+    align = "lrrrr"
+  )
+} else {
+  cat("*DE method summary not available. Run `tar_make()` to build pipeline targets.*\n")
+}
+```
+
+```{r method-barplot, fig.cap = "Number of significant DE genes identified by each method (|log2FC| > 1, padj < 0.05). Concordance across methods indicates robust signals. DESeq2 with apeglm shrinkage tends to be more conservative."}
+if (!is.null(de_summary) && nrow(de_summary) > 0) {
+  library(ggplot2)
+  long <- rbind(
+    data.frame(method = de_summary$method, direction = "Up",
+               count = de_summary$n_up),
+    data.frame(method = de_summary$method, direction = "Down",
+               count = -de_summary$n_down)
+  )
+  ggplot(long, aes(x = method, y = count, fill = direction)) +
+    geom_col() +
+    scale_fill_manual(values = c("Up" = "#DC3545", "Down" = "#0066CC"),
+                      name = "Direction") +
+    geom_hline(yintercept = 0, linewidth = 0.3) +
+    labs(
+      title = "DE Genes by Method",
+      x = NULL,
+      y = "Number of genes (down shown as negative)"
+    ) +
+    theme_minimal(base_size = 12)
+}
+```
+
+## Principal Component Analysis
+
+PCA is computed from the top 500 most variable genes after
+[variance-stabilizing transformation](https://bioconductor.org/packages/DESeq2/)
+(VST), which stabilizes variance across the expression range. VST is
+preferred over raw counts or logCPM for exploratory visualization.
+
+```{r pca-plot, fig.cap = "PCA of VST-transformed RNA-seq counts. Each point is a sample. Variance explained per PC shown on axes. Computed from top 500 most variable genes. See [DESeq2::vst()](https://bioconductor.org/packages/DESeq2/) for the transformation method."}
+pca_data <- safe_tar_read("pca_data")
+
+if (!is.null(pca_data) && nrow(pca_data$coords) > 0) {
+  # Color by condition if available
+  color_var <- NULL
+  if ("condition" %in% names(pca_data$coords)) color_var <- "condition"
+
+  p <- plot_pca(pca_data, color_by = color_var,
+                title = "Sample PCA (VST)")
+  print(p)
+} else {
+  cat("*PCA data not available. Run `tar_make()` to compute VST and PCA targets.*\n")
+}
+```
+
+## Volcano Plot
+
+The volcano plot shows statistical significance (-log10 adjusted p-value)
+against biological effect size (log2 fold change). Genes in the upper corners
+are both statistically significant and biologically meaningful.
+
+```{r volcano, fig.cap = "Volcano plot of DESeq2 results. X-axis: log2 fold change (apeglm-shrunken if available). Y-axis: -log10 adjusted p-value. Dashed lines: |LFC| = 1 and padj = 0.05 thresholds. Top 10 genes labeled by adjusted p-value. Red = upregulated, blue = downregulated."}
+volcano_data <- safe_tar_read("volcano_plot_data")
+
+if (!is.null(volcano_data) && nrow(volcano_data) > 0) {
+  p <- plot_volcano(
+    volcano_data,
+    lfc_threshold = 1,
+    padj_threshold = 0.05,
+    n_label = 10,
+    title = "DESeq2 Volcano Plot"
+  )
+  print(p)
+} else {
+  cat("*Volcano plot data not available. Run `tar_make()` to build DE targets.*\n")
+}
+```
+
+## MA Plot
+
+The MA plot (Bland-Altman) shows mean expression (x-axis) against fold change
+(y-axis). It reveals whether DE signals are concentrated at particular
+expression levels and whether fold-change estimates are biased.
+
+```{r ma-plot, fig.cap = "MA plot of DESeq2 results. X-axis: log10(baseMean + 1). Y-axis: log2 fold change. Red points are significant at padj < 0.05 and |LFC| > 1. Dashed lines at LFC = +/-1. Genes with low mean expression tend to have higher variance."}
+ma_data <- safe_tar_read("ma_plot_data")
+
+if (!is.null(ma_data) && nrow(ma_data) > 0) {
+  p <- plot_ma(
+    ma_data,
+    lfc_threshold = 1,
+    padj_threshold = 0.05,
+    title = "DESeq2 MA Plot"
+  )
+  print(p)
+} else {
+  cat("*MA plot data not available. Run `tar_make()` to build DE targets.*\n")
+}
+```
+
+## Heatmap of Top DE Genes
+
+The heatmap shows Z-score scaled VST expression for the most significant
+genes. Rows (genes) and columns (samples) are hierarchically clustered.
+
+```{r heatmap, fig.height = 10, fig.cap = "Heatmap of top 50 DE genes by adjusted p-value. Expression values are VST-transformed and Z-score scaled per gene. Blue = below mean, red = above mean. Hierarchical clustering applied to both rows and columns. See [data dictionary](data-dictionary.html) for gene ID mappings."}
+heatmap_data <- safe_tar_read("top_de_heatmap_data")
+
+if (!is.null(heatmap_data) &&
+    !is.null(heatmap_data$expr_matrix) &&
+    !is.null(heatmap_data$de_results)) {
+  p <- plot_heatmap_de(
+    heatmap_data$expr_matrix,
+    heatmap_data$de_results,
+    n_genes = 50,
+    title = "Top 50 DE Genes"
+  )
+  print(p)
+} else {
+  cat("*Heatmap data not available. Run `tar_make()` to build VST and DE targets.*\n")
+}
+```
+
+## Consensus Genes
+
+Genes identified as significant by all three methods (DESeq2, edgeR, limma)
+represent the highest-confidence DE candidates.
+
+```{r consensus}
+consensus <- safe_tar_read("consensus_de_genes")
+
+if (!is.null(consensus) && !is.null(consensus$n_consensus)) {
+  cat(paste0(
+    "**", consensus$n_consensus, " consensus DE genes** found across all three methods.\n\n"
+  ))
+
+  if (consensus$n_consensus > 0 && !is.null(consensus$consensus_genes)) {
+    n_show <- min(20, length(consensus$consensus_genes))
+    cat(paste0(
+      "Top ", n_show, " consensus genes (sorted by mean rank): ",
+      paste(utils::head(consensus$consensus_genes, n_show), collapse = ", "),
+      if (consensus$n_consensus > n_show) paste0(", ... (", consensus$n_consensus - n_show, " more)") else "",
+      "\n\n"
+    ))
+    cat("These genes are used for [pathway analysis](pathway-analysis.html) via ORA.\n")
+  }
+} else {
+  cat("*Consensus DE genes not available. Run `tar_make()` to build DE targets.*\n")
+}
+```
+
+## Paired Longitudinal DE
+
+For patients with samples at multiple timepoints (baseline and relapse),
+a paired design (`~ patient_id + visit`) controls for inter-patient
+variability and tests for within-patient expression changes over time.
+
+```{r paired-de}
+paired_results <- safe_tar_read("deseq2_paired_results")
+
+if (!is.null(paired_results) && !is.null(paired_results$results_table) &&
+    nrow(paired_results$results_table) > 0) {
+  n_patients <- if (!is.null(paired_results$n_patients)) paired_results$n_patients else NA
+  n_samples <- if (!is.null(paired_results$n_samples)) paired_results$n_samples else NA
+  n_deg <- if (!is.null(paired_results$n_deg)) paired_results$n_deg else 0
+
+  cat(paste0(
+    "**Paired analysis**: ", n_patients, " patients, ", n_samples, " samples\n\n",
+    "**", n_deg, " DE genes** at padj < 0.05\n\n"
+  ))
+
+  # Show volcano for paired results
+  p <- plot_volcano(
+    paired_results$results_table,
+    lfc_threshold = 1,
+    padj_threshold = 0.05,
+    n_label = 10,
+    title = "Paired DE: Baseline vs Relapse"
+  )
+  print(p)
+} else {
+  cat("*Paired DE results not available (requires patients with >=2 timepoints).*\n")
+}
+```
+
+## Annotated DE Results
+
+Gene symbols make Ensembl IDs interpretable. The `annotate_genes()` function
+maps Ensembl IDs to HGNC symbols using
+[MSigDB gene mappings](https://www.gsea-msigdb.org/gsea/msigdb/).
+
+```{r annotated-de}
+annotated <- safe_tar_read("de_results_annotated")
+
+if (!is.null(annotated) && nrow(annotated) > 0) {
+  # Show top 15 by significance
+  top <- utils::head(annotated[order(annotated$padj), ], 15)
+  display_cols <- intersect(
+    c("gene_symbol", "log2FoldChange", "baseMean", "padj"),
+    names(top)
+  )
+  knitr::kable(
+    top[, display_cols],
+    caption = paste0(
+      "Top 15 DE genes by adjusted p-value (DESeq2). ",
+      "Gene symbols mapped from Ensembl IDs via MSigDB. ",
+      "log2FoldChange: positive = upregulated in tumor/relapse. ",
+      "See [data dictionary](data-dictionary.html) for gene ID details."
+    ),
+    digits = c(0, 2, 1, 4),
+    row.names = FALSE
+  )
+} else {
+  cat("*Annotated DE results not available. Run `tar_make()` to build targets.*\n")
+}
+```
+
+## Pathway Enrichment Visualizations
+
+### GSEA Enrichment Dot Plot
+
+```{r gsea-dotplot, fig.cap = "GSEA enrichment dot plot of MSigDB Hallmark pathways. Dot color: -log10(adjusted p-value). Dot size: number of genes in the pathway. Pathways sorted by significance. See [MSigDB Hallmark](https://www.gsea-msigdb.org/gsea/msigdb/human/collections.jsp#H) for pathway definitions."}
+dotplot_data <- safe_tar_read("enrichment_dotplot_data")
+
+if (!is.null(dotplot_data) && nrow(dotplot_data) > 0) {
+  p <- plot_enrichment_dotplot(
+    dotplot_data,
+    n = 15,
+    color_by = "NES",
+    title = "GSEA Hallmark Pathways"
+  )
+  print(p)
+} else {
+  cat("*GSEA results not available. Run `tar_make()` with fgsea/msigdbr installed.*\n")
+}
+```
+
+### ORA Enrichment Bar Plot
+
+```{r ora-barplot, fig.cap = "Over-representation analysis (ORA) of consensus DE genes in MSigDB Hallmark pathways. Bar length: -log10(adjusted p-value). Fisher's exact test (hypergeometric). Only consensus genes (significant in DESeq2, edgeR, and limma) are tested."}
+barplot_data <- safe_tar_read("enrichment_barplot_data")
+
+if (!is.null(barplot_data) && nrow(barplot_data) > 0) {
+  p <- plot_enrichment_barplot(
+    barplot_data,
+    n = 15,
+    title = "ORA: Consensus DE Genes in Hallmark Pathways"
+  )
+  print(p)
+} else {
+  cat("*ORA results not available. Run `tar_make()` with msigdbr installed.*\n")
+}
+```
+
+## Next Steps
+
+- **Pathway analysis**: Consensus DE genes are tested for enrichment in
+  MSigDB Hallmark, KEGG, and other collections. See the
+  [pathway analysis vignette](pathway-analysis.html).
+- **Survival analysis**: DE gene signatures can be correlated with overall
+  survival. See the [data acquisition vignette](data-acquisition.html) for
+  clinical data integration.

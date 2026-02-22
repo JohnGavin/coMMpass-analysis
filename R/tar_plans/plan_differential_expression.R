@@ -2,13 +2,26 @@
 # Differential expression analysis targets
 
 plan_differential_expression <- list(
-  # DESeq2 analysis (uses cleaned clinical data)
+  # DESeq2 analysis - unpaired with apeglm shrinkage
   tar_target(
     deseq2_results,
     run_deseq2(
       normalized_data,
       clinical_data_clean,
-      design_formula = ~ condition
+      design_formula = ~ condition,
+      shrink_lfc = TRUE,
+      paired = FALSE
+    )
+  ),
+
+  # DESeq2 analysis - paired longitudinal (within-patient)
+  tar_target(
+    deseq2_paired_results,
+    run_deseq2(
+      normalized_data,
+      clinical_data_clean,
+      shrink_lfc = TRUE,
+      paired = TRUE
     )
   ),
 
@@ -32,7 +45,7 @@ plan_differential_expression <- list(
     )
   ),
 
-  # Consensus DE genes
+  # Consensus DE genes (unpaired methods)
   tar_target(
     consensus_de_genes,
     find_consensus_genes(

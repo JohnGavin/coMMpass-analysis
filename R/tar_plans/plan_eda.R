@@ -170,6 +170,147 @@ plan_eda <- list(
     packages = c("DBI", "duckdb", "arrow")
   ),
 
+  # --- ISS staging summary (#42) ---
+  tar_target(
+    eda_iss_summary,
+    {
+      rds_path <- file.path(clinical_data, "clinical_data.rds")
+      if (!file.exists(rds_path)) return(NULL)
+      clin <- readRDS(rds_path)
+      if (!is.data.frame(clin) || nrow(clin) == 0) return(NULL)
+      names(clin) <- tolower(make.unique(names(clin)))
+
+      # Find ISS column (various possible names from GDC)
+      iss_col <- grep("^iss|staging_system", names(clin), value = TRUE)
+      if (length(iss_col) == 0) {
+        return(list(available = FALSE, note = "No ISS column found in clinical data"))
+      }
+
+      iss_vals <- clin[[iss_col[1]]]
+      iss_vals[iss_vals %in% c("", "Not Reported", "not reported")] <- NA
+
+      iss_table <- as.data.frame(
+        table(ISS_Stage = iss_vals, useNA = "ifany"),
+        stringsAsFactors = FALSE
+      )
+      iss_table$Percentage <- sprintf("%.1f%%", 100 * iss_table$Freq / sum(iss_table$Freq))
+
+      # Age by ISS (if age available)
+      age_col <- intersect(c("age_at_diagnosis", "age_at_index"), names(clin))
+      age_by_iss <- NULL
+      if (length(age_col) > 0 && sum(!is.na(iss_vals)) > 0) {
+        age_raw <- as.numeric(clin[[age_col[1]]])
+        is_days <- max(age_raw, na.rm = TRUE) > 120
+        age_years <- if (is_days) age_raw / 365.25 else age_raw
+
+        valid <- !is.na(iss_vals) & !is.na(age_years)
+        if (sum(valid) > 0) {
+          age_by_iss <- tapply(age_years[valid], iss_vals[valid], function(x) {
+            list(n = length(x), mean = mean(x), median = median(x), sd = sd(x))
+          })
+        }
+      }
+
+      list(
+        available = TRUE,
+        iss_col = iss_col[1],
+        n_with_iss = sum(!is.na(iss_vals)),
+        n_missing = sum(is.na(iss_vals)),
+        iss_table = iss_table,
+        age_by_iss = age_by_iss
+      )
+    }
+  ),
+
+  # --- QC metrics formatted for vignette display ---
+  tar_target(
+    eda_qc_summary,
+    {
+      # qc_metrics is a target dependency (data frame from calculate_qc_metrics)
+      if (!is.data.frame(qc_metrics) || nrow(qc_metrics) == 0) return(NULL)
+
+      formatted <- data.frame(
+        Sample = qc_metrics$sample,
+        `Total Counts` = format(qc_metrics$total_counts, big.mark = ","),
+        `Detected Genes` = format(qc_metrics$detected_genes, big.mark = ","),
+        `Median Count` = sprintf("%.1f", qc_metrics$median_count),
+        `MAD Count` = sprintf("%.1f", qc_metrics$mad_count),
+        `Size Factor` = sprintf("%.3f", qc_metrics$size_factor),
+        Outlier = ifelse(qc_metrics$is_outlier, "Yes", "No"),
+        check.names = FALSE,
+        stringsAsFactors = FALSE
+      )
+
+      list(
+        table = formatted,
+        n_samples = nrow(qc_metrics),
+        n_outliers = sum(qc_metrics$is_outlier),
+        caption = sprintf(
+          paste0(
+            "Per-sample QC metrics for %d samples. ",
+            "Total Counts = library size, ",
+            "Detected Genes = genes with >0 counts, ",
+            "Size Factor = library size / median library size. ",
+            "%d outlier(s) flagged (bottom 5%% by library size or genes detected). ",
+            "Data: GDC STAR-Counts pipeline."
+          ),
+          nrow(qc_metrics), sum(qc_metrics$is_outlier)
+        )
+      )
+    }
+  ),
+
+  # --- Missing data summary (only variables WITH missing data) ---
+  tar_target(
+    eda_missing_summary,
+    {
+      rds_path <- file.path(clinical_data, "clinical_data.rds")
+      if (!file.exists(rds_path)) return(NULL)
+      clin <- readRDS(rds_path)
+      if (!is.data.frame(clin) || nrow(clin) == 0) return(NULL)
+
+      n_vars <- ncol(clin)
+      missing_counts <- colSums(is.na(clin))
+      has_missing <- missing_counts > 0
+      n_complete <- sum(!has_missing)
+
+      if (sum(has_missing) == 0) {
+        return(list(
+          all_complete = TRUE,
+          n_vars = n_vars,
+          n_complete = n_complete,
+          missing_table = NULL,
+          caption = sprintf(
+            "All %d variables are fully complete (0%% missing).", n_vars
+          )
+        ))
+      }
+
+      missing_df <- data.frame(
+        Variable = names(missing_counts[has_missing]),
+        `Missing Count` = as.integer(missing_counts[has_missing]),
+        `Missing Percent` = sprintf(
+          "%.1f%%", 100 * missing_counts[has_missing] / nrow(clin)
+        ),
+        check.names = FALSE,
+        stringsAsFactors = FALSE
+      )
+      missing_df <- missing_df[order(-missing_df$`Missing Count`), ]
+      rownames(missing_df) <- NULL
+
+      list(
+        all_complete = FALSE,
+        n_vars = n_vars,
+        n_complete = n_complete,
+        missing_table = missing_df,
+        caption = sprintf(
+          "%d of %d variables are fully complete (0%% missing). "
+        , n_complete, n_vars
+        )
+      )
+    }
+  ),
+
   # --- Cross-dataset integration summary ---
   tar_target(
     eda_integration_summary,
