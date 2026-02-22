@@ -1,0 +1,14 @@
+library(targets)
+library(targets)
+library(tarchetypes)
+library(crew)
+tar_option_set(packages = c("TCGAbiolinks", "GenomicDataCommons", 
+    "SummarizedExperiment", "DESeq2", "edgeR", "limma", "survival", 
+    "survminer", "tidyverse", "logger"), format = "qs", memory = "transient", 
+    garbage_collection = TRUE, controller = crew_controller_local(workers = 4, 
+        seconds_idle = 60))
+tar_source("R/", files = setdiff(list.files("R", pattern = "\\.R$", 
+    full.names = TRUE, recursive = TRUE), list.files("R/dev", 
+    pattern = "\\.R$", full.names = TRUE, recursive = TRUE)))
+list(tar_target(config, list(project_id = "MMRF-COMMPASS", sample_limit = 10)), 
+    tar_target(test_complete, TRUE))
