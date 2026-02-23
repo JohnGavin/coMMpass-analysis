@@ -78,6 +78,79 @@ plan_doc_examples <- list(
     }
   ),
 
+  # --- README: Quick Start bash commands ---
+  targets::tar_target(
+    code_readme_quick_start,
+    c(
+      "# Requires Nix package manager (https://nixos.org/download.html)",
+      "chmod +x default.sh",
+      "./default.sh",
+      "",
+      "# macOS only: prevent sleep during long builds",
+      "caffeinate -i ./default.sh"
+    )
+  ),
+
+  # --- README: Project structure tree ---
+  targets::tar_target(
+    readme_project_tree,
+    {
+      force(file.exists("DESCRIPTION"))
+      utils::capture.output(
+        fs::dir_tree(recurse = 2, regexp = "^[^._]", type = "directory")
+      )
+    }
+  ),
+
+  # --- Glossary vignette: Glossary table ---
+  targets::tar_target(
+    glossary_table,
+    data.frame(
+      Term = c(
+        "CoMMpass", "Cox PH", "DE", "FISH", "Gene detection",
+        "GSEA", "HR", "IMWG", "ISS", "KM", "Library size", "MAD",
+        "Outlier (QC)", "Read count", "scRNA-seq", "VST"
+      ),
+      Definition = c(
+        "Clinical Outcomes in Multiple Myeloma to Personal Assessment of Genetic Profile",
+        "Cox proportional hazards -- semi-parametric regression for survival data",
+        "Differential expression -- genes with significantly different expression between conditions",
+        "Fluorescence in situ hybridization -- detects cytogenetic abnormalities like t(4;14), t(14;16), del(17p)",
+        "A gene is 'detected' in a sample if it has at least 1 mapped read (count > 0). The number of detected genes per sample is a QC metric; low detection suggests poor sequencing depth or sample degradation",
+        "Gene Set Enrichment Analysis -- tests enrichment of gene sets in ranked lists",
+        "Hazard ratio -- relative risk of event occurrence (HR > 1 = worse survival)",
+        "International Myeloma Working Group -- defines cytogenetic risk criteria (Sonneveld et al. 2016, doi:10.1200/JCO.2014.55.1519)",
+        "International Staging System -- classifies myeloma severity (I-III) by serum albumin and beta-2 microglobulin (Greipp et al. 2005, doi:10.1200/JCO.2005.04.242)",
+        "Kaplan-Meier -- non-parametric survival curve estimator",
+        "Total number of sequencing reads mapped to genes in one sample (= sum of all gene counts). A proxy for sequencing depth. Synonym: 'Total Counts'",
+        "Median absolute deviation -- robust measure of spread. In QC context, MAD of gene counts within a single sample measures how variable gene expression is for that sample",
+        "A sample flagged as outlier if it falls in the bottom 5th percentile of library size OR genes detected, computed across all samples in the pipeline run. The flag is binary (Yes/No) because it answers: 'Is this sample in the tail?' The continuous metrics inform the threshold",
+        "The number of sequencing reads aligned to a gene in one sample. Raw integer counts are the input for DE methods (DESeq2, edgeR). See RNA-seq quantification",
+        "Single-cell RNA sequencing -- measures gene expression in individual cells",
+        "Variance-stabilizing transformation -- normalizes count data for visualization"
+      ),
+      See_Also = c(
+        "[MMRF](https://themmrf.org/finding-a-cure/personalized-treatment-approaches/)",
+        "[Survival vignette](survival-analysis.html)",
+        "[DE vignette](differential-expression.html)",
+        "[EDA vignette](exploratory-analysis.html)",
+        "[Data Acquisition QC](data-acquisition.html#quality-control)",
+        "[DE vignette](differential-expression.html)",
+        "[Survival vignette](survival-analysis.html)",
+        "[Survival vignette](survival-analysis.html)",
+        "[EDA vignette](exploratory-analysis.html)",
+        "[Survival vignette](survival-analysis.html)",
+        "[Data Acquisition](data-acquisition.html#rnaseq-data)",
+        "[Data Acquisition QC](data-acquisition.html#quality-control)",
+        "[Data Acquisition QC](data-acquisition.html#quality-control)",
+        "[Data Acquisition](data-acquisition.html#rnaseq-data)",
+        "[Data Dictionary](data-dictionary.html)",
+        "[DE vignette](differential-expression.html)"
+      ),
+      stringsAsFactors = FALSE
+    )
+  ),
+
   # --- exploratory-analysis.Rmd: "Simple Query" block ---
   targets::tar_target(
     code_eda_simple_query,
@@ -126,6 +199,12 @@ plan_doc_examples <- list(
   # ============================================================
 
   targets::tar_target(
+    code_parsed_readme_quick_start,
+    # Bash code -- just validate it's a character vector
+    list(valid = TRUE, n_expressions = 0L, code = code_readme_quick_start, error = NULL)
+  ),
+
+  targets::tar_target(
     code_parsed_dd_load_data,
     parse_code_example(code_dd_load_data)
   ),
@@ -153,10 +232,11 @@ plan_doc_examples <- list(
     doc_examples_validation,
     {
       parse_results <- list(
-        dd_load_data      = code_parsed_dd_load_data,
-        dd_explore_dict   = code_parsed_dd_explore_dict,
-        eda_simple_query  = code_parsed_eda_simple_query,
-        eda_aggregation   = code_parsed_eda_aggregation
+        readme_quick_start = code_parsed_readme_quick_start,
+        dd_load_data       = code_parsed_dd_load_data,
+        dd_explore_dict    = code_parsed_dd_explore_dict,
+        eda_simple_query   = code_parsed_eda_simple_query,
+        eda_aggregation    = code_parsed_eda_aggregation
       )
 
       all_valid <- all(vapply(parse_results, function(x) x$valid, logical(1)))

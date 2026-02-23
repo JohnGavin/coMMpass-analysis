@@ -58,7 +58,11 @@ safe_tar_read <- function(name) {
 
 ## Overview
 
-This document describes all variables in the MMRF CoMMpass dataset as downloaded from the [Genomic Data Commons (GDC)](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS). The CoMMpass (Relating Clinical Outcomes in Multiple Myeloma to Personal Assessment of Genetic Profile) study is a longitudinal observational study of ~1,000 newly diagnosed multiple myeloma patients.
+> See the [Glossary](glossary.html) for term definitions and [units reference](glossary.html#units-reference) used throughout this project.
+
+- Describes all variables in the MMRF CoMMpass dataset from the [GDC](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)
+- CoMMpass: longitudinal observational study of ~1,000 newly diagnosed multiple myeloma patients
+- Variables span clinical demographics, biospecimen metadata, and RNA-seq gene expression
 
 **Data sources:**
 
@@ -98,10 +102,18 @@ if (!is.null(dd)) {
           list(className = "dt-nowrap", targets = "_all")
         )
       ),
-      caption = "CoMMpass Data Dictionary - All Variables"
+      caption = htmltools::tags$caption(
+        style = "caption-side: top; text-align: left;",
+        paste0(
+          "CoMMpass Data Dictionary - All Variables. ",
+          "Click column headers to sort; use filters to search. ",
+          "GDC links open the official data dictionary page."
+        )
+      )
     )
   } else {
-    knitr::kable(dd, row.names = FALSE, caption = "CoMMpass Data Dictionary")
+    knitr::kable(dd, row.names = FALSE,
+                 caption = "CoMMpass Data Dictionary - All Variables")
   }
 } else {
   cat("*Data dictionary function not available.*\n")
@@ -110,7 +122,9 @@ if (!is.null(dd)) {
 
 ## Clinical Data
 
-Clinical data includes patient demographics, disease characteristics, and outcomes. Downloaded via `TCGAbiolinks::GDCquery_clinic()`.
+- Patient demographics, disease characteristics, and outcomes
+- Downloaded via `TCGAbiolinks::GDCquery_clinic()`
+- All time/age variables in **days** (see [units reference](glossary.html#units-reference))
 
 ```{r clinical-summary}
 # clinical_data target stores a directory path; load the RDS from it
@@ -131,39 +145,97 @@ if (!is.null(clinical) && is.data.frame(clinical)) {
   cat("- **Data completeness:**",
       sprintf("%.1f%%", 100 * mean(!is.na(clinical))), "\n\n")
 
-  # Column type overview
-  col_types <- data.frame(
+  # --- Column structure overview (str-like) ---
+  cat("### Column Structure\n\n")
+
+  col_info <- data.frame(
     Column = names(clinical),
-    Type = sapply(clinical, function(x) class(x)[1]),
-    Non_NA = sapply(clinical, function(x) sum(!is.na(x))),
-    Pct_Complete = sprintf("%.0f%%", 100 * sapply(clinical, function(x) mean(!is.na(x)))),
+    Type = vapply(clinical, function(x) class(x)[1], character(1)),
+    Non_NA = vapply(clinical, function(x) sum(!is.na(x)), integer(1)),
+    Pct_Complete = vapply(
+      clinical,
+      function(x) sprintf("%.0f%%", 100 * mean(!is.na(x))),
+      character(1)
+    ),
+    N_Unique = vapply(
+      clinical,
+      function(x) length(unique(x[!is.na(x)])),
+      integer(1)
+    ),
+    Example = vapply(clinical, function(x) {
+      vals <- x[!is.na(x)]
+      if (length(vals) == 0) return("(all NA)")
+      if (is.numeric(vals)) {
+        paste0(
+          "min=", signif(min(vals), 3),
+          " med=", signif(median(vals), 3),
+          " max=", signif(max(vals), 3)
+        )
+      } else {
+        top <- names(sort(table(vals), decreasing = TRUE))[
+          1:min(3, length(unique(vals)))
+        ]
+        paste(top, collapse = ", ")
+      }
+    }, character(1)),
     stringsAsFactors = FALSE
   )
 
-  cat("### Column Inventory\n\n")
-  if (has_DT) {
-    DT::datatable(
-      col_types,
-      filter = "top",
-      options = list(pageLength = 15, scrollX = TRUE),
-      caption = "Clinical Data Columns"
-    )
-  } else {
-    knitr::kable(col_types, caption = "Clinical Data Columns", row.names = FALSE)
+  # Add units to column names where known
+  unit_map <- c(
+    age_at_diagnosis = "age_at_diagnosis_days",
+    age_at_index = "age_at_index_days",
+    days_to_death = "days_to_death_days",
+    days_to_last_follow_up = "days_to_last_follow_up_days",
+    days_to_last_known_disease_status = "days_to_last_known_disease_status_days"
+  )
+  for (i in seq_len(nrow(col_info))) {
+    if (col_info$Column[i] %in% names(unit_map)) {
+      col_info$Column[i] <- unit_map[col_info$Column[i]]
+    }
   }
 
-  # Sample rows
-  cat("\n### Sample Data (first 5 rows, key columns)\n\n")
-  key_cols <- intersect(
-    c("submitter_id", "age_at_diagnosis", "gender", "race",
-      "vital_status", "days_to_death", "days_to_last_follow_up",
-      "primary_diagnosis"),
-    names(clinical)
-  )
-  if (length(key_cols) > 0) {
-    display <- head(clinical[, key_cols, drop = FALSE], 5)
-    knitr::kable(display, row.names = FALSE,
-                 caption = "Sample clinical records (first 5 rows, key columns). age_at_diagnosis is in days.")
+  # Reorder columns by similarity
+  id_cols <- grep("^(submitter|project|case|bcr|patient)", col_info$Column)
+  demo_cols <- grep("(gender|sex|race|ethnicity|age_)", col_info$Column)
+  time_cols <- grep("(days_|year_|date_)", col_info$Column)
+  vital_cols <- grep("(vital|alive|dead|status|cause)", col_info$Column)
+  disease_cols <- grep("(diagnosis|stage|grade|iss|tumor|site)", col_info$Column)
+
+  ordered_idx <- unique(c(id_cols, demo_cols, time_cols, vital_cols,
+                           disease_cols, seq_len(nrow(col_info))))
+  col_info <- col_info[ordered_idx, ]
+  rownames(col_info) <- NULL
+
+  if (has_DT) {
+    DT::datatable(
+      col_info,
+      filter = "top",
+      options = list(pageLength = 20, scrollX = TRUE, autoWidth = FALSE),
+      colnames = c("Column (units appended)", "R Type", "Non-NA",
+                    "% Complete", "Unique Values", "Example / Range"),
+      caption = htmltools::tags$caption(
+        style = "caption-side: top; text-align: left;",
+        paste0(
+          "Structure of all ", ncol(clinical), " clinical variables for ",
+          nrow(clinical), " patients. ",
+          "Time variables are in DAYS (GDC convention). ",
+          "Columns reordered: IDs > demographics > time > vital status > ",
+          "disease > other. ",
+          "See glossary for units reference."
+        )
+      )
+    )
+  } else {
+    knitr::kable(
+      col_info, row.names = FALSE,
+      col.names = c("Column (units)", "R Type", "Non-NA",
+                     "% Complete", "Unique", "Example / Range"),
+      caption = paste0(
+        "Structure of all ", ncol(clinical), " clinical variables. ",
+        "Time variables are in DAYS."
+      )
+    )
   }
 } else {
   cat("*Clinical data not available. Run the pipeline to download.*\n")
@@ -172,7 +244,8 @@ if (!is.null(clinical) && is.data.frame(clinical)) {
 
 ## Biospecimen Data
 
-Biospecimen data describes the tissue samples collected from patients.
+- Tissue samples collected from patients
+- Includes sample type, tissue type, and preservation method
 
 ```{r biospecimen-summary}
 # biospecimen lives in the same directory as clinical_data
@@ -190,18 +263,40 @@ if (!is.null(biospecimen) && is.data.frame(biospecimen)) {
 
   bio_cols <- data.frame(
     Column = names(biospecimen),
-    Type = sapply(biospecimen, function(x) class(x)[1]),
-    Non_NA = sapply(biospecimen, function(x) sum(!is.na(x))),
-    Pct_Complete = sprintf("%.0f%%", 100 * sapply(biospecimen, function(x) mean(!is.na(x)))),
+    Type = vapply(biospecimen, function(x) class(x)[1], character(1)),
+    Non_NA = vapply(biospecimen, function(x) sum(!is.na(x)), integer(1)),
+    Pct_Complete = vapply(
+      biospecimen,
+      function(x) sprintf("%.0f%%", 100 * mean(!is.na(x))),
+      character(1)
+    ),
+    N_Unique = vapply(
+      biospecimen,
+      function(x) length(unique(x[!is.na(x)])),
+      integer(1)
+    ),
     stringsAsFactors = FALSE
   )
 
   if (has_DT) {
-    DT::datatable(bio_cols, filter = "top",
-                  options = list(pageLength = 10, scrollX = TRUE),
-                  caption = "Biospecimen Data Columns")
+    DT::datatable(
+      bio_cols,
+      filter = "top",
+      options = list(pageLength = 15, scrollX = TRUE),
+      colnames = c("Column", "R Type", "Non-NA", "% Complete", "Unique Values"),
+      caption = htmltools::tags$caption(
+        style = "caption-side: top; text-align: left;",
+        paste0(
+          "Biospecimen data columns for ", nrow(biospecimen), " records. ",
+          "Click column headers to sort; use filters to search."
+        )
+      )
+    )
   } else {
-    knitr::kable(bio_cols, caption = "Biospecimen Data Columns", row.names = FALSE)
+    knitr::kable(bio_cols, row.names = FALSE,
+                 col.names = c("Column", "R Type", "Non-NA",
+                                "% Complete", "Unique"),
+                 caption = "Biospecimen Data Columns")
   }
 } else {
   cat("*Biospecimen data not available. Run the pipeline to download.*\n")
@@ -210,7 +305,10 @@ if (!is.null(biospecimen) && is.data.frame(biospecimen)) {
 
 ## RNA-seq Data
 
-RNA-seq gene expression data is generated using the STAR aligner and quantified against GENCODE annotations. Data is available in multiple quantification types.
+- RNA-seq gene expression generated using the STAR aligner
+- Quantified against GENCODE annotations
+- Available in multiple quantification types (raw counts, TPM, FPKM)
+- See [units reference](glossary.html#units-reference) for quantification units
 
 ```{r rnaseq-summary}
 se_data <- NULL
@@ -240,7 +338,25 @@ if (!is.null(se_data) && requireNamespace("SummarizedExperiment", quietly = TRUE
       Percentage = sprintf("%.1f%%", 100 * as.numeric(type_counts) / nrow(gene_meta)),
       stringsAsFactors = FALSE
     )
-    knitr::kable(head(type_df, 10), caption = "Top 10 Gene Biotypes", row.names = FALSE)
+    if (has_DT) {
+      DT::datatable(
+        type_df,
+        filter = "top",
+        options = list(pageLength = 15, scrollX = TRUE),
+        caption = htmltools::tags$caption(
+          style = "caption-side: top; text-align: left;",
+          paste0(
+            "Gene biotypes from GENCODE annotations. ",
+            format_with_commas(nrow(gene_meta)),
+            " total gene entries. ",
+            "protein_coding genes are the primary analysis target."
+          )
+        )
+      )
+    } else {
+      knitr::kable(head(type_df, 10), row.names = FALSE,
+                   caption = "Top 10 Gene Biotypes")
+    }
   }
 
   # Sample metadata columns
@@ -248,10 +364,28 @@ if (!is.null(se_data) && requireNamespace("SummarizedExperiment", quietly = TRUE
   cat("\n### Sample Metadata Columns\n\n")
   sample_cols <- data.frame(
     Column = names(sample_meta),
-    Type = sapply(sample_meta, function(x) class(x)[1]),
+    Type = vapply(sample_meta, function(x) class(x)[1], character(1)),
+    N_Unique = vapply(
+      sample_meta,
+      function(x) length(unique(x[!is.na(x)])),
+      integer(1)
+    ),
     stringsAsFactors = FALSE
   )
-  knitr::kable(sample_cols, caption = "RNA-seq Sample Metadata Columns", row.names = FALSE)
+  if (has_DT) {
+    DT::datatable(
+      sample_cols,
+      filter = "top",
+      options = list(pageLength = 15, scrollX = TRUE),
+      caption = htmltools::tags$caption(
+        style = "caption-side: top; text-align: left;",
+        "RNA-seq sample metadata columns from the SummarizedExperiment colData."
+      )
+    )
+  } else {
+    knitr::kable(sample_cols, row.names = FALSE,
+                 caption = "RNA-seq Sample Metadata Columns")
+  }
 } else {
   cat("*RNA-seq data not available. Run the pipeline to download.*\n")
 }
@@ -261,29 +395,49 @@ if (!is.null(se_data) && requireNamespace("SummarizedExperiment", quietly = TRUE
 
 GDC uses standardized column names. Common aliases used in analysis:
 
-| GDC Column | Common Alias | Notes |
-|---|---|---|
-| `submitter_id` | patient_id | Unique patient identifier |
-| `age_at_diagnosis` | age_days | In **days**, not years |
-| `vital_status` | status | Alive/Dead |
-| `days_to_death` | os_time (if dead) | Overall survival time |
-| `days_to_last_follow_up` | os_time (if alive) | Censoring time |
-| `gender` | sex | male/female |
-| `primary_diagnosis` | diagnosis | ICD-O-3 morphology |
+```{r column-mappings}
+mappings <- data.frame(
+  GDC_Column = c("submitter_id", "age_at_diagnosis", "vital_status",
+                  "days_to_death", "days_to_last_follow_up",
+                  "gender", "primary_diagnosis"),
+  Common_Alias = c("patient_id", "age_days", "status",
+                     "os_time (if dead)", "os_time (if alive)",
+                     "sex", "diagnosis"),
+  Notes = c("Unique patient identifier",
+             "In **days**, not years (divide by 365.25)",
+             "Alive/Dead",
+             "Overall survival time",
+             "Censoring time",
+             "male/female",
+             "ICD-O-3 morphology"),
+  stringsAsFactors = FALSE
+)
+
+if (has_DT) {
+  DT::datatable(
+    mappings,
+    filter = "top",
+    options = list(pageLength = 10, scrollX = TRUE),
+    colnames = c("GDC Column", "Common Alias", "Notes"),
+    caption = htmltools::tags$caption(
+      style = "caption-side: top; text-align: left;",
+      "GDC column name mappings to common aliases used in analysis code."
+    )
+  )
+} else {
+  knitr::kable(
+    mappings, row.names = FALSE,
+    col.names = c("GDC Column", "Common Alias", "Notes"),
+    caption = "GDC column name mappings."
+  )
+}
+```
 
 ## Units Reference
 
-**Age and time variables are stored in DAYS by GDC.** This is the single most common source of errors in GDC analyses.
+For the complete units reference table (age/time in days, expression quantification types), see the [Glossary units reference](glossary.html#units-reference).
 
-| Variable | Unit | Conversion |
-|---|---|---|
-| `age_at_diagnosis` | days | `age_years = age_at_diagnosis / 365.25` |
-| `days_to_death` | days | Used directly in survival analysis |
-| `days_to_last_follow_up` | days | Censoring time for survival |
-| `days_to_last_known_disease_status` | days | Disease assessment time |
-| `unstranded` / `stranded_*` | raw integer counts | Input for DESeq2/edgeR |
-| `tpm_unstranded` | TPM | Cross-sample comparison |
-| `fpkm_unstranded` | FPKM | Largely deprecated, use TPM |
+Key rule: **All age and time variables are stored in DAYS by GDC.** This is the single most common source of errors in GDC analyses.
 
 ## Data Sources & Links
 
@@ -293,6 +447,8 @@ GDC uses standardized column names. Common aliases used in analysis:
 - **MMRF CoMMpass Study**: <https://themmrf.org/research/commpass-study/>
 - **GENCODE**: <https://www.gencodegenes.org/>
 - **Ensembl**: <https://www.ensembl.org/>
+
+For exploratory analysis using these variables, see the [EDA vignette](exploratory-analysis.html).
 
 ## R Code Examples
 

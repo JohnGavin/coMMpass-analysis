@@ -120,6 +120,7 @@ articles:
   - exploratory-analysis
   - differential-expression
   - survival-analysis
+  - glossary
 
 navbar:
   structure:

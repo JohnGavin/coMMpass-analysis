@@ -46,10 +46,11 @@ safe_tar_read <- function(name) {
 
 ## Overview
 
-This vignette provides an exploratory analysis of the MMRF CoMMpass data
-retrieved by the pipeline. It covers patient demographics, biospecimen
-characteristics, RNA-seq quality metrics, and shows how to query the
-underlying parquet files with DuckDB.
+> See the [Glossary](glossary.html) for term definitions used throughout this project.
+
+- Patient demographics, biospecimen characteristics, and RNA-seq quality metrics
+- DuckDB queries against underlying parquet files
+- Cytogenetic alteration frequencies and co-occurrence patterns
 
 All summaries are **pre-computed** as targets (`eda_*`). If you have not
 yet run the pipeline, placeholder messages appear instead of plots.
@@ -452,6 +453,8 @@ if (!is.null(cyto_cooc) && nrow(cyto_cooc) > 0) {
   cat("*Co-occurrence heatmap not available.*\n")
 }
 ```
+
+Cytogenetic markers are used for [survival stratification](survival-analysis.html) and inform [differential expression](differential-expression.html) analysis.
 
 ## DuckDB Query Examples
 

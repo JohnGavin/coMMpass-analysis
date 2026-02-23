@@ -28,9 +28,9 @@ safe_tar_read <- function(name) {
 
 ## Overview
 
-This vignette presents survival analysis results for the CoMMpass cohort,
-stratified by clinical and cytogenetic features. Methods include:
+> See the [Glossary](glossary.html) for term definitions used throughout this project.
 
+- Survival analysis of the CoMMpass cohort stratified by clinical and cytogenetic features
 - **Kaplan-Meier curves** with log-rank tests for group comparisons
 - **Cox proportional hazards models** for multivariate analysis
 - **Forest plots** of hazard ratios with 95% confidence intervals
@@ -60,9 +60,9 @@ if (!is.null(km_overall) && !is.null(km_overall$fit)) {
 
 ## Survival by ISS Stage
 
-The [International Staging System (ISS)](https://doi.org/10.1200/JCO.2005.04.242)
-stratifies myeloma patients by serum albumin and beta-2 microglobulin.
-ISS III is expected to have worse survival than ISS I.
+- [ISS](https://doi.org/10.1200/JCO.2005.04.242) stratifies by serum albumin and beta-2 microglobulin
+- ISS III is expected to have worse survival than ISS I
+- See the [EDA vignette](exploratory-analysis.html) for ISS stage distributions
 
 ```{r km-iss, fig.cap = "Kaplan-Meier curves by ISS stage (I, II, III). Log-rank p-value tests whether survival distributions differ across stages. ISS III patients are expected to have shorter survival. See Greipp et al. 2005 for ISS definition."}
 km_iss <- safe_tar_read("km_by_iss")
@@ -245,5 +245,7 @@ if (!is.null(cox_basic) && !is.null(cox_full) &&
 - **Time-varying coefficients**: For covariates violating the PH assumption.
 - **Cure models**: If a plateau is observed in KM curves, consider
   mixture cure models.
-- See the [differential expression vignette](differential-expression.html)
-  for DE gene signatures that could inform survival stratification.
+- See the [cytogenetic landscape](exploratory-analysis.html) for alteration
+  frequencies underlying risk groups.
+- See the [DE results](differential-expression.html) for gene signatures
+  that could inform survival stratification.

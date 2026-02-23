@@ -1,0 +1,192 @@
+---
+title: "06. Glossary"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{06. Glossary}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+library(targets)
+has_DT <- requireNamespace("DT", quietly = TRUE)
+if (has_DT) library(DT)
+
+# Discover targets store and project root
+proj_dir <- Sys.getenv("TAR_PROJECT")
+tar_store <- NULL
+project_root <- "."
+
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_store <- file.path(proj_dir, "_targets")
+  project_root <- proj_dir
+} else if (dir.exists("_targets")) {
+  tar_store <- "_targets"
+  project_root <- "."
+} else if (dir.exists("../_targets")) {
+  tar_store <- "../_targets"
+  project_root <- ".."
+}
+
+safe_tar_read <- function(name) {
+  if (is.null(tar_store)) return(NULL)
+  tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
+}
+```
+
+## Definitions
+
+Terms used throughout the CoMMpass analysis vignettes. See individual vignettes for detailed usage.
+
+```{r glossary-table}
+glossary <- safe_tar_read("glossary_table")
+
+if (is.null(glossary)) {
+  # Fallback: build inline so the vignette always renders
+  glossary <- data.frame(
+    Term = c(
+      "CoMMpass",
+      "Cox PH",
+      "DE",
+      "FISH",
+      "Gene detection",
+      "GSEA",
+      "HR",
+      "IMWG",
+      "ISS",
+      "KM",
+      "Library size",
+      "MAD",
+      "Outlier (QC)",
+      "Read count",
+      "scRNA-seq",
+      "VST"
+    ),
+    Definition = c(
+      "Clinical Outcomes in Multiple Myeloma to Personal Assessment of Genetic Profile",
+      "Cox proportional hazards -- semi-parametric regression for survival data",
+      "Differential expression -- genes with significantly different expression between conditions",
+      "Fluorescence in situ hybridization -- detects cytogenetic abnormalities like t(4;14), t(14;16), del(17p)",
+      "A gene is 'detected' in a sample if it has at least 1 mapped read (count > 0). The number of detected genes per sample is a QC metric; low detection suggests poor sequencing depth or sample degradation",
+      "Gene Set Enrichment Analysis -- tests enrichment of gene sets in ranked lists",
+      "Hazard ratio -- relative risk of event occurrence (HR > 1 = worse survival)",
+      "International Myeloma Working Group -- defines cytogenetic risk criteria (Sonneveld et al. 2016, doi:10.1200/JCO.2014.55.1519)",
+      "International Staging System -- classifies myeloma severity (I-III) by serum albumin and beta-2 microglobulin (Greipp et al. 2005, doi:10.1200/JCO.2005.04.242)",
+      "Kaplan-Meier -- non-parametric survival curve estimator",
+      "Total number of sequencing reads mapped to genes in one sample (= sum of all gene counts). A proxy for sequencing depth. Synonym: 'Total Counts'",
+      "Median absolute deviation -- robust measure of spread. In QC context, MAD of gene counts within a single sample measures how variable gene expression is for that sample",
+      "A sample flagged as outlier if it falls in the bottom 5th percentile of library size OR genes detected, computed across all samples in the pipeline run. The flag is binary (Yes/No) because it answers: 'Is this sample in the tail?' The continuous metrics inform the threshold",
+      "The number of sequencing reads aligned to a gene in one sample. Raw integer counts are the input for DE methods (DESeq2, edgeR). See RNA-seq quantification",
+      "Single-cell RNA sequencing -- measures gene expression in individual cells",
+      "Variance-stabilizing transformation -- normalizes count data for visualization"
+    ),
+    See_Also = c(
+      "[MMRF](https://themmrf.org/finding-a-cure/personalized-treatment-approaches/)",
+      "[Survival vignette](survival-analysis.html)",
+      "[DE vignette](differential-expression.html)",
+      "[EDA vignette](exploratory-analysis.html)",
+      "[Data Acquisition QC](data-acquisition.html#quality-control)",
+      "[DE vignette](differential-expression.html)",
+      "[Survival vignette](survival-analysis.html)",
+      "[Survival vignette](survival-analysis.html)",
+      "[EDA vignette](exploratory-analysis.html)",
+      "[Survival vignette](survival-analysis.html)",
+      "[Data Acquisition](data-acquisition.html#rnaseq-data), [Wikipedia](https://en.wikipedia.org/wiki/RNA-Seq#Analysis)",
+      "[Data Acquisition QC](data-acquisition.html#quality-control), [Wikipedia](https://en.wikipedia.org/wiki/Median_absolute_deviation)",
+      "[Data Acquisition QC](data-acquisition.html#quality-control), [R/02_quality_control.R](https://github.com/JohnGavin/coMMpass-analysis/blob/main/R/02_quality_control.R)",
+      "[Data Acquisition](data-acquisition.html#rnaseq-data), [Wikipedia](https://en.wikipedia.org/wiki/RNA-Seq)",
+      "[Data Dictionary](data-dictionary.html)",
+      "[DE vignette](differential-expression.html)"
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+if (has_DT) {
+  DT::datatable(
+    glossary,
+    filter = "top",
+    escape = FALSE,
+    options = list(pageLength = 20, scrollX = TRUE, autoWidth = FALSE),
+    colnames = c("Term", "Definition", "See Also"),
+    caption = htmltools::tags$caption(
+      style = "caption-side: top; text-align: left;",
+      "Glossary of terms used in the CoMMpass analysis vignettes. Click column headers to sort; use filters to search."
+    )
+  )
+} else {
+  knitr::kable(
+    glossary, row.names = FALSE,
+    col.names = c("Term", "Definition", "See Also"),
+    caption = "Glossary of terms used in the CoMMpass analysis vignettes."
+  )
+}
+```
+
+## Units Reference {#units-reference}
+
+**Age and time variables are stored in DAYS by GDC.** This is the single most common source of errors in GDC analyses. See the [data dictionary](data-dictionary.html) for all variable definitions.
+
+```{r units-table}
+units_df <- data.frame(
+  Variable = c(
+    "age_at_diagnosis", "days_to_death", "days_to_last_follow_up",
+    "days_to_last_known_disease_status",
+    "unstranded / stranded_*", "tpm_unstranded", "fpkm_unstranded"
+  ),
+  Unit = c(
+    "days", "days", "days", "days",
+    "raw integer counts", "TPM", "FPKM"
+  ),
+  Conversion_or_Notes = c(
+    "age_years = age_at_diagnosis / 365.25",
+    "Used directly in survival analysis",
+    "Censoring time for survival",
+    "Disease assessment time",
+    "Input for DESeq2/edgeR",
+    "Cross-sample comparison (transcripts per million)",
+    "Largely deprecated, use TPM"
+  ),
+  stringsAsFactors = FALSE
+)
+
+if (has_DT) {
+  DT::datatable(
+    units_df,
+    filter = "top",
+    options = list(pageLength = 10, scrollX = TRUE),
+    colnames = c("Variable", "Unit", "Conversion / Notes"),
+    caption = htmltools::tags$caption(
+      style = "caption-side: top; text-align: left;",
+      paste0(
+        "Units for key GDC variables. All time/age variables are in DAYS. ",
+        "See GDC Data Dictionary for authoritative definitions."
+      )
+    )
+  )
+} else {
+  knitr::kable(
+    units_df, row.names = FALSE,
+    col.names = c("Variable", "Unit", "Conversion / Notes"),
+    caption = "Units for key GDC variables. All time/age variables are in DAYS."
+  )
+}
+```
+
+## Reproducibility
+
+<details>
+<summary>Session Info (click to expand)</summary>
+
+```{r session-info}
+sessionInfo()
+```
+
+</details>
