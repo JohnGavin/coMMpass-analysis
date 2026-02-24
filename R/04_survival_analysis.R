@@ -14,6 +14,7 @@
 #' @return Data frame with columns: patient_id, time_days, status (0=censored,
 #'   1=dead), age_years, gender, iss_stage, risk_group, plus individual
 #'   cytogenetic markers
+#' @family survival
 #' @export
 prepare_survival_data <- function(clinical_data, cyto_file = NULL) {
   if (is.null(clinical_data) || !is.data.frame(clinical_data) ||
@@ -169,6 +170,7 @@ prepare_survival_data <- function(clinical_data, cyto_file = NULL) {
 #'   - `median_survival`: named vector of median survival times
 #'   - `n_per_group`: sample sizes per stratum
 #'   - `strata`: the stratification variable used
+#' @family survival
 #' @export
 run_kaplan_meier <- function(surv_data, strata = NULL) {
   if (!requireNamespace("survival", quietly = TRUE)) {
@@ -243,6 +245,72 @@ run_kaplan_meier <- function(surv_data, strata = NULL) {
   )
 }
 
+#' Extract risk table from Kaplan-Meier results
+#'
+#' Generates a number-at-risk table at fixed time points from a
+#' [run_kaplan_meier()] result. Useful for pre-computing Shiny display
+#' data and static API endpoints.
+#'
+#' @param km_result List returned by [run_kaplan_meier()]
+#' @param times Numeric vector of time points (in days) at which to
+#'   evaluate the risk table. Defaults to `c(0, 365, 730, 1095, 1460)`
+#'   (0-4 years).
+#' @return Data frame with columns: time, n_risk, n_event, n_censor,
+#'   survival, and optionally strata (if stratified KM)
+#' @family survival
+#' @export
+extract_risk_table <- function(km_result,
+                                times = c(0, 365, 730, 1095, 1460)) {
+  if (is.null(km_result) || !is.list(km_result) || is.null(km_result$fit)) {
+    cli::cli_abort(c(
+      "x" = "{.arg km_result} must be a list from {.fn run_kaplan_meier} with a {.field fit} element"
+    ))
+  }
+
+  if (!is.numeric(times) || length(times) == 0) {
+    cli::cli_abort(c(
+      "x" = "{.arg times} must be a non-empty numeric vector"
+    ))
+  }
+
+  # Remove invalid time points
+  times <- times[is.finite(times) & times >= 0]
+  if (length(times) == 0) {
+    cli::cli_abort(c(
+      "x" = "No valid time points (must be finite and >= 0)"
+    ))
+  }
+
+  times <- sort(unique(times))
+
+  fit_summary <- summary(km_result$fit, times = times, extend = TRUE)
+
+  if (is.null(fit_summary$strata)) {
+    # Unstratified
+    risk_df <- data.frame(
+      time = fit_summary$time,
+      n_risk = fit_summary$n.risk,
+      n_event = fit_summary$n.event,
+      n_censor = fit_summary$n.censor,
+      survival = round(fit_summary$surv, 4),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    # Stratified
+    risk_df <- data.frame(
+      time = fit_summary$time,
+      strata = as.character(fit_summary$strata),
+      n_risk = fit_summary$n.risk,
+      n_event = fit_summary$n.event,
+      n_censor = fit_summary$n.censor,
+      survival = round(fit_summary$surv, 4),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  risk_df
+}
+
 #' Run Cox proportional hazards regression
 #'
 #' Fits a Cox PH model with specified covariates. Returns the model object,
@@ -257,6 +325,7 @@ run_kaplan_meier <- function(surv_data, strata = NULL) {
 #'   - `n`: number of patients in model
 #'   - `n_events`: number of events
 #'   - `ph_test`: cox.zph result for PH assumption
+#' @family survival
 #' @export
 run_cox_regression <- function(surv_data,
                                covariates = c("age_years", "gender")) {

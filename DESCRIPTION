@@ -22,6 +22,7 @@ Imports:
     duckdb,
     dbplyr,
     cli,
+    jsonlite,
     glue,
     stringr,
     tibble
@@ -48,5 +49,9 @@ Suggests:
     gert,
     nanoparquet,
     DT,
-    plotly
+    htmltools,
+    plotly,
+    plumber,
+    visNetwork,
+    here
 Config/testthat/edition: 3

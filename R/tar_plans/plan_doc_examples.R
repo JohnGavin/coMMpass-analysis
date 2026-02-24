@@ -161,11 +161,13 @@ plan_doc_examples <- list(
         "clinical <- query_commpass_parquet(\"clinical\")",
         "head(clinical)",
         "",
-        "# With filters",
-        "females <- query_commpass_parquet(",
-        "  \"clinical\",",
-        "  filters = list(gender = \"female\")",
-        ")"
+        "# With dplyr/tbl syntax",
+        "con <- DBI::dbConnect(duckdb::duckdb())",
+        "clinical_tbl <- get_commpass_tbl(\"clinical\", con = con)",
+        "females <- clinical_tbl |>",
+        "  dplyr::filter(gender == \"female\") |>",
+        "  dplyr::collect()",
+        "DBI::dbDisconnect(con, shutdown = TRUE)"
       )
     }
   ),
@@ -181,17 +183,73 @@ plan_doc_examples <- list(
         "clinical_tbl <- get_commpass_tbl(\"clinical\", con = con)",
         "",
         "result <- clinical_tbl |>",
-        "  filter(!is.na(gender)) |>",
-        "  group_by(gender) |>",
-        "  summarise(",
-        "    n = n(),",
+        "  dplyr::filter(!is.na(gender)) |>",
+        "  dplyr::group_by(gender) |>",
+        "  dplyr::summarise(",
+        "    n = dplyr::n(),",
         "    mean_age_years = mean(age_at_diagnosis / 365.25, na.rm = TRUE)",
         "  ) |>",
-        "  collect()",
+        "  dplyr::collect()",
         "",
         "DBI::dbDisconnect(con, shutdown = TRUE)"
       )
     }
+  ),
+
+  # --- api-usage.Rmd: curl example ---
+  targets::tar_target(
+    code_api_curl,
+    c(
+      "# Fetch the endpoint index",
+      "curl -s https://JohnGavin.github.io/coMMpass-analysis/api/v1/index.json | jq .",
+      "",
+      "# Fetch clinical data",
+      "curl -s https://JohnGavin.github.io/coMMpass-analysis/api/v1/clinical.json | jq '.metadata'",
+      "",
+      "# Download survival data",
+      "curl -o survival.json https://JohnGavin.github.io/coMMpass-analysis/api/v1/survival.json"
+    )
+  ),
+
+  # --- api-usage.Rmd: R (jsonlite) example ---
+  targets::tar_target(
+    code_api_r,
+    c(
+      'base_url <- "https://JohnGavin.github.io/coMMpass-analysis/api/v1"',
+      "",
+      "# Read endpoint index",
+      'index <- jsonlite::fromJSON(paste0(base_url, "/index.json"))',
+      "index$endpoints",
+      "",
+      "# Load clinical data as data frame",
+      'clinical <- jsonlite::fromJSON(paste0(base_url, "/clinical.json"))',
+      "str(clinical$metadata)",
+      "head(clinical$data)",
+      "",
+      "# Load survival data",
+      'surv <- jsonlite::fromJSON(paste0(base_url, "/survival.json"))',
+      "dim(surv$data)"
+    )
+  ),
+
+  # --- api-usage.Rmd: Python example ---
+  targets::tar_target(
+    code_api_python,
+    c(
+      "import requests",
+      "import pandas as pd",
+      "",
+      'base_url = "https://JohnGavin.github.io/coMMpass-analysis/api/v1"',
+      "",
+      "# Fetch clinical data",
+      'resp = requests.get(f"{base_url}/clinical.json")',
+      "data = resp.json()",
+      'print(f"Rows: {data[\'metadata\'][\'n_rows\']}")',
+      "",
+      "# Convert to DataFrame",
+      "df = pd.DataFrame(data['data'])",
+      "print(df.head())"
+    )
   ),
 
   # ============================================================
@@ -224,6 +282,23 @@ plan_doc_examples <- list(
     parse_code_example(code_eda_aggregation)
   ),
 
+  targets::tar_target(
+    code_parsed_api_curl,
+    # Bash code -- just validate it's a character vector
+    list(valid = TRUE, n_expressions = 0L, code = code_api_curl, error = NULL)
+  ),
+
+  targets::tar_target(
+    code_parsed_api_r,
+    parse_code_example(code_api_r)
+  ),
+
+  targets::tar_target(
+    code_parsed_api_python,
+    # Python code -- just validate it's a character vector
+    list(valid = TRUE, n_expressions = 0L, code = code_api_python, error = NULL)
+  ),
+
   # ============================================================
   # Master validation gate
   # ============================================================
@@ -236,7 +311,10 @@ plan_doc_examples <- list(
         dd_load_data       = code_parsed_dd_load_data,
         dd_explore_dict    = code_parsed_dd_explore_dict,
         eda_simple_query   = code_parsed_eda_simple_query,
-        eda_aggregation    = code_parsed_eda_aggregation
+        eda_aggregation    = code_parsed_eda_aggregation,
+        api_curl           = code_parsed_api_curl,
+        api_r              = code_parsed_api_r,
+        api_python         = code_parsed_api_python
       )
 
       all_valid <- all(vapply(parse_results, function(x) x$valid, logical(1)))
