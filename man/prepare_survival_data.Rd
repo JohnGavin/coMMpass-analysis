@@ -23,3 +23,13 @@ data. Uses `days_to_death` for deceased patients and
 `days_to_last_follow_up` for censored (alive) patients. Merges with
 cytogenetic risk groups when available.
 }
+\seealso{
+Other survival: 
+\code{\link{extract_risk_table}()},
+\code{\link{plot_forest}()},
+\code{\link{plot_km}()},
+\code{\link{run_cox_regression}()},
+\code{\link{run_kaplan_meier}()},
+\code{\link{run_km_by_markers}()}
+}
+\concept{survival}

@@ -20,3 +20,13 @@ Named list of KM results, one per marker
 Iterates over cytogenetic markers and runs stratified KM analysis for each.
 Markers with fewer than `min_positive` positive cases are skipped.
 }
+\seealso{
+Other survival: 
+\code{\link{extract_risk_table}()},
+\code{\link{plot_forest}()},
+\code{\link{plot_km}()},
+\code{\link{prepare_survival_data}()},
+\code{\link{run_cox_regression}()},
+\code{\link{run_kaplan_meier}()}
+}
+\concept{survival}

@@ -6,6 +6,7 @@
 #' and prepare the data.
 #'
 #' @return A GDCquery object containing metadata for RNA-seq samples
+#' @family data-acquisition
 #' @export
 #' @examples
 #' \dontrun{
@@ -32,6 +33,7 @@ query_commpass_rna <- function() {
 #' treatment information, and outcomes data.
 #'
 #' @return A data frame containing clinical data for CoMMpass patients
+#' @family data-acquisition
 #' @export
 #' @examples
 #' \dontrun{
@@ -56,6 +58,7 @@ get_commpass_clinical <- function() {
 #'
 #' @param prefix Optional prefix to filter files (e.g., "RNA-seq/", "clinical/")
 #' @return Character vector of S3 object keys (file paths)
+#' @family data-acquisition
 #' @export
 #' @examples
 #' \dontrun{
@@ -96,6 +99,7 @@ list_s3_commpass <- function(prefix = "") {
 #' @param dest_dir Destination directory for downloaded files (default: "data/raw/rna_seq")
 #' @param n Number of files to download (default: 3)
 #' @return Character vector of successfully downloaded file paths
+#' @family data-acquisition
 #' @export
 #' @examples
 #' \dontrun{

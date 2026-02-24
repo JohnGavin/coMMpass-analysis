@@ -7,7 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -18,36 +18,16 @@ knitr::opts_chunk$set(
   fig.height = 5
 )
 library(targets)
-library(dplyr)
-has_DT <- requireNamespace("DT", quietly = TRUE)
-if (has_DT) library(DT)
 
-# Source utility functions
-if (file.exists("../R/utils.R")) {
-  source("../R/utils.R")
-} else if (file.exists("R/utils.R")) {
-  source("R/utils.R")
-}
-if (file.exists("../R/data_dictionary.R")) {
-  source("../R/data_dictionary.R")
-} else if (file.exists("R/data_dictionary.R")) {
-  source("R/data_dictionary.R")
-}
-
-# Discover targets store and project root
+# Discover targets store
 proj_dir <- Sys.getenv("TAR_PROJECT")
 tar_store <- NULL
-project_root <- "."
-
 if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
   tar_store <- file.path(proj_dir, "_targets")
-  project_root <- proj_dir
 } else if (dir.exists("_targets")) {
   tar_store <- "_targets"
-  project_root <- "."
 } else if (dir.exists("../_targets")) {
   tar_store <- "../_targets"
-  project_root <- ".."
 }
 
 safe_tar_read <- function(name) {
@@ -73,51 +53,7 @@ safe_tar_read <- function(name) {
 ## Complete Data Dictionary
 
 ```{r dictionary-table}
-dd <- tryCatch(
-  get_commpass_data_dictionary(),
-  error = function(e) NULL
-)
-
-if (!is.null(dd)) {
-  if (has_DT) {
-    # Convert gdc_link URLs to short clickable links to save column width
-    dd_display <- dd
-    if ("gdc_link" %in% names(dd_display)) {
-      dd_display$gdc_link <- ifelse(
-        is.na(dd_display$gdc_link) | dd_display$gdc_link == "",
-        "",
-        paste0('<a href="', dd_display$gdc_link, '" target="_blank">GDC</a>')
-      )
-    }
-    DT::datatable(
-      dd_display,
-      filter = "top",
-      escape = FALSE,  # Allow HTML in gdc_link column
-      options = list(
-        pageLength = 20,
-        scrollX = TRUE,
-        autoWidth = FALSE,
-        columnDefs = list(
-          # Prevent wrapping on narrow columns
-          list(className = "dt-nowrap", targets = "_all")
-        )
-      ),
-      caption = htmltools::tags$caption(
-        style = "caption-side: top; text-align: left;",
-        paste0(
-          "CoMMpass Data Dictionary - All Variables. ",
-          "Click column headers to sort; use filters to search. ",
-          "GDC links open the official data dictionary page."
-        )
-      )
-    )
-  } else {
-    knitr::kable(dd, row.names = FALSE,
-                 caption = "CoMMpass Data Dictionary - All Variables")
-  }
-} else {
-  cat("*Data dictionary function not available.*\n")
-}
+safe_tar_read("vig_dd_dictionary_table")
 ```
 
 ## Clinical Data
@@ -126,120 +62,12 @@ if (!is.null(dd)) {
 - Downloaded via `TCGAbiolinks::GDCquery_clinic()`
 - All time/age variables in **days** (see [units reference](glossary.html#units-reference))
 
-```{r clinical-summary}
-# clinical_data target stores a directory path; load the RDS from it
-clinical_dir <- safe_tar_read("clinical_data")
-clinical <- NULL
+```{r clinical-summary-text, results='asis'}
+safe_tar_read("vig_dd_clinical_text")
+```
 
-if (!is.null(clinical_dir) && is.character(clinical_dir)) {
-  rds_path <- file.path(project_root, clinical_dir, "clinical_data.rds")
-  if (file.exists(rds_path)) {
-    clinical <- tryCatch(readRDS(rds_path), error = function(e) NULL)
-  }
-}
-
-if (!is.null(clinical) && is.data.frame(clinical)) {
-  cat("### Summary\n\n")
-  cat("- **Total patients:**", format_with_commas(nrow(clinical)), "\n")
-  cat("- **Variables:**", ncol(clinical), "\n")
-  cat("- **Data completeness:**",
-      sprintf("%.1f%%", 100 * mean(!is.na(clinical))), "\n\n")
-
-  # --- Column structure overview (str-like) ---
-  cat("### Column Structure\n\n")
-
-  col_info <- data.frame(
-    Column = names(clinical),
-    Type = vapply(clinical, function(x) class(x)[1], character(1)),
-    Non_NA = vapply(clinical, function(x) sum(!is.na(x)), integer(1)),
-    Pct_Complete = vapply(
-      clinical,
-      function(x) sprintf("%.0f%%", 100 * mean(!is.na(x))),
-      character(1)
-    ),
-    N_Unique = vapply(
-      clinical,
-      function(x) length(unique(x[!is.na(x)])),
-      integer(1)
-    ),
-    Example = vapply(clinical, function(x) {
-      vals <- x[!is.na(x)]
-      if (length(vals) == 0) return("(all NA)")
-      if (is.numeric(vals)) {
-        paste0(
-          "min=", signif(min(vals), 3),
-          " med=", signif(median(vals), 3),
-          " max=", signif(max(vals), 3)
-        )
-      } else {
-        top <- names(sort(table(vals), decreasing = TRUE))[
-          1:min(3, length(unique(vals)))
-        ]
-        paste(top, collapse = ", ")
-      }
-    }, character(1)),
-    stringsAsFactors = FALSE
-  )
-
-  # Add units to column names where known
-  unit_map <- c(
-    age_at_diagnosis = "age_at_diagnosis_days",
-    age_at_index = "age_at_index_days",
-    days_to_death = "days_to_death_days",
-    days_to_last_follow_up = "days_to_last_follow_up_days",
-    days_to_last_known_disease_status = "days_to_last_known_disease_status_days"
-  )
-  for (i in seq_len(nrow(col_info))) {
-    if (col_info$Column[i] %in% names(unit_map)) {
-      col_info$Column[i] <- unit_map[col_info$Column[i]]
-    }
-  }
-
-  # Reorder columns by similarity
-  id_cols <- grep("^(submitter|project|case|bcr|patient)", col_info$Column)
-  demo_cols <- grep("(gender|sex|race|ethnicity|age_)", col_info$Column)
-  time_cols <- grep("(days_|year_|date_)", col_info$Column)
-  vital_cols <- grep("(vital|alive|dead|status|cause)", col_info$Column)
-  disease_cols <- grep("(diagnosis|stage|grade|iss|tumor|site)", col_info$Column)
-
-  ordered_idx <- unique(c(id_cols, demo_cols, time_cols, vital_cols,
-                           disease_cols, seq_len(nrow(col_info))))
-  col_info <- col_info[ordered_idx, ]
-  rownames(col_info) <- NULL
-
-  if (has_DT) {
-    DT::datatable(
-      col_info,
-      filter = "top",
-      options = list(pageLength = 20, scrollX = TRUE, autoWidth = FALSE),
-      colnames = c("Column (units appended)", "R Type", "Non-NA",
-                    "% Complete", "Unique Values", "Example / Range"),
-      caption = htmltools::tags$caption(
-        style = "caption-side: top; text-align: left;",
-        paste0(
-          "Structure of all ", ncol(clinical), " clinical variables for ",
-          nrow(clinical), " patients. ",
-          "Time variables are in DAYS (GDC convention). ",
-          "Columns reordered: IDs > demographics > time > vital status > ",
-          "disease > other. ",
-          "See glossary for units reference."
-        )
-      )
-    )
-  } else {
-    knitr::kable(
-      col_info, row.names = FALSE,
-      col.names = c("Column (units)", "R Type", "Non-NA",
-                     "% Complete", "Unique", "Example / Range"),
-      caption = paste0(
-        "Structure of all ", ncol(clinical), " clinical variables. ",
-        "Time variables are in DAYS."
-      )
-    )
-  }
-} else {
-  cat("*Clinical data not available. Run the pipeline to download.*\n")
-}
+```{r clinical-summary-table}
+safe_tar_read("vig_dd_clinical_table")
 ```
 
 ## Biospecimen Data
@@ -247,60 +75,12 @@ if (!is.null(clinical) && is.data.frame(clinical)) {
 - Tissue samples collected from patients
 - Includes sample type, tissue type, and preservation method
 
-```{r biospecimen-summary}
-# biospecimen lives in the same directory as clinical_data
-biospecimen <- NULL
-if (!is.null(clinical_dir) && is.character(clinical_dir)) {
-  bio_rds <- file.path(project_root, clinical_dir, "biospecimen_data.rds")
-  if (file.exists(bio_rds)) {
-    biospecimen <- tryCatch(readRDS(bio_rds), error = function(e) NULL)
-  }
-}
+```{r biospecimen-summary-text, results='asis'}
+safe_tar_read("vig_dd_biospecimen_text")
+```
 
-if (!is.null(biospecimen) && is.data.frame(biospecimen)) {
-  cat("- **Total records:**", format_with_commas(nrow(biospecimen)), "\n")
-  cat("- **Variables:**", ncol(biospecimen), "\n\n")
-
-  bio_cols <- data.frame(
-    Column = names(biospecimen),
-    Type = vapply(biospecimen, function(x) class(x)[1], character(1)),
-    Non_NA = vapply(biospecimen, function(x) sum(!is.na(x)), integer(1)),
-    Pct_Complete = vapply(
-      biospecimen,
-      function(x) sprintf("%.0f%%", 100 * mean(!is.na(x))),
-      character(1)
-    ),
-    N_Unique = vapply(
-      biospecimen,
-      function(x) length(unique(x[!is.na(x)])),
-      integer(1)
-    ),
-    stringsAsFactors = FALSE
-  )
-
-  if (has_DT) {
-    DT::datatable(
-      bio_cols,
-      filter = "top",
-      options = list(pageLength = 15, scrollX = TRUE),
-      colnames = c("Column", "R Type", "Non-NA", "% Complete", "Unique Values"),
-      caption = htmltools::tags$caption(
-        style = "caption-side: top; text-align: left;",
-        paste0(
-          "Biospecimen data columns for ", nrow(biospecimen), " records. ",
-          "Click column headers to sort; use filters to search."
-        )
-      )
-    )
-  } else {
-    knitr::kable(bio_cols, row.names = FALSE,
-                 col.names = c("Column", "R Type", "Non-NA",
-                                "% Complete", "Unique"),
-                 caption = "Biospecimen Data Columns")
-  }
-} else {
-  cat("*Biospecimen data not available. Run the pipeline to download.*\n")
-}
+```{r biospecimen-summary-table}
+safe_tar_read("vig_dd_biospecimen_table")
 ```
 
 ## RNA-seq Data
@@ -310,85 +90,16 @@ if (!is.null(biospecimen) && is.data.frame(biospecimen)) {
 - Available in multiple quantification types (raw counts, TPM, FPKM)
 - See [units reference](glossary.html#units-reference) for quantification units
 
-```{r rnaseq-summary}
-se_data <- NULL
-rnaseq_path <- safe_tar_read("raw_rnaseq")
+```{r rnaseq-dims-text, results='asis'}
+safe_tar_read("vig_dd_rnaseq_text")
+```
 
-if (!is.null(rnaseq_path)) {
-  full_path <- if (file.exists(rnaseq_path)) rnaseq_path else file.path(project_root, rnaseq_path)
-  if (file.exists(full_path) && requireNamespace("SummarizedExperiment", quietly = TRUE)) {
-    se_data <- tryCatch(readRDS(full_path), error = function(e) NULL)
-  }
-}
+```{r rnaseq-biotype-table}
+safe_tar_read("vig_dd_rnaseq_biotype_table")
+```
 
-if (!is.null(se_data) && requireNamespace("SummarizedExperiment", quietly = TRUE)) {
-  cat("### Dimensions\n\n")
-  cat("- **Samples:**", ncol(se_data), "\n")
-  cat("- **Genes:**", format_with_commas(nrow(se_data)), "\n")
-  cat("- **Assays:**", paste(SummarizedExperiment::assayNames(se_data), collapse = ", "), "\n\n")
-
-  # Gene metadata summary
-  gene_meta <- as.data.frame(SummarizedExperiment::rowData(se_data))
-  if ("gene_type" %in% names(gene_meta)) {
-    cat("### Gene Biotypes\n\n")
-    type_counts <- sort(table(gene_meta$gene_type), decreasing = TRUE)
-    type_df <- data.frame(
-      Biotype = names(type_counts),
-      Count = as.integer(type_counts),
-      Percentage = sprintf("%.1f%%", 100 * as.numeric(type_counts) / nrow(gene_meta)),
-      stringsAsFactors = FALSE
-    )
-    if (has_DT) {
-      DT::datatable(
-        type_df,
-        filter = "top",
-        options = list(pageLength = 15, scrollX = TRUE),
-        caption = htmltools::tags$caption(
-          style = "caption-side: top; text-align: left;",
-          paste0(
-            "Gene biotypes from GENCODE annotations. ",
-            format_with_commas(nrow(gene_meta)),
-            " total gene entries. ",
-            "protein_coding genes are the primary analysis target."
-          )
-        )
-      )
-    } else {
-      knitr::kable(head(type_df, 10), row.names = FALSE,
-                   caption = "Top 10 Gene Biotypes")
-    }
-  }
-
-  # Sample metadata columns
-  sample_meta <- as.data.frame(SummarizedExperiment::colData(se_data))
-  cat("\n### Sample Metadata Columns\n\n")
-  sample_cols <- data.frame(
-    Column = names(sample_meta),
-    Type = vapply(sample_meta, function(x) class(x)[1], character(1)),
-    N_Unique = vapply(
-      sample_meta,
-      function(x) length(unique(x[!is.na(x)])),
-      integer(1)
-    ),
-    stringsAsFactors = FALSE
-  )
-  if (has_DT) {
-    DT::datatable(
-      sample_cols,
-      filter = "top",
-      options = list(pageLength = 15, scrollX = TRUE),
-      caption = htmltools::tags$caption(
-        style = "caption-side: top; text-align: left;",
-        "RNA-seq sample metadata columns from the SummarizedExperiment colData."
-      )
-    )
-  } else {
-    knitr::kable(sample_cols, row.names = FALSE,
-                 caption = "RNA-seq Sample Metadata Columns")
-  }
-} else {
-  cat("*RNA-seq data not available. Run the pipeline to download.*\n")
-}
+```{r rnaseq-sample-metadata}
+safe_tar_read("vig_dd_rnaseq_sample_table")
 ```
 
 ## Column Name Mappings
@@ -396,41 +107,7 @@ if (!is.null(se_data) && requireNamespace("SummarizedExperiment", quietly = TRUE
 GDC uses standardized column names. Common aliases used in analysis:
 
 ```{r column-mappings}
-mappings <- data.frame(
-  GDC_Column = c("submitter_id", "age_at_diagnosis", "vital_status",
-                  "days_to_death", "days_to_last_follow_up",
-                  "gender", "primary_diagnosis"),
-  Common_Alias = c("patient_id", "age_days", "status",
-                     "os_time (if dead)", "os_time (if alive)",
-                     "sex", "diagnosis"),
-  Notes = c("Unique patient identifier",
-             "In **days**, not years (divide by 365.25)",
-             "Alive/Dead",
-             "Overall survival time",
-             "Censoring time",
-             "male/female",
-             "ICD-O-3 morphology"),
-  stringsAsFactors = FALSE
-)
-
-if (has_DT) {
-  DT::datatable(
-    mappings,
-    filter = "top",
-    options = list(pageLength = 10, scrollX = TRUE),
-    colnames = c("GDC Column", "Common Alias", "Notes"),
-    caption = htmltools::tags$caption(
-      style = "caption-side: top; text-align: left;",
-      "GDC column name mappings to common aliases used in analysis code."
-    )
-  )
-} else {
-  knitr::kable(
-    mappings, row.names = FALSE,
-    col.names = c("GDC Column", "Common Alias", "Notes"),
-    caption = "GDC column name mappings."
-  )
-}
+safe_tar_read("vig_dd_column_mappings")
 ```
 
 ## Units Reference
@@ -455,27 +132,13 @@ For exploratory analysis using these variables, see the [EDA vignette](explorato
 ### Loading Data
 
 ```{r dd-load-data-code, results='asis'}
-code <- safe_tar_read("code_dd_load_data")
-if (!is.null(code)) {
-  cat("<details>\n<summary>Show code</summary>\n\n```r\n")
-  cat(paste(code, collapse = "\n"))
-  cat("\n```\n</details>\n")
-} else {
-  cat("*Code example not available. Run `tar_make()` first.*\n")
-}
+safe_tar_read("code_dd_load_data")
 ```
 
 ### Exploring the Dictionary
 
 ```{r dd-explore-dict-code, results='asis'}
-code <- safe_tar_read("code_dd_explore_dict")
-if (!is.null(code)) {
-  cat("<details>\n<summary>Show code</summary>\n\n```r\n")
-  cat(paste(code, collapse = "\n"))
-  cat("\n```\n</details>\n")
-} else {
-  cat("*Code example not available. Run `tar_make()` first.*\n")
-}
+safe_tar_read("code_dd_explore_dict")
 ```
 
 ## Reproducibility

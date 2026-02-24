@@ -181,6 +181,7 @@ get_msigdb_gene_sets <- function(collection = "hallmark",
 #'     \item{ranked_genes}{Named numeric vector of gene ranks used.}
 #'     \item{collection}{Gene set collection used.}
 #'   }
+#' @family pathway
 #' @export
 run_gsea <- function(de_results,
                      gene_sets = "hallmark",
@@ -296,6 +297,7 @@ run_gsea <- function(de_results,
 #'     \item{n_sig_genes}{Number of input significant genes.}
 #'     \item{top_pathways}{Top 20 enriched pathways as a data frame.}
 #'   }
+#' @family pathway
 #' @export
 run_ora <- function(sig_genes,
                     universe,
@@ -426,6 +428,7 @@ run_ora <- function(sig_genes,
 #' @param method Gene set collection: \code{"hallmark"} (default),
 #'   \code{"kegg"}, \code{"reactome"}, \code{"go_bp"}.
 #' @return List with ORA results (see [run_ora()]).
+#' @family pathway
 #' @export
 run_pathway_analysis <- function(de_genes, method = "hallmark") {
   logger::log_info("Running pathway analysis using {method} gene sets...")

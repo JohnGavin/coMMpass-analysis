@@ -57,36 +57,28 @@ plan_dag_validation <- list(
         "infrastructure"         = character(0)
       )
 
-      # --- Get pipeline edges ---
-      net <- targets::tar_network(targets_only = TRUE)
-      edges <- net$edges
+      # --- Get pipeline manifest ---
+      # tar_manifest() reads the pipeline definition without accessing
+      # the data store, which is safe to call inside a target.
+      manifest <- targets::tar_manifest()
 
-      if (is.null(edges) || nrow(edges) == 0) {
+      if (is.null(manifest) || nrow(manifest) == 0) {
         cli::cli_alert_success(
-          "DAG validation: no edges to check (empty pipeline)"
+          "DAG validation: no targets to check (empty pipeline)"
         )
         return(TRUE)
       }
 
-      # --- Map targets to layers via naming convention ---
-      # Target names often start with the plan prefix (minus "plan_")
-      # e.g. "raw_rnaseq" from plan_data_acquisition
-      # We use the pipeline manifest to map targets to their source plan
-      nodes <- net$vertices
-      if (is.null(nodes) || nrow(nodes) == 0) {
-        cli::cli_alert_success("DAG validation: no targets to check")
-        return(TRUE)
-      }
-
       cli::cli_alert_info(
-        "DAG validation: {nrow(edges)} edges, {nrow(nodes)} targets"
+        "DAG validation: {nrow(manifest)} targets in pipeline"
       )
 
-      # For now, just validate that the DAG is a valid DAG (no cycles)
-      # and report the layer structure. Full cross-layer validation
-      # requires target-to-plan mapping which we'll refine as plans grow.
+      # Validate that the manifest is well-formed and report layer structure.
+      # Full cross-layer edge validation requires tar_network() which
+      # cannot run inside a target (targets >= 1.10). Run
+      # targets::tar_network() interactively for edge-level checks.
       cli::cli_alert_success(
-        "DAG layer validation passed: pipeline is a valid DAG"
+        "DAG layer validation passed: {nrow(manifest)} targets defined"
       )
       TRUE
     }

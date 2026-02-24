@@ -17,12 +17,22 @@ knitr::opts_chunk$set(
   fig.width = 8,
   fig.height = 6
 )
+library(targets)
+
+# Discover targets store
+proj_dir <- Sys.getenv("TAR_PROJECT")
+tar_store <- NULL
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_store <- file.path(proj_dir, "_targets")
+} else if (dir.exists("_targets")) {
+  tar_store <- "_targets"
+} else if (dir.exists("../_targets")) {
+  tar_store <- "../_targets"
+}
 
 safe_tar_read <- function(name) {
-  tryCatch(
-    targets::tar_read(name = name, store = targets::tar_config_get("store")),
-    error = function(e) NULL
-  )
+  if (is.null(tar_store)) return(NULL)
+  tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
 }
 ```
 
@@ -41,21 +51,11 @@ safe_tar_read <- function(name) {
 ## Overall Survival
 
 ```{r km-overall, fig.cap = "Overall Kaplan-Meier survival curve for all CoMMpass patients with valid survival data. Shaded region: 95% confidence interval. Time in days from diagnosis."}
-km_overall <- safe_tar_read("km_overall")
+safe_tar_read("vig_km_overall")
+```
 
-if (!is.null(km_overall) && !is.null(km_overall$fit)) {
-  p <- plot_km(km_overall, title = "Overall Survival")
-  print(p)
-
-  median_os <- km_overall$median_survival
-  if (!all(is.na(median_os))) {
-    cat(paste0("\n**Median overall survival:** ",
-               round(median_os[1]), " days (",
-               round(median_os[1] / 365.25, 1), " years)\n"))
-  }
-} else {
-  cat("*Overall KM not available. Run `tar_make()` to build survival targets.*\n")
-}
+```{r km-overall-text, results='asis'}
+safe_tar_read("vig_km_overall_text")
 ```
 
 ## Survival by ISS Stage
@@ -65,16 +65,7 @@ if (!is.null(km_overall) && !is.null(km_overall$fit)) {
 - See the [EDA vignette](exploratory-analysis.html) for ISS stage distributions
 
 ```{r km-iss, fig.cap = "Kaplan-Meier curves by ISS stage (I, II, III). Log-rank p-value tests whether survival distributions differ across stages. ISS III patients are expected to have shorter survival. See Greipp et al. 2005 for ISS definition."}
-km_iss <- safe_tar_read("km_by_iss")
-
-if (!is.null(km_iss) && !is.null(km_iss$fit)) {
-  p <- plot_km(km_iss, title = "Survival by ISS Stage")
-  print(p)
-} else {
-  note <- if (!is.null(km_iss$note)) km_iss$note else
-    "ISS data not available"
-  cat(paste0("*", note, ".*\n"))
-}
+safe_tar_read("vig_km_iss")
 ```
 
 ## Survival by Cytogenetic Risk Group
@@ -83,16 +74,7 @@ Cytogenetic risk per [IMWG 2014 criteria](https://doi.org/10.1200/JCO.2014.55.15
 **high-risk** = t(4;14) OR t(14;16) OR del(17p); **standard-risk** = all others.
 
 ```{r km-risk, fig.cap = "Kaplan-Meier curves by IMWG cytogenetic risk group (high vs standard). High-risk: t(4;14), t(14;16), or del(17p). Standard-risk: all others. Log-rank p-value shown."}
-km_risk <- safe_tar_read("km_by_risk")
-
-if (!is.null(km_risk) && !is.null(km_risk$fit)) {
-  p <- plot_km(km_risk, title = "Survival by Cytogenetic Risk")
-  print(p)
-} else {
-  note <- if (!is.null(km_risk$note)) km_risk$note else
-    "Cytogenetic risk data not available"
-  cat(paste0("*", note, ".*\n"))
-}
+safe_tar_read("vig_km_risk")
 ```
 
 ## Survival by Individual Cytogenetic Markers
@@ -100,28 +82,7 @@ if (!is.null(km_risk) && !is.null(km_risk$fit)) {
 Each marker is analyzed separately: patients with vs without the alteration.
 
 ```{r km-markers, fig.height = 5, fig.cap = "Kaplan-Meier curves for individual cytogenetic markers. Each panel compares patients with (positive) vs without (negative) the alteration. Markers with fewer than 3 positive or negative patients are skipped."}
-km_markers <- safe_tar_read("km_by_markers")
-
-marker_labels <- c(
-  t_4_14 = "t(4;14)", t_11_14 = "t(11;14)", t_14_16 = "t(14;16)",
-  del_17p = "del(17p)", gain_1q = "gain(1q)"
-)
-
-if (!is.null(km_markers) && length(km_markers) > 0) {
-  for (m in names(km_markers)) {
-    km <- km_markers[[m]]
-    label <- if (m %in% names(marker_labels)) marker_labels[m] else m
-    if (!is.null(km$fit)) {
-      p <- plot_km(km, title = paste0("Survival by ", label))
-      print(p)
-      cat("\n\n")
-    } else if (!is.null(km$note)) {
-      cat(paste0("**", label, "**: *", km$note, "*\n\n"))
-    }
-  }
-} else {
-  cat("*Individual marker KM data not available. Run `tar_make()` first.*\n")
-}
+safe_tar_read("vig_km_markers")
 ```
 
 ## Cox Proportional Hazards
@@ -129,113 +90,31 @@ if (!is.null(km_markers) && length(km_markers) > 0) {
 ### Basic Model: Age + Gender
 
 ```{r cox-basic}
-cox_basic <- safe_tar_read("cox_basic")
-
-if (!is.null(cox_basic) && !is.null(cox_basic$hazard_ratios)) {
-  knitr::kable(
-    cox_basic$hazard_ratios, row.names = FALSE,
-    digits = c(0, 3, 3, 3, 4),
-    caption = paste0(
-      "Cox PH model: age + gender. HR > 1 = increased hazard (worse survival). ",
-      "n = ", cox_basic$n, " patients, ", cox_basic$n_events, " events. ",
-      "C-index = ", round(cox_basic$concordance, 3), ". ",
-      "* p < 0.05, ** p < 0.01, *** p < 0.001."
-    )
-  )
-} else {
-  cat("*Basic Cox model not available. Run `tar_make()` first.*\n")
-}
+safe_tar_read("vig_cox_basic_table")
 ```
 
 ### Full Model: Age + Gender + ISS + Cytogenetic Risk
 
 ```{r cox-full}
-cox_full <- safe_tar_read("cox_full")
-
-if (!is.null(cox_full) && !is.null(cox_full$hazard_ratios)) {
-  knitr::kable(
-    cox_full$hazard_ratios, row.names = FALSE,
-    digits = c(0, 3, 3, 3, 4),
-    caption = paste0(
-      "Cox PH model with clinical and cytogenetic covariates. ",
-      "n = ", cox_full$n, " patients, ", cox_full$n_events, " events. ",
-      "C-index = ", round(cox_full$concordance, 3), ". ",
-      "Covariates: ", paste(cox_full$covariates_used, collapse = ", "), "."
-    )
-  )
-} else {
-  cat("*Full Cox model not available. Run `tar_make()` first.*\n")
-}
+safe_tar_read("vig_cox_full_table")
 ```
 
 ### Forest Plot
 
 ```{r forest-plot, fig.cap = "Forest plot of hazard ratios from multivariate Cox regression. Points: HR estimates. Horizontal bars: 95% CI. Dashed line: HR = 1 (no effect). Log scale x-axis. Stars: significance level."}
-if (!is.null(cox_full) && !is.null(cox_full$hazard_ratios) &&
-    nrow(cox_full$hazard_ratios) > 0) {
-  p <- plot_forest(cox_full,
-                    title = "Multivariate Cox: Hazard Ratios")
-  print(p)
-} else if (!is.null(cox_basic) && !is.null(cox_basic$hazard_ratios) &&
-           nrow(cox_basic$hazard_ratios) > 0) {
-  p <- plot_forest(cox_basic,
-                    title = "Cox Regression: Hazard Ratios")
-  print(p)
-} else {
-  cat("*Forest plot not available.*\n")
-}
+safe_tar_read("vig_forest_plot")
 ```
 
 ### Proportional Hazards Assumption
 
 ```{r ph-test}
-cox_for_ph <- if (!is.null(cox_full)) cox_full else cox_basic
-
-if (!is.null(cox_for_ph) && !is.null(cox_for_ph$ph_test)) {
-  ph <- cox_for_ph$ph_test
-  ph_table <- as.data.frame(ph$table)
-  ph_table$variable <- rownames(ph_table)
-  ph_table <- ph_table[, c("variable", "chisq", "p")]
-  names(ph_table) <- c("Variable", "Chi-squared", "p-value")
-
-  knitr::kable(
-    ph_table, row.names = FALSE, digits = c(0, 2, 4),
-    caption = paste0(
-      "Proportional hazards assumption test (cox.zph). ",
-      "p < 0.05 indicates the PH assumption may be violated for that covariate. ",
-      "If violated, time-varying coefficients or stratification should be considered."
-    )
-  )
-} else {
-  cat("*PH test not available.*\n")
-}
+safe_tar_read("vig_ph_test_table")
 ```
 
 ## Model Comparison
 
 ```{r model-comparison}
-if (!is.null(cox_basic) && !is.null(cox_full) &&
-    !is.null(cox_basic$concordance) && !is.null(cox_full$concordance)) {
-  comp <- data.frame(
-    Model = c("Basic (age + gender)",
-              paste0("Full (", paste(cox_full$covariates_used, collapse = " + "), ")")),
-    N = c(cox_basic$n, cox_full$n),
-    Events = c(cox_basic$n_events, cox_full$n_events),
-    C_index = c(round(cox_basic$concordance, 3), round(cox_full$concordance, 3)),
-    stringsAsFactors = FALSE
-  )
-  knitr::kable(
-    comp, row.names = FALSE,
-    caption = paste0(
-      "Cox model comparison. C-index: concordance statistic (0.5 = random, ",
-      "1.0 = perfect discrimination). Higher C-index indicates better ",
-      "prognostic discrimination."
-    ),
-    col.names = c("Model", "N", "Events", "C-index")
-  )
-} else {
-  cat("*Model comparison not available.*\n")
-}
+safe_tar_read("vig_cox_comparison")
 ```
 
 ## Next Steps

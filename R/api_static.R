@@ -45,7 +45,18 @@ generate_api_index <- function(
 
   list(
     api = "CoMMpass Static API",
-    version = as.character(utils::packageVersion("coMMpass")),
+    version = tryCatch(
+      as.character(utils::packageVersion("coMMpass")),
+      error = function(e) {
+        # Fallback: read from DESCRIPTION when package not installed
+        desc <- tryCatch(read.dcf("DESCRIPTION"), error = function(e2) NULL)
+        if (!is.null(desc) && "Version" %in% colnames(desc)) {
+          desc[1, "Version"]
+        } else {
+          "0.0.0"
+        }
+      }
+    ),
     generated = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
     base_url = base_url,
     endpoints = endpoints,

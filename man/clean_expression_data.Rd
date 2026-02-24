@@ -15,3 +15,9 @@ Cleaned expression matrix with gene names as rownames
 \description{
 Standardizes expression data format and adds metadata
 }
+\seealso{
+Other data-cleaning: 
+\code{\link{clean_clinical_data}()},
+\code{\link{integrate_clinical_expression}()}
+}
+\concept{data-cleaning}

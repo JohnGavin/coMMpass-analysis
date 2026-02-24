@@ -146,28 +146,31 @@ plan_eda <- list(
         tmp_parquet, "')"
       ))
 
-      # Example 1: simple SELECT
-      demo_query_sql <- "SELECT submitter_id, gender, vital_status, age_at_diagnosis
-                         FROM clinical
-                         LIMIT 10"
-      demo_result <- DBI::dbGetQuery(con, demo_query_sql)
+      # Example 1: simple select via dplyr/tbl
+      clinical_tbl <- dplyr::tbl(con, "clinical")
+      demo_result <- clinical_tbl |>
+        dplyr::select(submitter_id, gender, vital_status,
+                      age_at_diagnosis) |>
+        utils::head(10) |>
+        dplyr::collect()
 
-      # Example 2: aggregation
-      agg_query_sql <- "SELECT gender, COUNT(*) AS n,
-                          ROUND(AVG(age_at_diagnosis / 365.25), 1) AS mean_age_years
-                        FROM clinical
-                        WHERE gender IS NOT NULL
-                        GROUP BY gender"
-      agg_result <- DBI::dbGetQuery(con, agg_query_sql)
+      # Example 2: aggregation via dplyr/tbl
+      agg_result <- clinical_tbl |>
+        dplyr::filter(!is.na(gender)) |>
+        dplyr::group_by(gender) |>
+        dplyr::summarise(
+          n = dplyr::n(),
+          mean_age_years = round(mean(age_at_diagnosis / 365.25,
+                                       na.rm = TRUE), 1)
+        ) |>
+        dplyr::collect()
 
       list(
-        demo_sql    = demo_query_sql,
         demo_result = demo_result,
-        agg_sql     = agg_query_sql,
         agg_result  = agg_result
       )
     },
-    packages = c("DBI", "duckdb", "arrow")
+    packages = c("DBI", "duckdb", "arrow", "dplyr")
   ),
 
   # --- ISS staging summary (#42) ---

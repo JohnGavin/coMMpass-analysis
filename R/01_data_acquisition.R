@@ -17,6 +17,7 @@
 #' @param seed Random seed for reproducible sampling (default 42)
 #' @param use_parquet If TRUE, also save parquet files alongside RDS (default TRUE)
 #' @return Path to the saved RDS file containing the SummarizedExperiment
+#' @family data-acquisition
 #' @export
 #' @examples
 #' \dontrun{
@@ -226,6 +227,7 @@ download_aws_data <- function(
 #' @param data_dir Directory to save data
 #' @param use_parquet If TRUE, also save parquet files (default TRUE)
 #' @return Path to the directory containing the saved data files
+#' @family data-acquisition
 #' @export
 #' @examples
 #' \dontrun{
@@ -334,6 +336,7 @@ download_clinical_data <- function(
 #' @param seed Random seed for sampling
 #' @param use_parquet If TRUE, save parquet files
 #' @return List of file paths to the downloaded data
+#' @family data-acquisition
 #' @export
 #' @examples
 #' \dontrun{

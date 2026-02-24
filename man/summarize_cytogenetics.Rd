@@ -21,3 +21,11 @@ cyto <- arrow::read_parquet("data/raw/clinical/cytogenetic_data.parquet")
 summarize_cytogenetics(cyto)
 }
 }
+\seealso{
+Other cytogenetics: 
+\code{\link{calculate_cooccurrence}()},
+\code{\link{extract_cytogenetic_data}()},
+\code{\link{plot_cooccurrence_heatmap}()},
+\code{\link{plot_cytogenetic_oncoprint}()}
+}
+\concept{cytogenetics}

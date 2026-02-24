@@ -24,3 +24,13 @@ List with components:
 Fits a Cox PH model with specified covariates. Returns the model object,
 hazard ratios with confidence intervals, and concordance index.
 }
+\seealso{
+Other survival: 
+\code{\link{extract_risk_table}()},
+\code{\link{plot_forest}()},
+\code{\link{plot_km}()},
+\code{\link{prepare_survival_data}()},
+\code{\link{run_kaplan_meier}()},
+\code{\link{run_km_by_markers}()}
+}
+\concept{survival}

@@ -1758,16 +1758,25 @@ plan_vignette_outputs <- list(
   # pipeline-dag.Rmd targets
   # ================================================================
 
-  # --- Pipeline visnetwork widget ---
+  # --- Pipeline manifest summary (for DAG display in vignette) ---
   tar_target(
     vig_pipeline_dag,
     {
-      targets::tar_visnetwork(
-        targets_only = TRUE,
-        label = c("time", "branches")
+      # tar_visnetwork()/tar_network() cannot run inside a target
+      # (targets >= 1.10). Use tar_manifest() which only reads the
+      # pipeline definition, not the data store.
+      manifest <- targets::tar_manifest()
+      list(
+        n_targets = nrow(manifest),
+        targets = manifest$name,
+        commands = manifest$command,
+        note = paste(
+          "Pipeline DAG has", nrow(manifest), "targets.",
+          "Run targets::tar_visnetwork() interactively to view the graph."
+        )
       )
     },
-    packages = c("targets", "visNetwork")
+    packages = c("targets")
   ),
 
   # --- Git info table (shared by all vignettes) ---

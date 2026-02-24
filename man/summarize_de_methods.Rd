@@ -20,3 +20,14 @@ Data frame with method, n_tested, n_sig, n_up, n_down
 Creates a summary table showing the number of significant genes per DE
 method.
 }
+\seealso{
+Other differential-expression: 
+\code{\link{compute_pca}()},
+\code{\link{plot_heatmap_de}()},
+\code{\link{plot_ma}()},
+\code{\link{plot_pca}()},
+\code{\link{plot_volcano}()},
+\code{\link{run_deseq2}()},
+\code{\link{run_vst}()}
+}
+\concept{differential-expression}

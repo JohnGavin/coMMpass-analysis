@@ -47,3 +47,8 @@ tbl <- query_commpass_parquet("clinical", collect = FALSE)
 result <- tbl |> dplyr::filter(gender == "female") |> dplyr::collect()
 }
 }
+\seealso{
+Other storage: 
+\code{\link{get_commpass_tbl}()}
+}
+\concept{storage}

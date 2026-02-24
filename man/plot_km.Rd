@@ -29,3 +29,13 @@ A ggplot object
 Creates a ggplot2-based KM survival curve from a survfit object.
 Supports stratified and unstratified curves with optional log-rank p-value.
 }
+\seealso{
+Other survival: 
+\code{\link{extract_risk_table}()},
+\code{\link{plot_forest}()},
+\code{\link{prepare_survival_data}()},
+\code{\link{run_cox_regression}()},
+\code{\link{run_kaplan_meier}()},
+\code{\link{run_km_by_markers}()}
+}
+\concept{survival}

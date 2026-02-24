@@ -21,3 +21,9 @@ Converts file sizes from bytes to human-readable format with appropriate units
 format_file_size(c(1024, 1048576, 5000877192))
 # Returns: "1.0 KB", "1.0 MB", "4.7 GB"
 }
+\seealso{
+Other utilities: 
+\code{\link{create_summary_table}()},
+\code{\link{format_with_commas}()}
+}
+\concept{utilities}

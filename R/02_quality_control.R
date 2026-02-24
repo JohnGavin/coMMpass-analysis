@@ -5,6 +5,7 @@
 #'
 #' @param se_data A SummarizedExperiment object with a "counts" assay
 #' @return A data frame with QC metrics per sample
+#' @family quality-control
 #' @export
 calculate_qc_metrics <- function(se_data) {
   logger::log_info("Calculating QC metrics...")

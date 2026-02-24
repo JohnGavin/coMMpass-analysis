@@ -27,7 +27,7 @@ cat(jsonlite::toJSON(idx, pretty = TRUE, auto_unbox = TRUE))
 }
 }
 \seealso{
-Other api:
+Other api: 
 \code{\link{api_get_clinical}()},
 \code{\link{api_get_de_results}()},
 \code{\link{api_get_pathways}()},

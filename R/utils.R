@@ -98,6 +98,7 @@ check_dependencies <- function() {
 #' @param size_bytes Numeric vector of file sizes in bytes
 #' @param digits Number of decimal places to show (default: 1)
 #' @return Character vector with formatted file sizes
+#' @family utilities
 #' @export
 #' @examples
 #' format_file_size(c(1024, 1048576, 5000877192))
@@ -146,6 +147,7 @@ format_file_size <- function(size_bytes, digits = 1) {
 #'
 #' @param x Numeric value or vector
 #' @return Character vector with formatted numbers
+#' @family utilities
 #' @export
 #' @examples
 #' format_with_commas(1234567)
@@ -161,6 +163,7 @@ format_with_commas <- function(x) {
 #' @param data Data frame
 #' @param vars Character vector of variable names (NULL for all numeric)
 #' @return Data frame with summary statistics
+#' @family utilities
 #' @export
 create_summary_table <- function(data, vars = NULL) {
   # Select numeric variables if vars not specified

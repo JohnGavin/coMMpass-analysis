@@ -25,3 +25,13 @@ query <- query_commpass_rna()
 # data <- GDCprepare(query)
 }
 }
+\seealso{
+Other data-acquisition: 
+\code{\link{acquire_commpass_data}()},
+\code{\link{download_clinical_data}()},
+\code{\link{download_gdc_rnaseq}()},
+\code{\link{download_s3_subset}()},
+\code{\link{get_commpass_clinical}()},
+\code{\link{list_s3_commpass}()}
+}
+\concept{data-acquisition}

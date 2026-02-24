@@ -20,3 +20,14 @@ List with ORA results (see [run_ora()]).
 Wrapper that runs ORA on consensus DE genes. Uses MSigDB Hallmark gene
 sets by default.
 }
+\seealso{
+Other pathway: 
+\code{\link{annotate_de_results}()},
+\code{\link{annotate_genes}()},
+\code{\link{plot_enrichment_barplot}()},
+\code{\link{plot_enrichment_dotplot}()},
+\code{\link{plot_gsea_running_score}()},
+\code{\link{run_gsea}()},
+\code{\link{run_ora}()}
+}
+\concept{pathway}

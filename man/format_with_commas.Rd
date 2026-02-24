@@ -19,3 +19,9 @@ Adds commas as thousands separators to large numbers
 format_with_commas(1234567)
 # Returns: "1,234,567"
 }
+\seealso{
+Other utilities: 
+\code{\link{create_summary_table}()},
+\code{\link{format_file_size}()}
+}
+\concept{utilities}

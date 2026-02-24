@@ -31,3 +31,14 @@ A ggplot2 object
 Creates a ggplot2 volcano plot with significance thresholds and optional
 gene labels.
 }
+\seealso{
+Other differential-expression: 
+\code{\link{compute_pca}()},
+\code{\link{plot_heatmap_de}()},
+\code{\link{plot_ma}()},
+\code{\link{plot_pca}()},
+\code{\link{run_deseq2}()},
+\code{\link{run_vst}()},
+\code{\link{summarize_de_methods}()}
+}
+\concept{differential-expression}

@@ -14,12 +14,12 @@ generate_api_endpoint(data, dataset_name, description)
 \item{description}{Human-readable description}
 }
 \value{
-A JSON string (character scalar) with \code{metadata} and \code{data}
+A JSON string (character scalar) with `metadata` and `data`
   fields
 }
 \description{
 Wraps a data frame in standard API envelope with metadata and
-serializes to JSON. Used by plan_api targets to produce static
+serializes to JSON. Used by [plan_api] targets to produce static
 JSON files.
 }
 \examples{
@@ -30,7 +30,7 @@ cat(json)
 }
 }
 \seealso{
-Other api:
+Other api: 
 \code{\link{api_get_clinical}()},
 \code{\link{api_get_de_results}()},
 \code{\link{api_get_pathways}()},

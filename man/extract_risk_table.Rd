@@ -7,10 +7,10 @@
 extract_risk_table(km_result, times = c(0, 365, 730, 1095, 1460))
 }
 \arguments{
-\item{km_result}{List returned by \code{\link[=run_kaplan_meier]{run_kaplan_meier()}}}
+\item{km_result}{List returned by [run_kaplan_meier()]}
 
 \item{times}{Numeric vector of time points (in days) at which to
-evaluate the risk table. Defaults to \code{c(0, 365, 730, 1095, 1460)}
+evaluate the risk table. Defaults to `c(0, 365, 730, 1095, 1460)`
 (0-4 years).}
 }
 \value{
@@ -19,11 +19,11 @@ Data frame with columns: time, n_risk, n_event, n_censor,
 }
 \description{
 Generates a number-at-risk table at fixed time points from a
-\code{\link[=run_kaplan_meier]{run_kaplan_meier()}} result. Useful for pre-computing Shiny display
+[run_kaplan_meier()] result. Useful for pre-computing Shiny display
 data and static API endpoints.
 }
 \seealso{
-Other survival:
+Other survival: 
 \code{\link{plot_forest}()},
 \code{\link{plot_km}()},
 \code{\link{prepare_survival_data}()},

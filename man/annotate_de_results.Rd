@@ -17,3 +17,14 @@ DE results with gene_symbol column prepended
 \description{
 Add gene symbol column to DE results table
 }
+\seealso{
+Other pathway: 
+\code{\link{annotate_genes}()},
+\code{\link{plot_enrichment_barplot}()},
+\code{\link{plot_enrichment_dotplot}()},
+\code{\link{plot_gsea_running_score}()},
+\code{\link{run_gsea}()},
+\code{\link{run_ora}()},
+\code{\link{run_pathway_analysis}()}
+}
+\concept{pathway}

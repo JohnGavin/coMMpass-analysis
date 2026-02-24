@@ -21,3 +21,8 @@ scientific context, calculation methods, and usage notes.
 docs <- get_variable_docs("age_at_diagnosis")
 cat(docs$usage_notes)
 }
+\seealso{
+Other data-dictionary: 
+\code{\link{get_commpass_data_dictionary}()}
+}
+\concept{data-dictionary}
