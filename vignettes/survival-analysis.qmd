@@ -1,9 +1,9 @@
 ---
 title: "05. Survival Analysis"
-output: rmarkdown::html_vignette
+format: html
 vignette: >
   %\VignetteIndexEntry{05. Survival Analysis}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 ---
 

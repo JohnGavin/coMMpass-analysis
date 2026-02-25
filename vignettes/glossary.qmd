@@ -1,9 +1,9 @@
 ---
 title: "06. Glossary"
-output: rmarkdown::html_vignette
+format: html
 vignette: >
   %\VignetteIndexEntry{06. Glossary}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 ---
 

@@ -403,3 +403,59 @@ test_that("generate_api_endpoint: data frame serialized correctly", {
   expect_equal(parsed$metadata$n_rows, 3)
   expect_equal(nrow(parsed$data), 3)
 })
+
+# ================================================================
+# Snapshot infrastructure adversarial tests
+# ================================================================
+
+test_that("all committed target objects are valid RDS files", {
+  obj_dir <- here::here("_targets/objects")
+  skip_if(!dir.exists(obj_dir), "_targets/objects/ not found")
+  files <- list.files(obj_dir, full.names = TRUE)
+  skip_if(length(files) == 0, "No target objects found")
+  for (f in files) {
+    obj <- tryCatch(readRDS(f), error = function(e) e)
+    expect_false(
+      inherits(obj, "error"),
+      label = paste("RDS read failed for", basename(f))
+    )
+  }
+})
+
+test_that("target objects are not corrupted (class checks)", {
+  obj_dir <- here::here("_targets/objects")
+  skip_if(!dir.exists(obj_dir), "_targets/objects/ not found")
+  # Key objects must have expected classes
+  expected <- list(
+    clinical_data_clean = "data.frame",
+    survival_data = "data.frame",
+    deseq2_results = "list",
+    edger_results = "list",
+    limma_results = "list",
+    gsea_results = "list",
+    cox_model = "list",
+    km_analysis = "list"
+  )
+  for (nm in names(expected)) {
+    path <- file.path(obj_dir, nm)
+    skip_if(!file.exists(path), paste0(nm, " not found"))
+    obj <- readRDS(path)
+    expect_true(
+      inherits(obj, expected[[nm]]),
+      label = paste(nm, "should be", expected[[nm]])
+    )
+  }
+})
+
+test_that("target objects are stable on re-read", {
+  obj_dir <- here::here("_targets/objects")
+  skip_if(!dir.exists(obj_dir), "_targets/objects/ not found")
+  targets_to_check <- c("clinical_data_clean", "survival_data", "config")
+  for (nm in targets_to_check) {
+    path <- file.path(obj_dir, nm)
+    skip_if(!file.exists(path), paste0(nm, " not found"))
+    obj1 <- readRDS(path)
+    obj2 <- readRDS(path)
+    expect_identical(obj1, obj2, label = paste(nm, "re-read stability"))
+  }
+})

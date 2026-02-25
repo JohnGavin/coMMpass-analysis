@@ -1,0 +1,89 @@
+---
+title: "Pipeline DAG"
+format: html
+vignette: >
+  %\VignetteIndexEntry{Pipeline DAG}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  collapse = TRUE,
+  comment = "#>"
+)
+library(targets)
+
+# Discover target store
+store_candidates <- c(
+  here::here("_targets"),
+  file.path(Sys.getenv("TARGETS_STORE", unset = "_targets")),
+  "_targets"
+)
+for (store in store_candidates) {
+  if (dir.exists(store)) {
+    Sys.setenv(TAR_STORE = store)
+    break
+  }
+}
+
+safe_tar_read <- function(name, store = Sys.getenv("TAR_STORE", "_targets")) {
+  tryCatch(
+    targets::tar_read_raw(name, store = store),
+    error = function(e) NULL
+  )
+}
+```
+
+## Pipeline Overview
+
+The CoMMpass analysis pipeline is organized into isolated layers.
+Each layer corresponds to a functional area of the analysis, with
+explicit allowed dependencies between layers.
+
+| Layer | Description |
+|---|---|
+| data-acquisition | Download RNA-seq and clinical data from GDC |
+| data-cleaning | Standardize and integrate datasets |
+| cytogenetics | Extract FISH markers and classify risk |
+| quality-control | Sample QC, filtering, normalization |
+| differential-expression | DESeq2, edgeR, limma-voom analysis |
+| survival | Kaplan-Meier, Cox PH regression |
+| pathway | GSEA, ORA, gene annotation |
+| eda | Exploratory summaries |
+| storage | DuckDB/parquet querying |
+| api | Plumber API for programmatic access |
+| documentation | Vignette pre-computed outputs |
+| infrastructure | Nix sync, pkgctx, DAG validation |
+
+## DAG Validation
+
+```{r dag-validation}
+safe_tar_read("dag_layer_validation")
+```
+
+## Target Network
+
+```{r pipeline-visnetwork}
+safe_tar_read("vig_pipeline_dag")
+```
+
+## Interactive DAG (live)
+
+The interactive DAG below is rendered directly from the pipeline metadata
+via `tar_visnetwork()`. This is the ONE exception to the zero-computation
+rule: it produces an htmlwidget that cannot be serialized as a target.
+
+```{r visnetwork-live, fig.height=8}
+#| eval: !expr 'dir.exists(Sys.getenv("TAR_STORE", "_targets"))'
+tryCatch(
+  targets::tar_visnetwork(targets_only = TRUE, label = "time"),
+  error = function(e) cat("*Pipeline store not available for live DAG.*\n")
+)
+```
+
+For the full interactive DAG explorer with filtering, coloring, and
+selection, see `inst/shinylive/pipeline_dag.qmd`.

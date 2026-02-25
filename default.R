@@ -31,7 +31,8 @@ system_pkgs <- c(
   "locale", "direnv", "jq", "curlMinimal", "nano",
   "duckdb", "tree", "bc", "htop", "btop", "cacert",
   "gh", "git", "gnupg", "toybox", "gettext", "pandoc",
-  "less", "unzip", "libiconv", "gcc", "libgcc", "clang"
+  "less", "unzip", "libiconv", "gcc", "libgcc", "clang",
+  "quarto"
 ) |> unique() |> sort()
 
 shell_hook <- "export R_MAKEVARS_USER=/dev/null\nprintf 'CoMMpass environment ready.\n'"

@@ -1,0 +1,2081 @@
+{
+  "nodes": [
+    {
+      "name": "api_clinical",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 5.47,
+      "bytes": 242
+    },
+    {
+      "name": "api_cytogenetics",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.008,
+      "bytes": 252
+    },
+    {
+      "name": "api_data_dict",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.015,
+      "bytes": 2080
+    },
+    {
+      "name": "api_de_results",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.02,
+      "bytes": 251
+    },
+    {
+      "name": "api_index",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 5.616,
+      "bytes": 670
+    },
+    {
+      "name": "api_pathways",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 5.471,
+      "bytes": 244
+    },
+    {
+      "name": "api_survival",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.005,
+      "bytes": 244
+    },
+    {
+      "name": "clinical_data",
+      "type": "stem",
+      "status": "dispatched"
+    },
+    {
+      "name": "clinical_data_clean",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "code_api_curl",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0,
+      "bytes": 227
+    },
+    {
+      "name": "code_api_python",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 5.451,
+      "bytes": 300
+    },
+    {
+      "name": "code_api_r",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0,
+      "bytes": 291
+    },
+    {
+      "name": "code_dd_explore_dict",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 5.452,
+      "bytes": 221
+    },
+    {
+      "name": "code_dd_load_data",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0,
+      "bytes": 366
+    },
+    {
+      "name": "code_eda_aggregation",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 5.447,
+      "bytes": 331
+    },
+    {
+      "name": "code_eda_simple_query",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.001,
+      "bytes": 294
+    },
+    {
+      "name": "code_parsed_api_curl",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0,
+      "bytes": 287
+    },
+    {
+      "name": "code_parsed_api_python",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0,
+      "bytes": 357
+    },
+    {
+      "name": "code_parsed_api_r",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.001,
+      "bytes": 349
+    },
+    {
+      "name": "code_parsed_dd_explore_dict",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.001,
+      "bytes": 280
+    },
+    {
+      "name": "code_parsed_dd_load_data",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.001,
+      "bytes": 432
+    },
+    {
+      "name": "code_parsed_eda_aggregation",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.002,
+      "bytes": 392
+    },
+    {
+      "name": "code_parsed_eda_simple_query",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.001,
+      "bytes": 355
+    },
+    {
+      "name": "code_parsed_readme_quick_start",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0,
+      "bytes": 259
+    },
+    {
+      "name": "code_readme_quick_start",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 5.274,
+      "bytes": 200
+    },
+    {
+      "name": "config",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0,
+      "bytes": 168
+    },
+    {
+      "name": "consensus_de_genes",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "cox_basic",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "cox_full",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "cyto_cooccurrence",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "cyto_frequency_summary",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "cyto_viz_data",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "cytogenetic_data",
+      "type": "stem",
+      "status": "errored",
+      "seconds": 0.037,
+      "bytes": 0
+    },
+    {
+      "name": "dag_layer_validation",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 6.778,
+      "bytes": 48
+    },
+    {
+      "name": "data_quality_report",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "de_method_summary",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "de_report",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "de_results_annotated",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "deseq2_paired_results",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "deseq2_results",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "doc_examples_validation",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0,
+      "bytes": 252
+    },
+    {
+      "name": "eda_biospecimen_summary",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "eda_clinical_summary",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "eda_duckdb_demo",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "eda_integration_summary",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "eda_iss_summary",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "eda_missing_summary",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "eda_qc_summary",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "eda_rnaseq_summary",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "edger_results",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "enrichment_barplot_data",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "enrichment_dotplot_data",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "expression_data_clean",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "filtered_data",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "gene_annotation",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "glossary_table",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0,
+      "bytes": 1542
+    },
+    {
+      "name": "gsea_hallmark",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "gsea_kegg",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "integrated_data",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "km_by_iss",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "km_by_markers",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "km_by_risk",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "km_overall",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "limma_results",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "ma_plot_data",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "nix_desc_deps",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "nix_desc_file",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0,
+      "bytes": 1159
+    },
+    {
+      "name": "nix_sync_check",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "normalized_data",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "ora_hallmark",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "pca_data",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "pkgctx_deps",
+      "type": "stem",
+      "status": "dispatched"
+    },
+    {
+      "name": "pkgctx_self",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.245,
+      "bytes": 20357
+    },
+    {
+      "name": "qc_metrics",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "raw_rnaseq",
+      "type": "stem",
+      "status": "dispatched"
+    },
+    {
+      "name": "readme_project_tree",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 5.177,
+      "bytes": 370
+    },
+    {
+      "name": "save_api_files",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.028,
+      "bytes": 160
+    },
+    {
+      "name": "shiny_cox_os_age_risk",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_cox_os_age_stage",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_cox_os_full",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_km_os_by_response",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_km_pfs_by_iss",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_km_pfs_by_risk",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_km_pfs_overall",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_pfs_data",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_risk_os_by_iss",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_risk_os_by_response",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_risk_os_by_risk",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_risk_os_overall",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_risk_pfs_by_iss",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_risk_pfs_by_risk",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_risk_pfs_overall",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "shiny_survival_index",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 5.002,
+      "bytes": 326
+    },
+    {
+      "name": "summary_report",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "survival_data",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "top_de_heatmap_data",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_age_histogram",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_annotated_de_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_api_endpoints_dt",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.112,
+      "bytes": 3460
+    },
+    {
+      "name": "vig_biospecimen_overview_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_clinical_column_info",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_clinical_demographics_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_config_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_consensus_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_count_distribution_plot",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_cox_basic_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_cox_comparison",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_cox_full_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_cyto_cooccurrence_heatmap",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_cyto_cooccurrence_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_cyto_frequency_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_cyto_oncoprint",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_dd_biospecimen_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_dd_biospecimen_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_dd_clinical_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_dd_clinical_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_dd_column_mappings",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.094,
+      "bytes": 3329
+    },
+    {
+      "name": "vig_dd_dictionary_table",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.025,
+      "bytes": 5586
+    },
+    {
+      "name": "vig_dd_rnaseq_biotype_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_dd_rnaseq_sample_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_dd_rnaseq_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_de_method_barplot",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_de_method_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_duckdb_demo_agg",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_duckdb_demo_simple",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_filtered_summary",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_forest_plot",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_gender_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_genes_detected_hist",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_git_info",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 0.294,
+      "bytes": 291
+    },
+    {
+      "name": "vig_gsea_dotplot",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_heatmap_plot",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_integration_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_iss_age_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_iss_barplot",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_iss_distribution_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_iss_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_km_iss",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_km_markers",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_km_overall",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_km_overall_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_km_risk",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_library_size_boxplot",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_ma_plot",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_missing_data_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_missing_data_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_ora_barplot",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_paired_de_plot",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_paired_de_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_pca_plot",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_ph_test_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_pipeline_dag",
+      "type": "stem",
+      "status": "uptodate",
+      "seconds": 2.407,
+      "bytes": 20110
+    },
+    {
+      "name": "vig_qc_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_qc_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_race_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_rnaseq_quality_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_rnaseq_sample_stats",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_rnaseq_summary_text",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_sample_type_barplot",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_samples_per_patient_hist",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_survival_endpoints",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_vital_table",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vig_volcano_plot",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "volcano_plot_data",
+      "type": "stem",
+      "status": "outdated"
+    },
+    {
+      "name": "vst_counts",
+      "type": "stem",
+      "status": "outdated"
+    }
+  ],
+  "edges": [
+    {
+      "from": "api_clinical",
+      "to": "save_api_files"
+    },
+    {
+      "from": "api_cytogenetics",
+      "to": "save_api_files"
+    },
+    {
+      "from": "api_data_dict",
+      "to": "save_api_files"
+    },
+    {
+      "from": "api_de_results",
+      "to": "save_api_files"
+    },
+    {
+      "from": "api_index",
+      "to": "save_api_files"
+    },
+    {
+      "from": "api_pathways",
+      "to": "save_api_files"
+    },
+    {
+      "from": "api_survival",
+      "to": "save_api_files"
+    },
+    {
+      "from": "clinical_data",
+      "to": "eda_clinical_summary"
+    },
+    {
+      "from": "clinical_data",
+      "to": "vig_dd_biospecimen_text"
+    },
+    {
+      "from": "clinical_data",
+      "to": "eda_missing_summary"
+    },
+    {
+      "from": "clinical_data",
+      "to": "eda_iss_summary"
+    },
+    {
+      "from": "clinical_data",
+      "to": "vig_dd_clinical_text"
+    },
+    {
+      "from": "clinical_data",
+      "to": "vig_dd_clinical_table"
+    },
+    {
+      "from": "clinical_data",
+      "to": "eda_biospecimen_summary"
+    },
+    {
+      "from": "clinical_data",
+      "to": "vig_dd_biospecimen_table"
+    },
+    {
+      "from": "clinical_data",
+      "to": "eda_integration_summary"
+    },
+    {
+      "from": "clinical_data",
+      "to": "vig_clinical_column_info"
+    },
+    {
+      "from": "clinical_data",
+      "to": "eda_duckdb_demo"
+    },
+    {
+      "from": "clinical_data",
+      "to": "clinical_data_clean"
+    },
+    {
+      "from": "clinical_data_clean",
+      "to": "deseq2_paired_results"
+    },
+    {
+      "from": "clinical_data_clean",
+      "to": "survival_data"
+    },
+    {
+      "from": "clinical_data_clean",
+      "to": "integrated_data"
+    },
+    {
+      "from": "clinical_data_clean",
+      "to": "edger_results"
+    },
+    {
+      "from": "clinical_data_clean",
+      "to": "limma_results"
+    },
+    {
+      "from": "clinical_data_clean",
+      "to": "deseq2_results"
+    },
+    {
+      "from": "clinical_data_clean",
+      "to": "data_quality_report"
+    },
+    {
+      "from": "code_api_curl",
+      "to": "code_parsed_api_curl"
+    },
+    {
+      "from": "code_api_python",
+      "to": "code_parsed_api_python"
+    },
+    {
+      "from": "code_api_r",
+      "to": "code_parsed_api_r"
+    },
+    {
+      "from": "code_dd_explore_dict",
+      "to": "code_parsed_dd_explore_dict"
+    },
+    {
+      "from": "code_dd_load_data",
+      "to": "code_parsed_dd_load_data"
+    },
+    {
+      "from": "code_eda_aggregation",
+      "to": "code_parsed_eda_aggregation"
+    },
+    {
+      "from": "code_eda_simple_query",
+      "to": "code_parsed_eda_simple_query"
+    },
+    {
+      "from": "code_parsed_api_curl",
+      "to": "doc_examples_validation"
+    },
+    {
+      "from": "code_parsed_api_python",
+      "to": "doc_examples_validation"
+    },
+    {
+      "from": "code_parsed_api_r",
+      "to": "doc_examples_validation"
+    },
+    {
+      "from": "code_parsed_dd_explore_dict",
+      "to": "doc_examples_validation"
+    },
+    {
+      "from": "code_parsed_dd_load_data",
+      "to": "doc_examples_validation"
+    },
+    {
+      "from": "code_parsed_eda_aggregation",
+      "to": "doc_examples_validation"
+    },
+    {
+      "from": "code_parsed_eda_simple_query",
+      "to": "doc_examples_validation"
+    },
+    {
+      "from": "code_parsed_readme_quick_start",
+      "to": "doc_examples_validation"
+    },
+    {
+      "from": "code_readme_quick_start",
+      "to": "code_parsed_readme_quick_start"
+    },
+    {
+      "from": "config",
+      "to": "cytogenetic_data"
+    },
+    {
+      "from": "config",
+      "to": "raw_rnaseq"
+    },
+    {
+      "from": "config",
+      "to": "clinical_data"
+    },
+    {
+      "from": "config",
+      "to": "de_report"
+    },
+    {
+      "from": "config",
+      "to": "vig_config_text"
+    },
+    {
+      "from": "config",
+      "to": "summary_report"
+    },
+    {
+      "from": "consensus_de_genes",
+      "to": "de_report"
+    },
+    {
+      "from": "consensus_de_genes",
+      "to": "summary_report"
+    },
+    {
+      "from": "consensus_de_genes",
+      "to": "ora_hallmark"
+    },
+    {
+      "from": "consensus_de_genes",
+      "to": "vig_consensus_text"
+    },
+    {
+      "from": "cox_basic",
+      "to": "vig_cox_comparison"
+    },
+    {
+      "from": "cox_basic",
+      "to": "vig_ph_test_table"
+    },
+    {
+      "from": "cox_basic",
+      "to": "vig_cox_basic_table"
+    },
+    {
+      "from": "cox_basic",
+      "to": "summary_report"
+    },
+    {
+      "from": "cox_basic",
+      "to": "vig_forest_plot"
+    },
+    {
+      "from": "cox_full",
+      "to": "vig_cox_comparison"
+    },
+    {
+      "from": "cox_full",
+      "to": "vig_ph_test_table"
+    },
+    {
+      "from": "cox_full",
+      "to": "vig_cox_full_table"
+    },
+    {
+      "from": "cox_full",
+      "to": "vig_forest_plot"
+    },
+    {
+      "from": "cyto_cooccurrence",
+      "to": "vig_cyto_cooccurrence_heatmap"
+    },
+    {
+      "from": "cyto_cooccurrence",
+      "to": "vig_cyto_cooccurrence_table"
+    },
+    {
+      "from": "cyto_frequency_summary",
+      "to": "vig_cyto_frequency_table"
+    },
+    {
+      "from": "cyto_viz_data",
+      "to": "cyto_cooccurrence"
+    },
+    {
+      "from": "cyto_viz_data",
+      "to": "vig_cyto_oncoprint"
+    },
+    {
+      "from": "cyto_viz_data",
+      "to": "cyto_frequency_summary"
+    },
+    {
+      "from": "cytogenetic_data",
+      "to": "survival_data"
+    },
+    {
+      "from": "cytogenetic_data",
+      "to": "cyto_viz_data"
+    },
+    {
+      "from": "de_method_summary",
+      "to": "vig_de_method_barplot"
+    },
+    {
+      "from": "de_method_summary",
+      "to": "vig_de_method_table"
+    },
+    {
+      "from": "de_results_annotated",
+      "to": "vig_annotated_de_table"
+    },
+    {
+      "from": "deseq2_paired_results",
+      "to": "vig_paired_de_plot"
+    },
+    {
+      "from": "deseq2_paired_results",
+      "to": "vig_paired_de_text"
+    },
+    {
+      "from": "deseq2_results",
+      "to": "de_method_summary"
+    },
+    {
+      "from": "deseq2_results",
+      "to": "gene_annotation"
+    },
+    {
+      "from": "deseq2_results",
+      "to": "consensus_de_genes"
+    },
+    {
+      "from": "deseq2_results",
+      "to": "gsea_kegg"
+    },
+    {
+      "from": "deseq2_results",
+      "to": "gsea_hallmark"
+    },
+    {
+      "from": "deseq2_results",
+      "to": "de_results_annotated"
+    },
+    {
+      "from": "deseq2_results",
+      "to": "top_de_heatmap_data"
+    },
+    {
+      "from": "deseq2_results",
+      "to": "volcano_plot_data"
+    },
+    {
+      "from": "deseq2_results",
+      "to": "ma_plot_data"
+    },
+    {
+      "from": "deseq2_results",
+      "to": "ora_hallmark"
+    },
+    {
+      "from": "eda_biospecimen_summary",
+      "to": "vig_biospecimen_overview_text"
+    },
+    {
+      "from": "eda_biospecimen_summary",
+      "to": "vig_sample_type_barplot"
+    },
+    {
+      "from": "eda_biospecimen_summary",
+      "to": "vig_samples_per_patient_hist"
+    },
+    {
+      "from": "eda_clinical_summary",
+      "to": "vig_race_table"
+    },
+    {
+      "from": "eda_clinical_summary",
+      "to": "vig_vital_table"
+    },
+    {
+      "from": "eda_clinical_summary",
+      "to": "vig_clinical_demographics_text"
+    },
+    {
+      "from": "eda_clinical_summary",
+      "to": "vig_survival_endpoints"
+    },
+    {
+      "from": "eda_clinical_summary",
+      "to": "vig_gender_table"
+    },
+    {
+      "from": "eda_clinical_summary",
+      "to": "vig_age_histogram"
+    },
+    {
+      "from": "eda_duckdb_demo",
+      "to": "vig_duckdb_demo_agg"
+    },
+    {
+      "from": "eda_duckdb_demo",
+      "to": "vig_duckdb_demo_simple"
+    },
+    {
+      "from": "eda_integration_summary",
+      "to": "vig_integration_text"
+    },
+    {
+      "from": "eda_iss_summary",
+      "to": "vig_iss_distribution_text"
+    },
+    {
+      "from": "eda_iss_summary",
+      "to": "vig_iss_age_table"
+    },
+    {
+      "from": "eda_iss_summary",
+      "to": "vig_iss_barplot"
+    },
+    {
+      "from": "eda_iss_summary",
+      "to": "vig_iss_table"
+    },
+    {
+      "from": "eda_missing_summary",
+      "to": "vig_missing_data_text"
+    },
+    {
+      "from": "eda_missing_summary",
+      "to": "vig_missing_data_table"
+    },
+    {
+      "from": "eda_qc_summary",
+      "to": "vig_qc_text"
+    },
+    {
+      "from": "eda_qc_summary",
+      "to": "vig_qc_table"
+    },
+    {
+      "from": "eda_rnaseq_summary",
+      "to": "vig_library_size_boxplot"
+    },
+    {
+      "from": "eda_rnaseq_summary",
+      "to": "vig_genes_detected_hist"
+    },
+    {
+      "from": "eda_rnaseq_summary",
+      "to": "vig_rnaseq_summary_text"
+    },
+    {
+      "from": "eda_rnaseq_summary",
+      "to": "vig_rnaseq_quality_text"
+    },
+    {
+      "from": "edger_results",
+      "to": "de_method_summary"
+    },
+    {
+      "from": "edger_results",
+      "to": "consensus_de_genes"
+    },
+    {
+      "from": "enrichment_barplot_data",
+      "to": "vig_ora_barplot"
+    },
+    {
+      "from": "enrichment_dotplot_data",
+      "to": "vig_gsea_dotplot"
+    },
+    {
+      "from": "expression_data_clean",
+      "to": "integrated_data"
+    },
+    {
+      "from": "expression_data_clean",
+      "to": "data_quality_report"
+    },
+    {
+      "from": "filtered_data",
+      "to": "vst_counts"
+    },
+    {
+      "from": "filtered_data",
+      "to": "vig_filtered_summary"
+    },
+    {
+      "from": "filtered_data",
+      "to": "normalized_data"
+    },
+    {
+      "from": "gene_annotation",
+      "to": "de_results_annotated"
+    },
+    {
+      "from": "gsea_hallmark",
+      "to": "enrichment_dotplot_data"
+    },
+    {
+      "from": "integrated_data",
+      "to": "data_quality_report"
+    },
+    {
+      "from": "km_by_iss",
+      "to": "shiny_risk_os_by_iss"
+    },
+    {
+      "from": "km_by_iss",
+      "to": "vig_km_iss"
+    },
+    {
+      "from": "km_by_markers",
+      "to": "vig_km_markers"
+    },
+    {
+      "from": "km_by_risk",
+      "to": "vig_km_risk"
+    },
+    {
+      "from": "km_by_risk",
+      "to": "shiny_risk_os_by_risk"
+    },
+    {
+      "from": "km_overall",
+      "to": "vig_km_overall"
+    },
+    {
+      "from": "km_overall",
+      "to": "shiny_risk_os_overall"
+    },
+    {
+      "from": "km_overall",
+      "to": "vig_km_overall_text"
+    },
+    {
+      "from": "km_overall",
+      "to": "summary_report"
+    },
+    {
+      "from": "limma_results",
+      "to": "de_method_summary"
+    },
+    {
+      "from": "limma_results",
+      "to": "consensus_de_genes"
+    },
+    {
+      "from": "ma_plot_data",
+      "to": "vig_ma_plot"
+    },
+    {
+      "from": "nix_desc_deps",
+      "to": "nix_sync_check"
+    },
+    {
+      "from": "nix_desc_file",
+      "to": "nix_desc_deps"
+    },
+    {
+      "from": "normalized_data",
+      "to": "deseq2_paired_results"
+    },
+    {
+      "from": "normalized_data",
+      "to": "edger_results"
+    },
+    {
+      "from": "normalized_data",
+      "to": "limma_results"
+    },
+    {
+      "from": "normalized_data",
+      "to": "deseq2_results"
+    },
+    {
+      "from": "ora_hallmark",
+      "to": "summary_report"
+    },
+    {
+      "from": "ora_hallmark",
+      "to": "enrichment_barplot_data"
+    },
+    {
+      "from": "pca_data",
+      "to": "vig_pca_plot"
+    },
+    {
+      "from": "qc_metrics",
+      "to": "eda_qc_summary"
+    },
+    {
+      "from": "qc_metrics",
+      "to": "summary_report"
+    },
+    {
+      "from": "raw_rnaseq",
+      "to": "vig_dd_rnaseq_biotype_table"
+    },
+    {
+      "from": "raw_rnaseq",
+      "to": "eda_rnaseq_summary"
+    },
+    {
+      "from": "raw_rnaseq",
+      "to": "vig_dd_rnaseq_sample_table"
+    },
+    {
+      "from": "raw_rnaseq",
+      "to": "expression_data_clean"
+    },
+    {
+      "from": "raw_rnaseq",
+      "to": "vig_rnaseq_sample_stats"
+    },
+    {
+      "from": "raw_rnaseq",
+      "to": "vig_dd_rnaseq_text"
+    },
+    {
+      "from": "raw_rnaseq",
+      "to": "filtered_data"
+    },
+    {
+      "from": "raw_rnaseq",
+      "to": "vig_filtered_summary"
+    },
+    {
+      "from": "raw_rnaseq",
+      "to": "qc_metrics"
+    },
+    {
+      "from": "raw_rnaseq",
+      "to": "vig_count_distribution_plot"
+    },
+    {
+      "from": "shiny_km_os_by_response",
+      "to": "shiny_risk_os_by_response"
+    },
+    {
+      "from": "shiny_km_pfs_by_iss",
+      "to": "shiny_risk_pfs_by_iss"
+    },
+    {
+      "from": "shiny_km_pfs_by_risk",
+      "to": "shiny_risk_pfs_by_risk"
+    },
+    {
+      "from": "shiny_km_pfs_overall",
+      "to": "shiny_risk_pfs_overall"
+    },
+    {
+      "from": "shiny_pfs_data",
+      "to": "shiny_km_pfs_by_iss"
+    },
+    {
+      "from": "shiny_pfs_data",
+      "to": "shiny_km_pfs_by_risk"
+    },
+    {
+      "from": "shiny_pfs_data",
+      "to": "shiny_km_pfs_overall"
+    },
+    {
+      "from": "survival_data",
+      "to": "shiny_km_os_by_response"
+    },
+    {
+      "from": "survival_data",
+      "to": "km_by_markers"
+    },
+    {
+      "from": "survival_data",
+      "to": "shiny_cox_os_age_stage"
+    },
+    {
+      "from": "survival_data",
+      "to": "km_by_iss"
+    },
+    {
+      "from": "survival_data",
+      "to": "cox_basic"
+    },
+    {
+      "from": "survival_data",
+      "to": "shiny_pfs_data"
+    },
+    {
+      "from": "survival_data",
+      "to": "shiny_cox_os_age_risk"
+    },
+    {
+      "from": "survival_data",
+      "to": "km_by_risk"
+    },
+    {
+      "from": "survival_data",
+      "to": "km_overall"
+    },
+    {
+      "from": "survival_data",
+      "to": "shiny_cox_os_full"
+    },
+    {
+      "from": "survival_data",
+      "to": "cox_full"
+    },
+    {
+      "from": "top_de_heatmap_data",
+      "to": "vig_heatmap_plot"
+    },
+    {
+      "from": "volcano_plot_data",
+      "to": "vig_volcano_plot"
+    },
+    {
+      "from": "vst_counts",
+      "to": "top_de_heatmap_data"
+    },
+    {
+      "from": "vst_counts",
+      "to": "pca_data"
+    }
+  ],
+  "meta": [
+    {
+      "name": "code_dd_explore_dict",
+      "seconds": 5.452,
+      "bytes": 221
+    },
+    {
+      "name": "code_eda_aggregation",
+      "seconds": 5.447,
+      "bytes": 331
+    },
+    {
+      "name": "api_pathways",
+      "seconds": 5.471,
+      "bytes": 244
+    },
+    {
+      "name": "api_clinical",
+      "seconds": 5.47,
+      "bytes": 242
+    },
+    {
+      "name": "code_parsed_dd_explore_dict",
+      "seconds": 0.001,
+      "bytes": 280
+    },
+    {
+      "name": "api_data_dict",
+      "seconds": 0.015,
+      "bytes": 2080
+    },
+    {
+      "name": "code_parsed_eda_aggregation",
+      "seconds": 0.002,
+      "bytes": 392
+    },
+    {
+      "name": "api_cytogenetics",
+      "seconds": 0.008,
+      "bytes": 252
+    },
+    {
+      "name": "api_de_results",
+      "seconds": 0.02,
+      "bytes": 251
+    },
+    {
+      "name": "api_survival",
+      "seconds": 0.005,
+      "bytes": 244
+    },
+    {
+      "name": "config",
+      "seconds": 0,
+      "bytes": 168
+    },
+    {
+      "name": "vig_pipeline_dag",
+      "seconds": 2.407,
+      "bytes": 20110
+    },
+    {
+      "name": "api_index",
+      "seconds": 5.616,
+      "bytes": 670
+    },
+    {
+      "name": "save_api_files",
+      "seconds": 0.028,
+      "bytes": 160
+    },
+    {
+      "name": "vig_api_endpoints_dt",
+      "seconds": 0.112,
+      "bytes": 3460
+    },
+    {
+      "name": "code_readme_quick_start",
+      "seconds": 5.274,
+      "bytes": 200
+    },
+    {
+      "name": "code_api_python",
+      "seconds": 5.451,
+      "bytes": 300
+    },
+    {
+      "name": "vig_git_info",
+      "seconds": 0.294,
+      "bytes": 291
+    },
+    {
+      "name": "code_parsed_readme_quick_start",
+      "seconds": 0,
+      "bytes": 259
+    },
+    {
+      "name": "code_parsed_api_python",
+      "seconds": 0,
+      "bytes": 357
+    },
+    {
+      "name": "code_api_curl",
+      "seconds": 0,
+      "bytes": 227
+    },
+    {
+      "name": "code_eda_simple_query",
+      "seconds": 0.001,
+      "bytes": 294
+    },
+    {
+      "name": "glossary_table",
+      "seconds": 0,
+      "bytes": 1542
+    },
+    {
+      "name": "code_parsed_api_curl",
+      "seconds": 0,
+      "bytes": 287
+    },
+    {
+      "name": "code_parsed_eda_simple_query",
+      "seconds": 0.001,
+      "bytes": 355
+    },
+    {
+      "name": "nix_desc_file",
+      "seconds": 0,
+      "bytes": 1159
+    },
+    {
+      "name": "api_get_survival"
+    },
+    {
+      "name": "get_msigdb_gene_sets"
+    },
+    {
+      "name": "parse_cytogenetic_status"
+    },
+    {
+      "name": "annotate_de_results"
+    },
+    {
+      "name": "plot_enrichment_dotplot"
+    },
+    {
+      "name": "classify_cytogenetic_risk"
+    },
+    {
+      "name": "calculate_qc_metrics"
+    },
+    {
+      "name": "parse_commpass_barcodes"
+    },
+    {
+      "name": "summarize_cytogenetics"
+    },
+    {
+      "name": ".__global__"
+    },
+    {
+      "name": "get_commpass_clinical"
+    },
+    {
+      "name": "summarize_data"
+    },
+    {
+      "name": "extract_counts"
+    },
+    {
+      "name": "create_summary_table"
+    },
+    {
+      "name": "build_gene_ranks"
+    },
+    {
+      "name": "list_s3_commpass"
+    },
+    {
+      "name": "find_expr_col"
+    },
+    {
+      "name": "resolve_parquet_path"
+    },
+    {
+      "name": "run_vst"
+    },
+    {
+      "name": "find_lfc_col"
+    },
+    {
+      "name": "plan_file"
+    },
+    {
+      "name": "placeholder_results"
+    },
+    {
+      "name": "prepare_coldata"
+    },
+    {
+      "name": "plot_km"
+    },
+    {
+      "name": "find_padj_col"
+    },
+    {
+      "name": "format_with_commas"
+    },
+    {
+      "name": "plan_files"
+    },
+    {
+      "name": "download_clinical_data"
+    },
+    {
+      "name": "extract_risk_table"
+    },
+    {
+      "name": "file"
+    },
+    {
+      "name": "annotate_via_orgdb"
+    },
+    {
+      "name": "integrate_clinical_expression"
+    },
+    {
+      "name": "generate_api_index"
+    },
+    {
+      "name": "generate_api_endpoint"
+    },
+    {
+      "name": "format_file_size"
+    },
+    {
+      "name": "setup_logging"
+    },
+    {
+      "name": "annotate_via_msigdbr"
+    },
+    {
+      "name": "save_timestamped"
+    },
+    {
+      "name": "plot_pca"
+    },
+    {
+      "name": "download_s3_subset"
+    },
+    {
+      "name": "check_dependencies"
+    },
+    {
+      "name": "install.packages"
+    },
+    {
+      "name": "plot_cytogenetic_oncoprint"
+    },
+    {
+      "name": "plot_enrichment_barplot"
+    },
+    {
+      "name": "parse_code_example"
+    },
+    {
+      "name": "run_kaplan_meier"
+    },
+    {
+      "name": "plot_cooccurrence_heatmap"
+    },
+    {
+      "name": "find_consensus_genes"
+    },
+    {
+      "name": "api_get_clinical"
+    },
+    {
+      "name": "create_project_dirs"
+    },
+    {
+      "name": "render_de_report"
+    },
+    {
+      "name": "download_aws_data"
+    },
+    {
+      "name": "compute_pca"
+    },
+    {
+      "name": "prepare_survival_data"
+    },
+    {
+      "name": "generate_summary_report"
+    },
+    {
+      "name": "api_get_pathways"
+    },
+    {
+      "name": "get_description_deps"
+    },
+    {
+      "name": "api_list_datasets"
+    },
+    {
+      "name": "query_commpass_rna"
+    },
+    {
+      "name": "run_pkgctx"
+    },
+    {
+      "name": "clean_clinical_data"
+    },
+    {
+      "name": "save_rnaseq_parquet"
+    },
+    {
+      "name": "api_get_de_results"
+    },
+    {
+      "name": "get_commpass_data_dictionary"
+    },
+    {
+      "name": "clean_expression_data"
+    },
+    {
+      "name": "remove.packages"
+    },
+    {
+      "name": "update.packages"
+    },
+    {
+      "name": "normalize_rnaseq"
+    },
+    {
+      "name": "plot_forest"
+    },
+    {
+      "name": "api_serve"
+    },
+    {
+      "name": "calculate_cooccurrence"
+    },
+    {
+      "name": "run_cox_regression"
+    },
+    {
+      "name": "run_ora"
+    },
+    {
+      "name": "plot_gsea_running_score"
+    },
+    {
+      "name": "extract_cytogenetic_data"
+    },
+    {
+      "name": "filter_low_quality"
+    },
+    {
+      "name": "build_paired_coldata"
+    },
+    {
+      "name": "run_gsea"
+    },
+    {
+      "name": "get_commpass_tbl"
+    },
+    {
+      "name": "query_commpass_parquet"
+    },
+    {
+      "name": "run_limma"
+    },
+    {
+      "name": "run_edger"
+    },
+    {
+      "name": "plot_heatmap_de"
+    },
+    {
+      "name": "summarize_de_methods"
+    },
+    {
+      "name": "plot_ma"
+    },
+    {
+      "name": "plot_volcano"
+    },
+    {
+      "name": "annotate_genes"
+    },
+    {
+      "name": "run_km_by_markers"
+    },
+    {
+      "name": "download_gdc_rnaseq"
+    },
+    {
+      "name": "get_variable_docs"
+    },
+    {
+      "name": "run_pathway_analysis"
+    },
+    {
+      "name": "run_deseq2_paired"
+    },
+    {
+      "name": "acquire_commpass_data"
+    },
+    {
+      "name": "run_deseq2"
+    },
+    {
+      "name": "vig_dd_column_mappings",
+      "seconds": 0.094,
+      "bytes": 3329
+    },
+    {
+      "name": "shiny_survival_index",
+      "seconds": 5.002,
+      "bytes": 326
+    },
+    {
+      "name": "readme_project_tree",
+      "seconds": 5.177,
+      "bytes": 370
+    },
+    {
+      "name": "code_api_r",
+      "seconds": 0,
+      "bytes": 291
+    },
+    {
+      "name": "vig_dd_dictionary_table",
+      "seconds": 0.025,
+      "bytes": 5586
+    },
+    {
+      "name": "code_parsed_api_r",
+      "seconds": 0.001,
+      "bytes": 349
+    },
+    {
+      "name": "code_dd_load_data",
+      "seconds": 0,
+      "bytes": 366
+    },
+    {
+      "name": "code_parsed_dd_load_data",
+      "seconds": 0.001,
+      "bytes": 432
+    },
+    {
+      "name": "pkgctx_self",
+      "seconds": 0.245,
+      "bytes": 20357
+    },
+    {
+      "name": "doc_examples_validation",
+      "seconds": 0,
+      "bytes": 252
+    },
+    {
+      "name": "dag_layer_validation",
+      "seconds": 6.778,
+      "bytes": 48
+    },
+    {
+      "name": "cytogenetic_data",
+      "seconds": 0.037,
+      "bytes": 0
+    }
+  ]
+}

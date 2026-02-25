@@ -1,9 +1,9 @@
 ---
 title: "01. Data Acquisition & Status"
-output: rmarkdown::html_vignette
+format: html
 vignette: >
   %\VignetteIndexEntry{01. Data Acquisition & Status}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 ---
 

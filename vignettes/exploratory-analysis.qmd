@@ -1,9 +1,9 @@
 ---
 title: "03. Exploratory Data Analysis"
-output: rmarkdown::html_vignette
+format: html
 vignette: >
   %\VignetteIndexEntry{03. Exploratory Data Analysis}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{quarto::html}
   %\VignetteEncoding{UTF-8}
 ---
 
