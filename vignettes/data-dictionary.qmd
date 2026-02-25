@@ -1,0 +1,153 @@
+---
+title: "02. Data Dictionary"
+format: html
+vignette: >
+  %\VignetteIndexEntry{02. Data Dictionary}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 5
+)
+library(targets)
+
+# Discover targets store
+proj_dir <- Sys.getenv("TAR_PROJECT")
+tar_store <- NULL
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_store <- file.path(proj_dir, "_targets")
+} else if (dir.exists("_targets")) {
+  tar_store <- "_targets"
+} else if (dir.exists("../_targets")) {
+  tar_store <- "../_targets"
+}
+
+safe_tar_read <- function(name) {
+  if (is.null(tar_store)) return(NULL)
+  tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
+}
+```
+
+## Overview
+
+> See the [Glossary](glossary.html) for term definitions and [units reference](glossary.html#units-reference) used throughout this project.
+
+- Describes all variables in the MMRF CoMMpass dataset from the [GDC](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)
+- CoMMpass: longitudinal observational study of ~1,000 newly diagnosed multiple myeloma patients
+- Variables span clinical demographics, biospecimen metadata, and RNA-seq gene expression
+
+**Data sources:**
+
+- [GDC Portal - MMRF-COMMPASS](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)
+- [GDC Data Dictionary](https://docs.gdc.cancer.gov/Data_Dictionary/viewer/)
+- [MMRF CoMMpass Study](https://themmrf.org/research/commpass-study/)
+
+## Complete Data Dictionary
+
+```{r dictionary-table}
+safe_tar_read("vig_dd_dictionary_table")
+```
+
+## Clinical Data
+
+- Patient demographics, disease characteristics, and outcomes
+- Downloaded via `TCGAbiolinks::GDCquery_clinic()`
+- All time/age variables in **days** (see [units reference](glossary.html#units-reference))
+
+```{r clinical-summary-text, results='asis'}
+safe_tar_read("vig_dd_clinical_text")
+```
+
+```{r clinical-summary-table}
+safe_tar_read("vig_dd_clinical_table")
+```
+
+## Biospecimen Data
+
+- Tissue samples collected from patients
+- Includes sample type, tissue type, and preservation method
+
+```{r biospecimen-summary-text, results='asis'}
+safe_tar_read("vig_dd_biospecimen_text")
+```
+
+```{r biospecimen-summary-table}
+safe_tar_read("vig_dd_biospecimen_table")
+```
+
+## RNA-seq Data
+
+- RNA-seq gene expression generated using the STAR aligner
+- Quantified against GENCODE annotations
+- Available in multiple quantification types (raw counts, TPM, FPKM)
+- See [units reference](glossary.html#units-reference) for quantification units
+
+```{r rnaseq-dims-text, results='asis'}
+safe_tar_read("vig_dd_rnaseq_text")
+```
+
+```{r rnaseq-biotype-table}
+safe_tar_read("vig_dd_rnaseq_biotype_table")
+```
+
+```{r rnaseq-sample-metadata}
+safe_tar_read("vig_dd_rnaseq_sample_table")
+```
+
+## Column Name Mappings
+
+GDC uses standardized column names. Common aliases used in analysis:
+
+```{r column-mappings}
+safe_tar_read("vig_dd_column_mappings")
+```
+
+## Units Reference
+
+For the complete units reference table (age/time in days, expression quantification types), see the [Glossary units reference](glossary.html#units-reference).
+
+Key rule: **All age and time variables are stored in DAYS by GDC.** This is the single most common source of errors in GDC analyses.
+
+## Data Sources & Links
+
+- **GDC Portal**: <https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS>
+- **GDC Data Dictionary**: <https://docs.gdc.cancer.gov/Data_Dictionary/viewer/>
+- **GDC mRNA Analysis Pipeline**: <https://docs.gdc.cancer.gov/Data/Bioinformatics_Pipelines/Expression_mRNA_Pipeline/>
+- **MMRF CoMMpass Study**: <https://themmrf.org/research/commpass-study/>
+- **GENCODE**: <https://www.gencodegenes.org/>
+- **Ensembl**: <https://www.ensembl.org/>
+
+For exploratory analysis using these variables, see the [EDA vignette](exploratory-analysis.html).
+
+## R Code Examples
+
+### Loading Data
+
+```{r dd-load-data-code, results='asis'}
+safe_tar_read("code_dd_load_data")
+```
+
+### Exploring the Dictionary
+
+```{r dd-explore-dict-code, results='asis'}
+safe_tar_read("code_dd_explore_dict")
+```
+
+## Reproducibility
+
+<details>
+<summary>Session Info (click to expand)</summary>
+
+```{r session-info}
+sessionInfo()
+```
+
+</details>

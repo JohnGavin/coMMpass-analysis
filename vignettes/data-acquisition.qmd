@@ -1,0 +1,134 @@
+---
+title: "01. Data Acquisition & Status"
+format: html
+vignette: >
+  %\VignetteIndexEntry{01. Data Acquisition & Status}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 5
+)
+library(targets)
+
+# Discover targets store
+proj_dir <- Sys.getenv("TAR_PROJECT")
+tar_store <- NULL
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_store <- file.path(proj_dir, "_targets")
+} else if (dir.exists("_targets")) {
+  tar_store <- "_targets"
+} else if (dir.exists("../_targets")) {
+  tar_store <- "../_targets"
+}
+
+safe_tar_read <- function(name) {
+  if (is.null(tar_store)) return(NULL)
+  tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
+}
+```
+
+## Overview
+
+> See the [Glossary](glossary.html) for term definitions (read count, library size, gene detection, outlier, etc.).
+
+- RNA-seq and clinical data from [GDC](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS) via the [`targets` pipeline](https://github.com/JohnGavin/coMMpass-analysis/tree/main/R/tar_plans)
+- Open Access RNA-seq from the GDC S3 bucket (`s3://gdc-mmrf-commpass-phs000748-2-open/`)
+- Clinical metadata via `TCGAbiolinks::GDCquery_clinic()`
+
+## Pipeline Configuration
+
+```{r config, results='asis'}
+safe_tar_read("vig_config_text")
+```
+
+> **Note:** This vignette was built with `sample_limit = `r { x <- safe_tar_read("config"); if (!is.null(x)) x$sample_limit else "?" }`` patients. Numbers below reflect this subset, not the full ~900-patient CoMMpass cohort. For pipeline execution details, see [issue #46 (telemetry vignette)](https://github.com/JohnGavin/coMMpass-analysis/issues/46).
+
+## RNA-seq Data {#rnaseq-data}
+
+RNA-seq gene expression data is downloaded from GDC as a [SummarizedExperiment](https://bioconductor.org/packages/SummarizedExperiment/) object containing [STAR-Counts](https://docs.gdc.cancer.gov/Data/Bioinformatics_Pipelines/Expression_mRNA_Pipeline/).
+
+```{r rnaseq-summary-text, results='asis'}
+safe_tar_read("vig_rnaseq_summary_text")
+```
+
+```{r rnaseq-sample-table}
+safe_tar_read("vig_rnaseq_sample_stats")
+```
+
+```{r count-distribution, fig.cap = "Distribution of mean gene expression (log10 scale) across all genes. The three peaks correspond to distinct gene populations: (1) unexpressed/noise genes near zero, (2) lowly-expressed genes detected in a subset of samples, and (3) moderately-to-highly expressed housekeeping/structural genes. This trimodal pattern is expected for GENCODE-annotated RNA-seq data, which includes ~60k entries spanning protein-coding genes, lncRNAs, pseudogenes, and other biotypes with very different expression levels. Data: GDC STAR-Counts."}
+safe_tar_read("vig_count_distribution_plot")
+```
+
+## Clinical Data
+
+Clinical metadata from [GDC](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS) provides patient demographics, disease characteristics, and outcomes. See the [data dictionary](data-dictionary.html) for variable definitions and the [glossary](glossary.html) for units.
+
+```{r clinical-columns}
+safe_tar_read("vig_clinical_column_info")
+```
+
+### Data Completeness
+
+```{r missing-data-text, results='asis'}
+safe_tar_read("vig_missing_data_text")
+```
+
+```{r missing-data-table}
+safe_tar_read("vig_missing_data_table")
+```
+
+## Quality Control {#quality-control}
+
+Quality control identifies outlier samples based on [library size](glossary.html) and [gene detection](glossary.html) rate. See [`R/02_quality_control.R`](https://github.com/JohnGavin/coMMpass-analysis/blob/main/R/02_quality_control.R) for filtering criteria.
+
+The per-sample expression summary (Total Counts, Genes Detected) is shown in the [RNA-seq Data](#rnaseq-data) section above. This section adds QC-specific metrics: size factors, count dispersion (MAD), and outlier flags.
+
+**Variable definitions** (see also [Glossary](glossary.html)):
+
+- **Total Counts** --- [library size](glossary.html): sum of all [read counts](glossary.html) mapped to genes in one sample
+- **Detected Genes** --- number of genes with at least 1 mapped [read](glossary.html) (count > 0)
+- **Median Count** --- median read count across all genes in a sample (most genes have 0 or low counts, so this is typically 0)
+- **MAD Count** --- [median absolute deviation](https://en.wikipedia.org/wiki/Median_absolute_deviation) of gene counts within a single sample (measures spread of the count distribution for that sample)
+- **Size Factor** --- library size / median library size across all samples (values near 1.0 = typical; <<1 = under-sequenced; >>1 = over-sequenced)
+- **Outlier** --- flagged `Yes` if the sample falls in the **bottom 5th percentile** of either library size OR genes detected
+
+```{r qc-text, results='asis'}
+safe_tar_read("vig_qc_text")
+```
+
+```{r qc-table}
+safe_tar_read("vig_qc_table")
+```
+
+```{r filtered-summary, results='asis'}
+safe_tar_read("vig_filtered_summary")
+```
+
+## Reproducibility
+
+<details>
+<summary>Git Commit Info (click to expand)</summary>
+
+```{r git-info}
+safe_tar_read("vig_git_info")
+```
+
+</details>
+
+<details>
+<summary>Session Info (click to expand)</summary>
+
+```{r session-info}
+sessionInfo()
+```
+
+</details>

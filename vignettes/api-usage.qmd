@@ -1,0 +1,117 @@
+---
+title: "07. API Usage"
+format: html
+vignette: >
+  %\VignetteIndexEntry{07. API Usage}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+library(targets)
+
+# Discover targets store
+proj_dir <- Sys.getenv("TAR_PROJECT")
+tar_store <- NULL
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_store <- file.path(proj_dir, "_targets")
+} else if (dir.exists("_targets")) {
+  tar_store <- "_targets"
+} else if (dir.exists("../_targets")) {
+  tar_store <- "../_targets"
+}
+
+safe_tar_read <- function(name, store = tar_store) {
+  if (is.null(store)) return(NULL)
+  tryCatch(
+    targets::tar_read_raw(name, store = store),
+    error = function(e) NULL
+  )
+}
+```
+
+## Overview
+
+The CoMMpass Analysis project provides pre-computed analysis results as static
+JSON files hosted on GitHub Pages. These endpoints are updated on each pipeline
+run and serve read-only data derived from the
+[GDC portal](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS).
+
+**Base URL:** `https://JohnGavin.github.io/coMMpass-analysis/api/v1/`
+
+Data is pre-computed via a `targets` pipeline and serialized to JSON. For raw
+(non-derived) data, visit the original data sources listed in the
+[Raw Data Sources] section below.
+
+## Available Endpoints
+
+```{r endpoints-table}
+safe_tar_read("vig_api_endpoints_dt")
+```
+
+## Example: curl
+
+```{r example-curl, results='asis'}
+code <- safe_tar_read("code_api_curl")
+if (!is.null(code)) {
+  cat("<details>\n<summary>Show code</summary>\n\n```bash\n")
+  cat(paste(code, collapse = "\n"))
+  cat("\n```\n</details>\n")
+} else {
+  cat("*Code example not available. Run `tar_make()` first.*\n")
+}
+```
+
+## Example: R (jsonlite)
+
+```{r example-r, results='asis'}
+code <- safe_tar_read("code_api_r")
+if (!is.null(code)) {
+  cat("<details>\n<summary>Show code</summary>\n\n```r\n")
+  cat(paste(code, collapse = "\n"))
+  cat("\n```\n</details>\n")
+} else {
+  cat("*Code example not available. Run `tar_make()` first.*\n")
+}
+```
+
+## Example: Python (requests)
+
+```{r example-python, results='asis'}
+code <- safe_tar_read("code_api_python")
+if (!is.null(code)) {
+  cat("<details>\n<summary>Show code</summary>\n\n```python\n")
+  cat(paste(code, collapse = "\n"))
+  cat("\n```\n</details>\n")
+} else {
+  cat("*Code example not available. Run `tar_make()` first.*\n")
+}
+```
+
+## Raw Data Sources
+
+For non-derived data, access the original sources directly:
+- **GDC Data Portal:** <https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS>
+- **MMRF Research Gateway:** <https://research.themmrf.org/>
+- **GDC API:** <https://api.gdc.cancer.gov/>
+
+## Phase 2 Roadmap
+
+A future release will provide a dynamic [plumber](https://www.rplumber.io/)
+API with query parameters for filtering, subsetting, and custom analyses.
+The plumber endpoint functions already exist in `R/10_api.R` and
+`inst/plumber/plumber.R`. Phase 2 will add authentication, rate limiting,
+and OpenAPI documentation.
+
+## Reproducibility
+
+```{r git-info}
+safe_tar_read("vig_git_info")
+```

@@ -32,3 +32,14 @@ List with DE results including raw and shrunken (if requested)
 Runs DESeq2 with optional apeglm log-fold-change shrinkage and optional
 paired longitudinal design for within-patient comparisons.
 }
+\seealso{
+Other differential-expression: 
+\code{\link{compute_pca}()},
+\code{\link{plot_heatmap_de}()},
+\code{\link{plot_ma}()},
+\code{\link{plot_pca}()},
+\code{\link{plot_volcano}()},
+\code{\link{run_vst}()},
+\code{\link{summarize_de_methods}()}
+}
+\concept{differential-expression}

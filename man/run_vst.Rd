@@ -21,3 +21,14 @@ Wrapper around DESeq2::vst() for use in visualization. VST is appropriate
 for PCA, heatmaps, and clustering -- not for DE testing (which uses raw
 counts).
 }
+\seealso{
+Other differential-expression: 
+\code{\link{compute_pca}()},
+\code{\link{plot_heatmap_de}()},
+\code{\link{plot_ma}()},
+\code{\link{plot_pca}()},
+\code{\link{plot_volcano}()},
+\code{\link{run_deseq2}()},
+\code{\link{summarize_de_methods}()}
+}
+\concept{differential-expression}

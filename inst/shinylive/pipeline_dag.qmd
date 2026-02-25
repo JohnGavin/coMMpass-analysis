@@ -1,0 +1,223 @@
+---
+title: "CoMMpass Pipeline DAG Explorer"
+format:
+  html:
+    page-layout: full
+    resources:
+      - shinylive-sw.js
+      - data/pipeline_network.json
+filters:
+  - shinylive
+---
+
+```{shinylive-r}
+#| standalone: true
+#| viewerHeight: 800
+
+library(shiny)
+library(bslib)
+library(visNetwork)
+library(jsonlite)
+library(dplyr)
+
+ui <- page_sidebar(
+  title = "CoMMpass Pipeline DAG Explorer",
+  sidebar = sidebar(
+    width = 300,
+    textInput("filter_text", "Filter targets by name:", ""),
+    checkboxInput("targets_only", "Targets only (hide functions)", TRUE),
+    sliderInput("level_sep", "Level separation:", 100, 500, 200, step = 50),
+    selectInput("layout", "Layout direction:",
+      choices = c("Top-Down" = "UD", "Left-Right" = "LR",
+                  "Bottom-Up" = "DU", "Right-Left" = "RL"),
+      selected = "LR"
+    ),
+    hr(),
+    h6("Color by:"),
+    radioButtons("color_by", NULL,
+      choices = c("Layer" = "layer", "Runtime (seconds)" = "seconds",
+                  "Size (bytes)" = "bytes"),
+      selected = "layer"
+    ),
+    hr(),
+    h6("Selection"),
+    verbatimTextOutput("selected_info"),
+    actionButton("reset_selection", "Reset selection", class = "btn-sm")
+  ),
+  card(
+    full_screen = TRUE,
+    card_header("Pipeline DAG"),
+    visNetworkOutput("dag", height = "700px")
+  )
+)
+
+server <- function(input, output, session) {
+  # Load embedded network data
+  network_data <- reactive({
+    json_text <- paste(readLines("data/pipeline_network.json"), collapse = "\n")
+    fromJSON(json_text, simplifyDataFrame = TRUE)
+  })
+
+  # Layer-color mapping
+  layer_colors <- c(
+    "data-acquisition" = "#4CAF50",
+    "data-cleaning" = "#2196F3",
+    "cytogenetics" = "#9C27B0",
+    "quality-control" = "#FF9800",
+    "differential-expression" = "#F44336",
+    "survival" = "#00BCD4",
+    "pathway" = "#E91E63",
+    "eda" = "#8BC34A",
+    "storage" = "#795548",
+    "api" = "#607D8B",
+    "documentation" = "#CDDC39",
+    "infrastructure" = "#9E9E9E",
+    "other" = "#BDBDBD"
+  )
+
+  # Assign layer from target name prefix
+  assign_layer <- function(name) {
+    patterns <- c(
+      "^(raw_rnaseq|clinical_data$|fetch_)" = "data-acquisition",
+      "^(clinical_data_clean|expression_data_clean|integrated|filtered|normalized)" = "data-cleaning",
+      "^(cyto|fish_)" = "cytogenetics",
+      "^(qc_|data_quality)" = "quality-control",
+      "^(deseq2|edger|limma|consensus_de)" = "differential-expression",
+      "^(survival|cox_|km_)" = "survival",
+      "^(gsea|pathway|gene_annot)" = "pathway",
+      "^(eda_)" = "eda",
+      "^(save_|parquet|duckdb)" = "storage",
+      "^(api_|shiny_)" = "api",
+      "^(vig_|code_|doc_|readme_|glossary)" = "documentation",
+      "^(config|nix_|dag_|pkgctx)" = "infrastructure"
+    )
+    for (pat in names(patterns)) {
+      if (grepl(pat, name)) return(patterns[[pat]])
+    }
+    "other"
+  }
+
+  filtered_network <- reactive({
+    nd <- network_data()
+    nodes <- nd$nodes
+    edges <- nd$edges
+
+    # Merge meta if available
+    if (!is.null(nd$meta) && nrow(nd$meta) > 0) {
+      nodes <- left_join(nodes, nd$meta, by = "name")
+    }
+
+    # Assign layers
+    nodes$layer <- sapply(nodes$name, assign_layer)
+
+    # Filter by text
+    if (nzchar(input$filter_text)) {
+      pattern <- tolower(input$filter_text)
+      keep <- grepl(pattern, tolower(nodes$name))
+      keep_names <- nodes$name[keep]
+      # Also keep connected nodes (1 degree)
+      connected <- edges$from %in% keep_names | edges$to %in% keep_names
+      connected_names <- unique(c(edges$from[connected], edges$to[connected]))
+      all_keep <- unique(c(keep_names, connected_names))
+      nodes <- nodes[nodes$name %in% all_keep, ]
+      edges <- edges[edges$from %in% all_keep & edges$to %in% all_keep, ]
+    }
+
+    # Color by selection
+    if (input$color_by == "layer") {
+      nodes$color <- sapply(nodes$layer, function(l) {
+        if (l %in% names(layer_colors)) layer_colors[[l]] else "#BDBDBD"
+      })
+    } else if (input$color_by == "seconds" && "seconds" %in% names(nodes)) {
+      secs <- nodes$seconds
+      secs[is.na(secs)] <- 0
+      max_s <- max(secs, na.rm = TRUE)
+      if (max_s > 0) {
+        intensity <- secs / max_s
+      } else {
+        intensity <- rep(0, length(secs))
+      }
+      nodes$color <- rgb(intensity, 0.3, 1 - intensity)
+    } else if (input$color_by == "bytes" && "bytes" %in% names(nodes)) {
+      bytes <- nodes$bytes
+      bytes[is.na(bytes)] <- 0
+      max_b <- max(bytes, na.rm = TRUE)
+      if (max_b > 0) {
+        intensity <- bytes / max_b
+      } else {
+        intensity <- rep(0, length(bytes))
+      }
+      nodes$color <- rgb(0.3, intensity, 1 - intensity)
+    } else {
+      nodes$color <- sapply(nodes$layer, function(l) {
+        if (l %in% names(layer_colors)) layer_colors[[l]] else "#BDBDBD"
+      })
+    }
+
+    # Node sizing by bytes if available
+    if ("bytes" %in% names(nodes)) {
+      b <- nodes$bytes
+      b[is.na(b)] <- 0
+      nodes$value <- 10 + 30 * (b / max(max(b, na.rm = TRUE), 1))
+    } else {
+      nodes$value <- 20
+    }
+
+    # Format for visNetwork
+    nodes$id <- nodes$name
+    nodes$label <- nodes$name
+    nodes$title <- paste0(
+      "<b>", nodes$name, "</b><br>",
+      "Layer: ", nodes$layer,
+      if ("seconds" %in% names(nodes)) paste0("<br>Runtime: ", round(nodes$seconds, 2), "s") else "",
+      if ("bytes" %in% names(nodes)) paste0("<br>Size: ", format(nodes$bytes, big.mark = ","), " bytes") else ""
+    )
+
+    list(nodes = nodes, edges = edges)
+  })
+
+  output$dag <- renderVisNetwork({
+    fn <- filtered_network()
+    visNetwork(fn$nodes, fn$edges) |>
+      visEdges(arrows = "to", smooth = list(type = "cubicBezier")) |>
+      visHierarchicalLayout(
+        direction = input$layout,
+        levelSeparation = input$level_sep,
+        sortMethod = "directed"
+      ) |>
+      visOptions(
+        highlightNearest = list(enabled = TRUE, degree = 2, hover = TRUE),
+        nodesIdSelection = TRUE
+      ) |>
+      visInteraction(navigationButtons = TRUE, zoomView = TRUE) |>
+      visPhysics(enabled = FALSE) |>
+      visEvents(select = "function(nodes) {
+        Shiny.setInputValue('selected_node', nodes.nodes[0]);
+      }")
+  })
+
+  output$selected_info <- renderText({
+    sel <- input$selected_node
+    if (is.null(sel) || sel == "") return("Click a node to see details")
+    fn <- filtered_network()
+    node <- fn$nodes[fn$nodes$id == sel, ]
+    if (nrow(node) == 0) return("Node not found")
+    upstream <- fn$edges$from[fn$edges$to == sel]
+    downstream <- fn$edges$to[fn$edges$from == sel]
+    paste0(
+      "Target: ", sel, "\n",
+      "Layer: ", node$layer, "\n",
+      if ("seconds" %in% names(node)) paste0("Runtime: ", round(node$seconds, 2), "s\n") else "",
+      if ("bytes" %in% names(node)) paste0("Size: ", format(node$bytes, big.mark = ","), " bytes\n") else "",
+      "Upstream (", length(upstream), "): ", paste(upstream, collapse = ", "), "\n",
+      "Downstream (", length(downstream), "): ", paste(downstream, collapse = ", ")
+    )
+  })
+
+  observeEvent(input$reset_selection, {
+    visNetworkProxy("dag") |> visUnselectAll()
+  })
+}
+
+shinyApp(ui, server)
+```

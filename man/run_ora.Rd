@@ -44,3 +44,14 @@ Tests whether a set of significant genes is over-represented in gene set
 collections using Fisher's exact test (hypergeometric distribution).
 Gene sets come from MSigDB via msigdbr.
 }
+\seealso{
+Other pathway: 
+\code{\link{annotate_de_results}()},
+\code{\link{annotate_genes}()},
+\code{\link{plot_enrichment_barplot}()},
+\code{\link{plot_enrichment_dotplot}()},
+\code{\link{plot_gsea_running_score}()},
+\code{\link{run_gsea}()},
+\code{\link{run_pathway_analysis}()}
+}
+\concept{pathway}

@@ -180,14 +180,12 @@ mod_data_loader_server <- function(id, shared_data) {
       } else if (input$data_source == "targets") {
         # Load from targets pipeline
         tryCatch({
-          library(targets)
-
           # Load results from targets
-          shared_data$raw_data <- tar_read(raw_data)
-          shared_data$qc_metrics <- tar_read(qc_metrics)
-          shared_data$de_results <- tar_read(consensus_de_genes)
-          shared_data$survival_data <- tar_read(survival_data)
-          shared_data$pathway_results <- tar_read(pathway_results)
+          shared_data$raw_data <- targets::tar_read(raw_data)
+          shared_data$qc_metrics <- targets::tar_read(qc_metrics)
+          shared_data$de_results <- targets::tar_read(consensus_de_genes)
+          shared_data$survival_data <- targets::tar_read(survival_data)
+          shared_data$pathway_results <- targets::tar_read(pathway_results)
 
           output$load_status <- renderText("Data loaded from targets pipeline!")
 

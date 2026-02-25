@@ -17,3 +17,9 @@ List with matched clinical and expression data
 \description{
 Combines clinical and expression data with consistent sample IDs
 }
+\seealso{
+Other data-cleaning: 
+\code{\link{clean_clinical_data}()},
+\code{\link{clean_expression_data}()}
+}
+\concept{data-cleaning}

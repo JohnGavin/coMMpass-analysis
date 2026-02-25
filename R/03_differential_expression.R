@@ -17,6 +17,7 @@ NULL
 #'   blocking factor. Requires 'patient_id' and 'visit' columns in
 #'   clinical_data. Only patients with >=2 timepoints are included.
 #' @return List with DE results including raw and shrunken (if requested)
+#' @family differential-expression
 #' @export
 run_deseq2 <- function(
   se_data,

@@ -15,3 +15,9 @@ Cleaned clinical data frame
 \description{
 Standardizes clinical data column names and formats
 }
+\seealso{
+Other data-cleaning: 
+\code{\link{clean_expression_data}()},
+\code{\link{integrate_clinical_expression}()}
+}
+\concept{data-cleaning}

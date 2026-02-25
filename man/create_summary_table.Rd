@@ -17,3 +17,9 @@ Data frame with summary statistics
 \description{
 Generate a nicely formatted summary statistics table for numeric variables
 }
+\seealso{
+Other utilities: 
+\code{\link{format_file_size}()},
+\code{\link{format_with_commas}()}
+}
+\concept{utilities}

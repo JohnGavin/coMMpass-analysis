@@ -56,6 +56,7 @@ find_expr_col <- function(df) {
 #'   TRUE for exploratory analysis)
 #' @return SummarizedExperiment with "vst" assay added, or NULL if DESeq2
 #'   is not available
+#' @family differential-expression
 #' @export
 run_vst <- function(se_data, blind = TRUE) {
   if (!requireNamespace("DESeq2", quietly = TRUE)) {
@@ -92,6 +93,7 @@ run_vst <- function(se_data, blind = TRUE) {
 #'   PCA coordinates
 #' @return List with components: coords (data frame with PC1, PC2, ...),
 #'   var_explained (numeric vector of variance proportions), n_genes_used
+#' @family differential-expression
 #' @export
 compute_pca <- function(expr_matrix, n_top = 500L, metadata = NULL) {
   if (is.null(expr_matrix) || ncol(expr_matrix) < 2) {
@@ -146,6 +148,7 @@ compute_pca <- function(expr_matrix, n_top = 500L, metadata = NULL) {
 #' @param n_label Number of top genes to label (default 10)
 #' @param title Plot title
 #' @return A ggplot2 object
+#' @family differential-expression
 #' @export
 plot_volcano <- function(
   de_results,
@@ -246,6 +249,7 @@ plot_volcano <- function(
 #' @param padj_threshold Adjusted p-value threshold (default 0.05)
 #' @param title Plot title
 #' @return A ggplot2 object
+#' @family differential-expression
 #' @export
 plot_ma <- function(
   de_results,
@@ -327,6 +331,7 @@ plot_ma <- function(
 #' @param shape_by Column name in coords to use for shape (default NULL)
 #' @param title Plot title
 #' @return A ggplot2 object
+#' @family differential-expression
 #' @export
 plot_pca <- function(
   pca_data,
@@ -382,6 +387,7 @@ plot_pca <- function(
 #'   annotation
 #' @param title Plot title
 #' @return A ggplot2 object (tile-based heatmap)
+#' @family differential-expression
 #' @export
 plot_heatmap_de <- function(
   expr_matrix,
@@ -477,6 +483,7 @@ plot_heatmap_de <- function(
 #' @param padj_threshold Adjusted p-value threshold (default 0.05)
 #' @param lfc_threshold Log2 fold-change threshold (default 1)
 #' @return Data frame with method, n_tested, n_sig, n_up, n_down
+#' @family differential-expression
 #' @export
 summarize_de_methods <- function(
   de_list,

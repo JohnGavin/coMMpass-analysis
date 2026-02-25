@@ -228,3 +228,234 @@ test_that("query_commpass_parquet: empty filters list behaves like no filter", {
 
   unlink(tmp_dir, recursive = TRUE)
 })
+
+# ================================================================
+# API function adversarial tests
+# ================================================================
+
+# --- api_get_clinical adversarial ---
+
+test_that("api_get_clinical: wrong type for patient_ids errors", {
+  expect_error(api_get_clinical(patient_ids = 42), "patient_ids")
+})
+
+test_that("api_get_clinical: wrong type for variables errors", {
+  expect_error(api_get_clinical(variables = 123), "variables")
+})
+
+test_that("api_get_clinical: bad store returns NULL gracefully", {
+  result <- api_get_clinical(store = "/nonexistent_store_path")
+  expect_null(result)
+})
+
+test_that("api_get_clinical: store must be character", {
+  expect_error(api_get_clinical(store = 42), "store")
+})
+
+# --- api_get_de_results adversarial ---
+
+test_that("api_get_de_results: character padj_threshold errors", {
+  expect_error(api_get_de_results(padj_threshold = "abc"), "padj_threshold")
+})
+
+test_that("api_get_de_results: negative padj_threshold errors", {
+  expect_error(api_get_de_results(padj_threshold = -1), "padj_threshold")
+})
+
+test_that("api_get_de_results: Inf lfc_threshold errors", {
+  expect_error(api_get_de_results(lfc_threshold = Inf), "lfc_threshold")
+})
+
+test_that("api_get_de_results: NA padj_threshold errors", {
+  expect_error(api_get_de_results(padj_threshold = NA), "padj_threshold")
+})
+
+test_that("api_get_de_results: padj_threshold > 1 errors", {
+  expect_error(api_get_de_results(padj_threshold = 2), "padj_threshold")
+})
+
+# --- api_get_survival adversarial ---
+
+test_that("api_get_survival: numeric store errors", {
+  expect_error(api_get_survival(store = 42), "store")
+})
+
+test_that("api_get_survival: bad store returns NULL", {
+  result <- api_get_survival(store = "/nonexistent_store_path")
+  expect_null(result)
+})
+
+# --- api_get_pathways adversarial ---
+
+test_that("api_get_pathways: NA significant_only errors", {
+  expect_error(api_get_pathways(significant_only = NA), "significant_only")
+})
+
+test_that("api_get_pathways: character significant_only errors", {
+  expect_error(api_get_pathways(significant_only = "yes"), "significant_only")
+})
+
+test_that("api_get_pathways: bad store returns NULL", {
+  result <- api_get_pathways(store = "/nonexistent_store_path")
+  expect_null(result)
+})
+
+# --- api_serve adversarial ---
+
+test_that("api_serve: character port errors", {
+  expect_error(api_serve(port = "abc"), "port")
+})
+
+test_that("api_serve: port out of range errors", {
+  expect_error(api_serve(port = 99999), "port")
+})
+
+test_that("api_serve: numeric host errors", {
+  expect_error(api_serve(host = 42), "host")
+})
+
+# --- api_list_datasets adversarial ---
+
+test_that("api_list_datasets: idempotent (call twice, same result)", {
+  r1 <- api_list_datasets()
+  r2 <- api_list_datasets()
+  expect_identical(r1, r2)
+})
+
+test_that("api_list_datasets: returns data frame with expected columns", {
+  result <- api_list_datasets()
+  expect_s3_class(result, "data.frame")
+  expect_true("dataset" %in% names(result))
+  expect_true("endpoint" %in% names(result))
+})
+
+# ================================================================
+# extract_risk_table adversarial tests
+# ================================================================
+
+test_that("extract_risk_table: NULL input errors", {
+  expect_error(extract_risk_table(NULL), "km_result")
+})
+
+test_that("extract_risk_table: non-list input errors", {
+  expect_error(extract_risk_table("not a list"), "km_result")
+})
+
+test_that("extract_risk_table: empty times vector errors", {
+  # Create a minimal KM result
+  skip_if_not_installed("survival")
+  surv_data <- data.frame(
+    time_days = c(100, 200, 300, 400),
+    status = c(1, 0, 1, 0)
+  )
+  km <- run_kaplan_meier(surv_data, strata = NULL)
+  expect_error(extract_risk_table(km, times = numeric(0)), "times")
+})
+
+test_that("extract_risk_table: negative/Inf times filtered to valid subset", {
+  skip_if_not_installed("survival")
+  surv_data <- data.frame(
+    time_days = c(100, 200, 300, 400),
+    status = c(1, 0, 1, 0)
+  )
+  km <- run_kaplan_meier(surv_data, strata = NULL)
+  # c(-1, Inf) has no valid times after filtering
+
+  expect_error(extract_risk_table(km, times = c(-1, Inf)), "valid time points")
+})
+
+test_that("extract_risk_table: valid KM result returns data frame", {
+  skip_if_not_installed("survival")
+  surv_data <- data.frame(
+    time_days = c(100, 200, 300, 400, 500),
+    status = c(1, 0, 1, 0, 1)
+  )
+  km <- run_kaplan_meier(surv_data, strata = NULL)
+  result <- extract_risk_table(km, times = c(0, 200, 400))
+  expect_s3_class(result, "data.frame")
+  expect_true("n_risk" %in% names(result))
+  expect_true("survival" %in% names(result))
+})
+
+# ================================================================
+# generate_api_index / generate_api_endpoint adversarial tests
+# ================================================================
+
+test_that("generate_api_index: returns expected structure", {
+  result <- generate_api_index()
+  expect_type(result, "list")
+  expect_true("endpoints" %in% names(result))
+  expect_true("version" %in% names(result))
+})
+
+test_that("generate_api_endpoint: NULL data returns metadata-only JSON", {
+  result <- generate_api_endpoint(NULL, "test", "Test data")
+  expect_type(result, "character")
+  parsed <- jsonlite::fromJSON(result)
+  expect_equal(parsed$metadata$dataset, "test")
+  expect_equal(parsed$metadata$n_rows, 0)
+})
+
+test_that("generate_api_endpoint: data frame serialized correctly", {
+  df <- data.frame(a = 1:3, b = c("x", "y", "z"), stringsAsFactors = FALSE)
+  result <- generate_api_endpoint(df, "test", "Test data")
+  parsed <- jsonlite::fromJSON(result)
+  expect_equal(parsed$metadata$n_rows, 3)
+  expect_equal(nrow(parsed$data), 3)
+})
+
+# ================================================================
+# Snapshot infrastructure adversarial tests
+# ================================================================
+
+test_that("all committed target objects are valid RDS files", {
+  obj_dir <- here::here("_targets/objects")
+  skip_if(!dir.exists(obj_dir), "_targets/objects/ not found")
+  files <- list.files(obj_dir, full.names = TRUE)
+  skip_if(length(files) == 0, "No target objects found")
+  for (f in files) {
+    obj <- tryCatch(readRDS(f), error = function(e) e)
+    expect_false(
+      inherits(obj, "error"),
+      label = paste("RDS read failed for", basename(f))
+    )
+  }
+})
+
+test_that("target objects are not corrupted (class checks)", {
+  obj_dir <- here::here("_targets/objects")
+  skip_if(!dir.exists(obj_dir), "_targets/objects/ not found")
+  # Key objects must have expected classes
+  expected <- list(
+    clinical_data_clean = "data.frame",
+    survival_data = "data.frame",
+    deseq2_results = "list",
+    edger_results = "list",
+    limma_results = "list",
+    gsea_results = "list",
+    cox_model = "list",
+    km_analysis = "list"
+  )
+  for (nm in names(expected)) {
+    path <- file.path(obj_dir, nm)
+    skip_if(!file.exists(path), paste0(nm, " not found"))
+    obj <- readRDS(path)
+    expect_true(
+      inherits(obj, expected[[nm]]),
+      label = paste(nm, "should be", expected[[nm]])
+    )
+  }
+})
+
+test_that("target objects are stable on re-read", {
+  obj_dir <- here::here("_targets/objects")
+  skip_if(!dir.exists(obj_dir), "_targets/objects/ not found")
+  targets_to_check <- c("clinical_data_clean", "survival_data", "config")
+  for (nm in targets_to_check) {
+    path <- file.path(obj_dir, nm)
+    skip_if(!file.exists(path), paste0(nm, " not found"))
+    obj1 <- readRDS(path)
+    obj2 <- readRDS(path)
+    expect_identical(obj1, obj2, label = paste(nm, "re-read stability"))
+  }
+})

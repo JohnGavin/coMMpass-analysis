@@ -44,3 +44,8 @@ result <- clinical_tbl |>
 DBI::dbDisconnect(con, shutdown = TRUE)
 }
 }
+\seealso{
+Other storage: 
+\code{\link{query_commpass_parquet}()}
+}
+\concept{storage}

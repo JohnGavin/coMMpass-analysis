@@ -20,3 +20,14 @@ A ggplot2 object
 Creates a horizontal bar plot of the top N enriched pathways, colored
 by direction (GSEA) or significance (ORA).
 }
+\seealso{
+Other pathway: 
+\code{\link{annotate_de_results}()},
+\code{\link{annotate_genes}()},
+\code{\link{plot_enrichment_dotplot}()},
+\code{\link{plot_gsea_running_score}()},
+\code{\link{run_gsea}()},
+\code{\link{run_ora}()},
+\code{\link{run_pathway_analysis}()}
+}
+\concept{pathway}

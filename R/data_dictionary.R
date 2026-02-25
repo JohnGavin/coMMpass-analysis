@@ -11,6 +11,7 @@
 #'
 #' @return A tibble with columns: variable, category, data_type, units,
 #'   description, typical_range, gdc_link
+#' @family data-dictionary
 #' @export
 #' @examples
 #' dd <- get_commpass_data_dictionary()
@@ -190,6 +191,7 @@ get_commpass_data_dictionary <- function() {
 #' @param variable Character string naming the variable to document
 #' @return A list with elements: variable, description, scientific_context,
 #'   calculation, usage_notes, references
+#' @family data-dictionary
 #' @export
 #' @examples
 #' docs <- get_variable_docs("age_at_diagnosis")

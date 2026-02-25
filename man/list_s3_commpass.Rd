@@ -29,3 +29,13 @@ rna_files <- list_s3_commpass(prefix = "RNA-seq/")
 length(files)
 }
 }
+\seealso{
+Other data-acquisition: 
+\code{\link{acquire_commpass_data}()},
+\code{\link{download_clinical_data}()},
+\code{\link{download_gdc_rnaseq}()},
+\code{\link{download_s3_subset}()},
+\code{\link{get_commpass_clinical}()},
+\code{\link{query_commpass_rna}()}
+}
+\concept{data-acquisition}

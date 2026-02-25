@@ -43,12 +43,16 @@ c(
   plan_cytogenetic,    # Cytogenetic marker extraction from clinical data
   plan_eda,            # Exploratory data analysis summaries
   plan_doc_examples,   # Code-as-targets for vignette display blocks
+  plan_vignette_outputs, # Pre-computed vignette display objects
   plan_quality_control,
   plan_differential_expression,
   plan_de_visualization,   # VST, PCA, volcano/MA/heatmap data
   plan_survival_analysis,
+  plan_survival_shiny,     # Pre-computed survival for Shiny module
   plan_pathway_analysis,
   plan_gene_annotation,    # Ensembl -> symbol, enrichment viz data
   plan_cytogenetic_viz,    # Oncoprint and co-occurrence visualization
-  plan_pkgctx           # Auto-generate .ctx.yaml API context files
+  plan_api,             # Static JSON API generation (Phase 1)
+  plan_pkgctx,          # Auto-generate .ctx.yaml API context files
+  plan_dag_validation   # Cross-layer dependency validation
 )

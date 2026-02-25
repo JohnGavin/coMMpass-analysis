@@ -36,3 +36,11 @@ cyto <- arrow::read_parquet("data/raw/clinical/cytogenetic_data.parquet")
 plot_cytogenetic_oncoprint(cyto)
 }
 }
+\seealso{
+Other cytogenetics: 
+\code{\link{calculate_cooccurrence}()},
+\code{\link{extract_cytogenetic_data}()},
+\code{\link{plot_cooccurrence_heatmap}()},
+\code{\link{summarize_cytogenetics}()}
+}
+\concept{cytogenetics}

@@ -57,6 +57,109 @@ arguments:
 returns: A lazy dbplyr tbl.
 ---
 kind: function
+name: run_deseq2
+exported: true
+signature: run_deseq2(se_data,clinical_data,design_formula = ~condition,shrink_lfc = TRUE,paired = FALSE)
+arguments:
+  clinical_data: Clinical data frame
+  design_formula: Design formula for the model
+  paired: If TRUE, use paired longitudinal design with patient as blocking factor.
+  se_data: A SummarizedExperiment object
+  shrink_lfc: If TRUE, apply apeglm LFC shrinkage (default TRUE)
+returns: List with DE results including raw and shrunken (if requested)
+---
+kind: function
+name: extract_cytogenetic_data
+exported: true
+signature: extract_cytogenetic_data(clinical_dir)
+arguments:
+  clinical_dir: Path to clinical data directory (from download_clinical_data)
+returns: Path to saved cytogenetic parquet file
+---
+kind: function
+name: plot_km
+exported: true
+signature: plot_km(km_result,title = "Kaplan-Meier Survival Curve",xlab = "Time (days)",time_breaks = NULL)
+arguments:
+  km_result: List from [run_kaplan_meier()] with `fit`, `logrank_p`, `median_survival`, `n_per_group`, `strata`
+  time_breaks: Sequence of time breaks for x-axis (in days).
+  title: Plot title
+  xlab: X-axis label
+returns: A ggplot object
+---
+kind: function
+name: plot_forest
+exported: true
+signature: plot_forest(cox_result, title = "Cox Regression Forest Plot")
+arguments:
+  cox_result: List from [run_cox_regression()] with `hazard_ratios`, `concordance`, `n`, `n_events`
+  title: Plot title
+returns: A ggplot object
+---
+kind: function
+name: run_km_by_markers
+exported: true
+signature: run_km_by_markers(surv_data,markers = NULL,min_positive = 3L)
+arguments:
+  markers: Character vector of marker column names.
+  min_positive: Minimum number of positive cases to run analysis (default 3)
+  surv_data: Data frame from [prepare_survival_data()]
+returns: Named list of KM results, one per marker
+---
+kind: function
+name: api_list_datasets
+exported: true
+signature: api_list_datasets()
+returns: 'A data frame with columns: dataset, description, format, n_rows, n_cols, last_updated'
+---
+kind: function
+name: api_get_clinical
+exported: true
+signature: api_get_clinical(patient_ids = NULL, variables = NULL,store = "_targets")
+arguments:
+  patient_ids: Optional character vector of patient IDs to filter
+  store: 'Path to targets store (default: "_targets")'
+  variables: Optional character vector of column names to select
+returns: A data frame of clinical data, or NULL if unavailable
+---
+kind: function
+name: api_get_de_results
+exported: true
+signature: api_get_de_results(padj_threshold = 1, lfc_threshold = 0,store = "_targets")
+arguments:
+  lfc_threshold: 'Filter to genes with absolute log2FC above this threshold (default: 0, i.e., no filter)'
+  padj_threshold: 'Filter to genes with padj below this threshold (default: 1, i.e., no filter)'
+  store: Path to targets store
+returns: A data frame of DE results, or NULL if unavailable
+---
+kind: function
+name: api_get_survival
+exported: true
+signature: api_get_survival(store = "_targets")
+arguments:
+  store: Path to targets store
+returns: A data frame of survival data, or NULL if unavailable
+---
+kind: function
+name: api_get_pathways
+exported: true
+signature: api_get_pathways(significant_only = FALSE, store = "_targets")
+arguments:
+  significant_only: If TRUE, return only pathways with padj < 0.05
+  store: Path to targets store
+returns: A data frame of pathway results, or NULL if unavailable
+---
+kind: function
+name: api_serve
+exported: true
+signature: api_serve(port = 8080L, host = "127.0.0.1",store = "_targets")
+arguments:
+  host: 'Host address (default: "127.0.0.1")'
+  port: 'Port number (default: 8080)'
+  store: 'Path to targets store (default: "_targets")'
+returns: Invisible NULL (starts server)
+---
+kind: function
 name: download_gdc_rnaseq
 exported: true
 signature: download_gdc_rnaseq(project_id = "MMRF-COMMPASS",data_dir = "data/raw/gdc",sample_limit = 200,random_sample = TRUE,seed = 42,use_parquet = TRUE)
@@ -94,22 +197,198 @@ arguments:
 returns: List of file paths to the downloaded data
 ---
 kind: function
+name: annotate_genes
+exported: true
+signature: annotate_genes(ensembl_ids)
+arguments:
+  ensembl_ids: Character vector of Ensembl gene IDs (versions stripped)
+returns: 'Data frame with columns: ensembl_gene, gene_symbol, entrez_gene.'
+---
+kind: function
+name: annotate_de_results
+exported: true
+signature: annotate_de_results(de_results, annotation)
+arguments:
+  annotation: Data frame from annotate_genes()
+  de_results: Data frame with Ensembl IDs as rownames
+returns: DE results with gene_symbol column prepended
+---
+kind: function
+name: plot_enrichment_dotplot
+exported: true
+signature: plot_enrichment_dotplot(enrich_result,n = 15L,color_by = "padj",title = "Enrichment Dot Plot")
+arguments:
+  color_by: 'Which metric to color by: "padj" (default) or "NES"'
+  enrich_result: Data frame with pathway enrichment results.
+  n: Number of top pathways to show (default 15)
+  title: Plot title
+returns: A ggplot2 object
+---
+kind: function
+name: plot_enrichment_barplot
+exported: true
+signature: plot_enrichment_barplot(enrich_result,n = 15L,title = "Enrichment Bar Plot")
+arguments:
+  enrich_result: Data frame with pathway enrichment results
+  n: Number of top pathways to show (default 15)
+  title: Plot title
+returns: A ggplot2 object
+---
+kind: function
+name: plot_gsea_running_score
+exported: true
+signature: plot_gsea_running_score(gsea_result,gene_set_name,gene_sets = NULL,title = NULL)
+arguments:
+  gene_set_name: Name of the gene set to plot
+  gene_sets: Named list of gene sets (required for tick marks).
+  gsea_result: List from run_gsea() containing results and ranked_genes
+  title: 'Plot title (default: gene set name)'
+returns: A ggplot2 object
+---
+kind: function
 name: prepare_survival_data
 exported: true
-signature: prepare_survival_data(clinical_data, se_data)
+signature: prepare_survival_data(clinical_data, cyto_file = NULL)
 arguments:
-  clinical_data: Clinical data frame
-  se_data: A SummarizedExperiment object (optional)
-returns: Data frame with survival time, status, and covariates
+  clinical_data: Cleaned clinical data frame (from clean_clinical_data)
+  cyto_file: Path to cytogenetic parquet file (from extract_cytogenetic_data), or NULL to skip cytogenetic...
+returns: 'Data frame with columns: patient_id, time_days, status (0=censored, 1=dead), age_years, gender,...'
+---
+kind: function
+name: run_kaplan_meier
+exported: true
+signature: run_kaplan_meier(surv_data, strata = NULL)
+arguments:
+  strata: Column name to stratify by (e.g.
+  surv_data: Data frame from [prepare_survival_data()] with columns `time_days` and `status`
+returns: 'List with components: - `fit`: survfit object - `logrank`: survdiff result (NULL if no strata) -...'
+---
+kind: function
+name: extract_risk_table
+exported: true
+signature: extract_risk_table(km_result,times = c(0, 365, 730, 1095, 1460))
+arguments:
+  km_result: List returned by [run_kaplan_meier()]
+  times: Numeric vector of time points (in days) at which to evaluate the risk table.
+returns: 'Data frame with columns: time, n_risk, n_event, n_censor, survival, and optionally strata (if...'
+---
+kind: function
+name: run_cox_regression
+exported: true
+signature: run_cox_regression(surv_data,covariates = c("age_years", "gender"))
+arguments:
+  covariates: Character vector of covariate column names
+  surv_data: Data frame from [prepare_survival_data()]
+returns: 'List with components: - `model`: coxph object - `hazard_ratios`: data frame with HR, CI, p-values -...'
 ---
 kind: function
 name: run_gsea
 exported: true
-signature: run_gsea(se_data, clinical_data)
+signature: run_gsea(de_results,gene_sets = "hallmark",gene_id_type = "ensembl_gene",min_size = 15L,max_size = 500L)
 arguments:
-  clinical_data: Clinical data frame
-  se_data: A SummarizedExperiment object
-returns: List with GSEA results
+  de_results: Data frame of DE results.
+  gene_id_type: 'Type of gene identifiers: "ensembl_gene" (default), "gene_symbol", or "entrez_gene".'
+  gene_sets: 'Character string specifying the MSigDB collection: "hallmark" (default), "kegg", "reactome", "go_bp", "go_mf", "go_cc", "c2", "c7".'
+  max_size: 'Maximum gene set size (default: 500).'
+  min_size: 'Minimum gene set size (default: 15).'
+returns: 'List with components: Data frame with pathway, NES, pval, padj, size, leadingEdge columns.'
+---
+kind: function
+name: run_ora
+exported: true
+signature: run_ora(sig_genes,universe,gene_sets = "hallmark",gene_id_type = "ensembl_gene",min_size = 10L,max_size = 500L)
+arguments:
+  gene_id_type: 'Type of gene identifiers: "ensembl_gene" (default), "gene_symbol", or "entrez_gene".'
+  gene_sets: Character string specifying the MSigDB collection (same options as [run_gsea()]), or a named list of character vectors.
+  max_size: 'Maximum gene set size (default: 500).'
+  min_size: 'Minimum gene set size (default: 10).'
+  sig_genes: Character vector of significant gene identifiers.
+  universe: Character vector of all tested gene identifiers (background).
+returns: 'List with components: Data frame with pathway, overlap, gene_set_size, universe_size, p_value, padj, odds_ratio, overlapping_genes.'
+---
+kind: function
+name: run_pathway_analysis
+exported: true
+signature: run_pathway_analysis(de_genes, method = "hallmark")
+arguments:
+  de_genes: Consensus DE result from [find_consensus_genes()] with consensus_genes character vector and by_method list.
+  method: 'Gene set collection: "hallmark" (default), "kegg", "reactome", "go_bp".'
+returns: List with ORA results (see [run_ora()]).
+---
+kind: function
+name: run_vst
+exported: true
+signature: run_vst(se_data, blind = TRUE)
+arguments:
+  blind: Logical, whether VST should be blind to the design (default TRUE for exploratory analysis)
+  se_data: SummarizedExperiment with "counts" assay
+returns: SummarizedExperiment with "vst" assay added, or NULL if DESeq2 is not available
+---
+kind: function
+name: compute_pca
+exported: true
+signature: compute_pca(expr_matrix, n_top = 500L, metadata = NULL)
+arguments:
+  expr_matrix: Numeric matrix (genes x samples) of transformed expression values (e.g., VST or logCPM)
+  metadata: Optional data frame of sample annotations to merge with PCA coordinates
+  n_top: Number of most variable genes to use (default 500)
+returns: 'List with components: coords (data frame with PC1, PC2, ...), var_explained (numeric vector of...'
+---
+kind: function
+name: plot_volcano
+exported: true
+signature: plot_volcano(de_results,lfc_threshold = 1,padj_threshold = 0.05,n_label = 10L,title = "Volcano Plot")
+arguments:
+  de_results: Data frame with DE results (must have padj and log2FC columns -- auto-detected from...
+  lfc_threshold: Log2 fold-change threshold for significance (default 1)
+  n_label: Number of top genes to label (default 10)
+  padj_threshold: Adjusted p-value threshold (default 0.05)
+  title: Plot title
+returns: A ggplot2 object
+---
+kind: function
+name: plot_ma
+exported: true
+signature: plot_ma(de_results,lfc_threshold = 1,padj_threshold = 0.05,title = "MA Plot")
+arguments:
+  de_results: Data frame with DE results
+  lfc_threshold: Log2 fold-change threshold for coloring (default 1)
+  padj_threshold: Adjusted p-value threshold (default 0.05)
+  title: Plot title
+returns: A ggplot2 object
+---
+kind: function
+name: plot_pca
+exported: true
+signature: plot_pca(pca_data,color_by = NULL,shape_by = NULL,title = "PCA")
+arguments:
+  color_by: Column name in coords to color by (default NULL)
+  pca_data: List from compute_pca() with coords and var_explained
+  shape_by: Column name in coords to use for shape (default NULL)
+  title: Plot title
+returns: A ggplot2 object
+---
+kind: function
+name: plot_heatmap_de
+exported: true
+signature: plot_heatmap_de(expr_matrix,de_results,n_genes = 50L,annotation_df = NULL,title = "Top DE Genes")
+arguments:
+  annotation_df: Optional data frame of sample annotations for column annotation
+  de_results: Data frame with DE results (rownames = gene IDs)
+  expr_matrix: Numeric matrix of transformed expression (genes x samples)
+  n_genes: Number of top DE genes to show (default 50)
+  title: Plot title
+returns: A ggplot2 object (tile-based heatmap)
+---
+kind: function
+name: summarize_de_methods
+exported: true
+signature: summarize_de_methods(de_list,padj_threshold = 0.05,lfc_threshold = 1)
+arguments:
+  de_list: Named list of DE result lists (each with results_table)
+  lfc_threshold: Log2 fold-change threshold (default 1)
+  padj_threshold: Adjusted p-value threshold (default 0.05)
+returns: Data frame with method, n_tested, n_sig, n_up, n_down
 ---
 kind: function
 name: clean_clinical_data
@@ -187,3 +466,58 @@ signature: get_variable_docs(variable)
 arguments:
   variable: Character string naming the variable to document
 returns: 'A list with elements: variable, description, scientific_context, calculation, usage_notes,...'
+---
+kind: function
+name: plot_cytogenetic_oncoprint
+exported: true
+signature: plot_cytogenetic_oncoprint(cyto_data,markers = NULL,sort_by = c("frequency", "risk"),title = "Cytogenetic Landscape")
+arguments:
+  cyto_data: 'Data frame from extract_cytogenetic_data() with columns: patient_id, iss_stage, t_4_14, t_11_14, t_14_16, del_17p, gain_1q, etc.'
+  markers: Character vector of marker columns to include.
+  sort_by: How to sort patients.
+  title: Plot title.
+returns: A ggplot object
+---
+kind: function
+name: calculate_cooccurrence
+exported: true
+signature: calculate_cooccurrence(cyto_data, markers = NULL)
+arguments:
+  cyto_data: Data frame from extract_cytogenetic_data()
+  markers: Character vector of marker columns.
+returns: 'Data frame with columns: marker1, marker2, odds_ratio, pvalue, padj (BH-corrected), n_both,...'
+---
+kind: function
+name: plot_cooccurrence_heatmap
+exported: true
+signature: plot_cooccurrence_heatmap(cooccurrence,title = "Cytogenetic Co-occurrence")
+arguments:
+  cooccurrence: Data frame from calculate_cooccurrence()
+  title: Plot title
+returns: A ggplot object
+---
+kind: function
+name: summarize_cytogenetics
+exported: true
+signature: summarize_cytogenetics(cyto_data)
+arguments:
+  cyto_data: Data frame from extract_cytogenetic_data()
+returns: Data frame with marker, n_positive, n_tested, pct columns
+---
+kind: function
+name: generate_api_index
+exported: true
+signature: generate_api_index(base_url = "https://JohnGavin.github.io/coMMpass-analysis/api/v1")
+arguments:
+  base_url: Base URL for the static API.
+returns: A list suitable for JSON serialization containing endpoint catalogue, version, and generated timestamp.
+---
+kind: function
+name: generate_api_endpoint
+exported: true
+signature: generate_api_endpoint(data, dataset_name, description)
+arguments:
+  data: A data frame to serialize, or NULL if data is unavailable
+  dataset_name: Short name for this dataset (e.g.
+  description: Human-readable description
+returns: A JSON string (character scalar) with `metadata` and `data` fields

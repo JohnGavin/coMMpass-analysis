@@ -20,6 +20,7 @@ utils::globalVariables(c(
 #' @param sort_by How to sort patients. One of "frequency" (default) or "risk".
 #' @param title Plot title.
 #' @return A ggplot object
+#' @family cytogenetics
 #' @export
 #' @examples
 #' \dontrun{
@@ -175,6 +176,7 @@ plot_cytogenetic_oncoprint <- function(cyto_data,
 #' @return Data frame with columns: marker1, marker2, odds_ratio, pvalue,
 #'   padj (BH-corrected), n_both, n_either, tendency
 #'   (co-occurrence/exclusive/none)
+#' @family cytogenetics
 #' @export
 #' @examples
 #' \dontrun{
@@ -252,6 +254,7 @@ calculate_cooccurrence <- function(cyto_data, markers = NULL) {
 #' @param cooccurrence Data frame from calculate_cooccurrence()
 #' @param title Plot title
 #' @return A ggplot object
+#' @family cytogenetics
 #' @export
 #' @examples
 #' \dontrun{
@@ -336,6 +339,7 @@ plot_cooccurrence_heatmap <- function(cooccurrence,
 #'
 #' @param cyto_data Data frame from extract_cytogenetic_data()
 #' @return Data frame with marker, n_positive, n_tested, pct columns
+#' @family cytogenetics
 #' @export
 #' @examples
 #' \dontrun{

@@ -22,3 +22,14 @@ List with components: coords (data frame with PC1, PC2, ...),
 \description{
 Compute PCA from transformed expression data
 }
+\seealso{
+Other differential-expression: 
+\code{\link{plot_heatmap_de}()},
+\code{\link{plot_ma}()},
+\code{\link{plot_pca}()},
+\code{\link{plot_volcano}()},
+\code{\link{run_deseq2}()},
+\code{\link{run_vst}()},
+\code{\link{summarize_de_methods}()}
+}
+\concept{differential-expression}

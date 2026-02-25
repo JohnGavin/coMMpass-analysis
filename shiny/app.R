@@ -614,9 +614,9 @@ mod_survival_viz_server <- function(id, shared_data) {
       }
       
       if (input$group_by != "none" && input$group_by %in% names(surv_data)) {
-        formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ ", input$group_by))
-        fit <- survfit(formula, data = surv_data)
-        
+        formula <- as.formula(paste0("survival::Surv(", time_col, ", ", status_col, ") ~ ", input$group_by))
+        fit <- survival::survfit(formula, data = surv_data)
+
         groups <- unique(surv_data[[input$group_by]])
         colors <- c("#2E86AB", "#A23B72", "#F18F01")
         
@@ -642,9 +642,9 @@ mod_survival_viz_server <- function(id, shared_data) {
           yaxis = list(title = "Survival Probability", range = c(0, 1))
         )
       } else {
-        formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ 1"))
-        fit <- survfit(formula, data = surv_data)
-        
+        formula <- as.formula(paste0("survival::Surv(", time_col, ", ", status_col, ") ~ 1"))
+        fit <- survival::survfit(formula, data = surv_data)
+
         p <- plot_ly(
           x = c(0, fit$time),
           y = c(1, fit$surv),
@@ -672,15 +672,15 @@ mod_survival_viz_server <- function(id, shared_data) {
       
       if (time_col %in% names(surv_data) && status_col %in% names(surv_data)) {
         if (input$group_by != "none" && input$group_by %in% names(surv_data)) {
-          formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ ", input$group_by))
-          survdiff_result <- survdiff(formula, data = surv_data)
+          formula <- as.formula(paste0("survival::Surv(", time_col, ", ", status_col, ") ~ ", input$group_by))
+          survdiff_result <- survival::survdiff(formula, data = surv_data)
           p_value <- 1 - pchisq(survdiff_result$chisq, length(survdiff_result$n) - 1)
           cat("Log-rank test p-value:", format(p_value, digits = 4), "\n\n")
-          fit <- survfit(formula, data = surv_data)
+          fit <- survival::survfit(formula, data = surv_data)
           print(fit)
         } else {
-          formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ 1"))
-          fit <- survfit(formula, data = surv_data)
+          formula <- as.formula(paste0("survival::Surv(", time_col, ", ", status_col, ") ~ 1"))
+          fit <- survival::survfit(formula, data = surv_data)
           print(fit)
         }
       } else {

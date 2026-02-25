@@ -31,3 +31,14 @@ A ggplot2 object (tile-based heatmap)
 Creates a heatmap of the top differentially expressed genes using
 z-score scaled expression values.
 }
+\seealso{
+Other differential-expression: 
+\code{\link{compute_pca}()},
+\code{\link{plot_ma}()},
+\code{\link{plot_pca}()},
+\code{\link{plot_volcano}()},
+\code{\link{run_deseq2}()},
+\code{\link{run_vst}()},
+\code{\link{summarize_de_methods}()}
+}
+\concept{differential-expression}

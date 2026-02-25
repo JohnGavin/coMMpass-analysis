@@ -71,9 +71,10 @@
 ^_pkgdown\.yml$
 ^pkgdown$
 
-# Hidden directories
+# Hidden directories and files
 ^\.claude$
 ^\.github$
+^\.lintr$
 ^vignettes/\.quarto$
 
 # LICENSE (included via License field)

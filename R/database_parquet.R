@@ -14,6 +14,7 @@
 #' @param collect If TRUE (default), collect results into a data frame.
 #'   If FALSE, return a lazy tbl for further dplyr operations.
 #' @return A data frame (if collect=TRUE) or lazy dbplyr tbl
+#' @family storage
 #' @export
 #' @examples
 #' \dontrun{
@@ -90,6 +91,7 @@ query_commpass_parquet <- function(
 #'   is created and returned as an attribute of the result.
 #' @return A lazy dbplyr tbl. If con was NULL, the DuckDB connection is stored
 #'   as attr(result, "connection") - caller must disconnect it.
+#' @family storage
 #' @export
 #' @examples
 #' \dontrun{

@@ -1,0 +1,230 @@
+---
+title: "03. Exploratory Data Analysis"
+format: html
+vignette: >
+  %\VignetteIndexEntry{03. Exploratory Data Analysis}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 5
+)
+library(targets)
+
+# Discover targets store
+proj_dir <- Sys.getenv("TAR_PROJECT")
+tar_store <- NULL
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_store <- file.path(proj_dir, "_targets")
+} else if (dir.exists("_targets")) {
+  tar_store <- "_targets"
+} else if (dir.exists("../_targets")) {
+  tar_store <- "../_targets"
+}
+
+safe_tar_read <- function(name) {
+  if (is.null(tar_store)) return(NULL)
+  tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
+}
+```
+
+## Overview
+
+> See the [Glossary](glossary.html) for term definitions used throughout this project.
+
+- Patient demographics, biospecimen characteristics, and RNA-seq quality metrics
+- DuckDB queries against underlying parquet files
+- Cytogenetic alteration frequencies and co-occurrence patterns
+
+All summaries are **pre-computed** as targets (`vig_*`). If you have not
+yet run the pipeline, placeholder messages appear instead of plots.
+Run `targets::tar_make()` to populate the data.
+
+## Clinical Demographics
+
+```{r clinical-demographics, results='asis'}
+safe_tar_read("vig_clinical_demographics_text")
+```
+
+### Age at Diagnosis
+
+```{r age-histogram, fig.cap = "Age at diagnosis distribution for CoMMpass patients. GDC stores age in days; values are converted to years (age / 365.25). Data: GDC clinical endpoint."}
+safe_tar_read("vig_age_histogram")
+```
+
+### Gender Distribution
+
+```{r gender-table}
+safe_tar_read("vig_gender_table")
+```
+
+### Race Distribution
+
+```{r race-table}
+safe_tar_read("vig_race_table")
+```
+
+### Vital Status
+
+```{r vital-status}
+safe_tar_read("vig_vital_table")
+```
+
+## ISS Staging
+
+The International Staging System (ISS) classifies multiple myeloma into three
+stages based on serum beta-2 microglobulin and albumin levels. Higher stages
+indicate more advanced disease and worse prognosis.
+
+```{r iss-distribution, results='asis'}
+safe_tar_read("vig_iss_distribution_text")
+```
+
+### ISS Stage Distribution
+
+```{r iss-table}
+safe_tar_read("vig_iss_table")
+```
+
+```{r iss-barplot, fig.cap = "ISS stage distribution across CoMMpass patients. Higher stages indicate more advanced disease. ISS = International Staging System."}
+safe_tar_read("vig_iss_barplot")
+```
+
+### Age by ISS Stage
+
+```{r iss-age}
+safe_tar_read("vig_iss_age_table")
+```
+
+## Survival Endpoints
+
+```{r survival-endpoints, results='asis'}
+safe_tar_read("vig_survival_endpoints")
+```
+
+## Biospecimen Overview
+
+```{r biospecimen-overview, results='asis'}
+safe_tar_read("vig_biospecimen_overview_text")
+```
+
+### Sample Types
+
+```{r sample-type-bar, fig.cap = "Sample type distribution across all CoMMpass biospecimens. Data: GDC biospecimen endpoint."}
+safe_tar_read("vig_sample_type_barplot")
+```
+
+### Samples per Patient
+
+```{r samples-per-patient, fig.cap = "Number of biospecimen samples per patient. Most patients have multiple samples (longitudinal collection). Data: GDC biospecimen."}
+safe_tar_read("vig_samples_per_patient_hist")
+```
+
+## RNA-seq Quality
+
+```{r rnaseq-quality, results='asis'}
+safe_tar_read("vig_rnaseq_quality_text")
+```
+
+### Library Size Distribution
+
+```{r library-size-boxplot, fig.cap = "Library sizes (millions of reads) across RNA-seq samples. Library size = total mapped read counts per sample. Data: GDC STAR-Counts."}
+safe_tar_read("vig_library_size_boxplot")
+```
+
+### Genes Detected per Sample
+
+```{r genes-detected-histogram, fig.cap = "Number of genes detected (count > 0) per RNA-seq sample. Samples with unusually low detection may be outliers. Data: GDC STAR-Counts."}
+safe_tar_read("vig_genes_detected_hist")
+```
+
+## Cytogenetic Landscape
+
+Cytogenetic markers from FISH testing are key to myeloma risk stratification
+([IMWG 2014 criteria](https://doi.org/10.1200/JCO.2014.55.1519)).
+High-risk alterations include t(4;14), t(14;16), del(17p), and gain(1q).
+
+### Alteration Frequencies
+
+```{r cyto-frequency}
+safe_tar_read("vig_cyto_frequency_table")
+```
+
+### Oncoprint
+
+```{r cyto-oncoprint, fig.height = 5, fig.cap = "Cytogenetic oncoprint showing alteration landscape across patients. Rows: FISH markers. Columns: patients sorted by alteration frequency. Blue = translocation, red = deletion, green = gain. Percentages show alteration frequency among tested patients."}
+safe_tar_read("vig_cyto_oncoprint")
+```
+
+### Co-occurrence Analysis
+
+```{r cyto-cooccurrence}
+safe_tar_read("vig_cyto_cooccurrence_table")
+```
+
+```{r cyto-cooccurrence-heatmap, fig.cap = "Pairwise co-occurrence heatmap. Red: co-occurrence (positive association). Blue: mutual exclusivity (negative association). Color intensity: -log10(adjusted p-value). * = significant at padj < 0.05."}
+safe_tar_read("vig_cyto_cooccurrence_heatmap")
+```
+
+Cytogenetic markers are used for [survival stratification](survival-analysis.html) and inform [differential expression](differential-expression.html) analysis.
+
+## DuckDB Query Examples
+
+The package provides two functions for querying the parquet files:
+
+- `query_commpass_parquet()` -- one-shot query that returns a data frame
+- `get_commpass_tbl()` -- returns a lazy `dplyr::tbl()` for chained operations
+
+### Example: Simple Query
+
+```{r eda-simple-query-code, results='asis'}
+safe_tar_read("code_eda_simple_query")
+```
+
+```{r duckdb-demo-simple}
+safe_tar_read("vig_duckdb_demo_simple")
+```
+
+### Example: Aggregation with DuckDB
+
+```{r eda-aggregation-code, results='asis'}
+safe_tar_read("code_eda_aggregation")
+```
+
+```{r duckdb-demo-agg}
+safe_tar_read("vig_duckdb_demo_agg")
+```
+
+## Cross-dataset Integration
+
+```{r integration, results='asis'}
+safe_tar_read("vig_integration_text")
+```
+
+## Reproducibility
+
+<details>
+<summary>Git Commit Info (click to expand)</summary>
+
+```{r git-info}
+safe_tar_read("vig_git_info")
+```
+
+</details>
+
+<details>
+<summary>Session Info (click to expand)</summary>
+
+```{r session-info}
+sessionInfo()
+```
+
+</details>

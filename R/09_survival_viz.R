@@ -19,6 +19,7 @@ utils::globalVariables(c(
 #' @param time_breaks Sequence of time breaks for x-axis (in days). Default
 #'   marks every 365 days.
 #' @return A ggplot object
+#' @family survival
 #' @export
 plot_km <- function(km_result,
                     title = "Kaplan-Meier Survival Curve",
@@ -137,6 +138,7 @@ plot_km <- function(km_result,
 #'   `concordance`, `n`, `n_events`
 #' @param title Plot title
 #' @return A ggplot object
+#' @family survival
 #' @export
 plot_forest <- function(cox_result, title = "Cox Regression Forest Plot") {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
@@ -204,6 +206,7 @@ plot_forest <- function(cox_result, title = "Cox Regression Forest Plot") {
 #' @param markers Character vector of marker column names. Default auto-detects.
 #' @param min_positive Minimum number of positive cases to run analysis (default 3)
 #' @return Named list of KM results, one per marker
+#' @family survival
 #' @export
 run_km_by_markers <- function(surv_data,
                                markers = NULL,

@@ -9,7 +9,7 @@ URL: https://JohnGavin.github.io/coMMpass-analysis/,
 BugReports: https://github.com/JohnGavin/coMMpass-analysis/issues
 Encoding: UTF-8
 RoxygenNote: 7.3.3
-VignetteBuilder: knitr
+VignetteBuilder: quarto, knitr
 Imports:
     TCGAbiolinks,
     SummarizedExperiment,
@@ -22,12 +22,14 @@ Imports:
     duckdb,
     dbplyr,
     cli,
+    jsonlite,
     glue,
     stringr,
     tibble
 Suggests:
     AnnotationDbi,
     apeglm,
+    quarto,
     targets,
     tarchetypes,
     crew,
@@ -48,5 +50,9 @@ Suggests:
     gert,
     nanoparquet,
     DT,
-    plotly
+    htmltools,
+    plotly,
+    plumber,
+    visNetwork,
+    here
 Config/testthat/edition: 3

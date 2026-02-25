@@ -18,3 +18,14 @@ Maps Ensembl gene IDs to HGNC symbols and Entrez IDs. Uses msigdbr gene
 mapping as the primary source (always available with msigdbr). Falls back
 to org.Hs.eg.db + AnnotationDbi if msigdbr is not installed.
 }
+\seealso{
+Other pathway: 
+\code{\link{annotate_de_results}()},
+\code{\link{plot_enrichment_barplot}()},
+\code{\link{plot_enrichment_dotplot}()},
+\code{\link{plot_gsea_running_score}()},
+\code{\link{run_gsea}()},
+\code{\link{run_ora}()},
+\code{\link{run_pathway_analysis}()}
+}
+\concept{pathway}

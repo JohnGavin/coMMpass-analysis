@@ -10,6 +10,7 @@
 #' @param ensembl_ids Character vector of Ensembl gene IDs (versions stripped)
 #' @return Data frame with columns: ensembl_gene, gene_symbol, entrez_gene.
 #'   Unmappable IDs have NA for symbol/entrez.
+#' @family pathway
 #' @export
 annotate_genes <- function(ensembl_ids) {
   if (is.null(ensembl_ids) || length(ensembl_ids) == 0) {
@@ -132,6 +133,7 @@ annotate_via_orgdb <- function(ensembl_ids) {
 #' @param de_results Data frame with Ensembl IDs as rownames
 #' @param annotation Data frame from annotate_genes()
 #' @return DE results with gene_symbol column prepended
+#' @family pathway
 #' @export
 annotate_de_results <- function(de_results, annotation) {
   if (is.null(de_results) || nrow(de_results) == 0) return(de_results)
@@ -159,6 +161,7 @@ annotate_de_results <- function(de_results, annotation) {
 #' @param color_by Which metric to color by: "padj" (default) or "NES"
 #' @param title Plot title
 #' @return A ggplot2 object
+#' @family pathway
 #' @export
 plot_enrichment_dotplot <- function(
   enrich_result,
@@ -242,6 +245,7 @@ plot_enrichment_dotplot <- function(
 #' @param n Number of top pathways to show (default 15)
 #' @param title Plot title
 #' @return A ggplot2 object
+#' @family pathway
 #' @export
 plot_enrichment_barplot <- function(
   enrich_result,
@@ -317,6 +321,7 @@ plot_enrichment_barplot <- function(
 #'   If NULL, attempts to retrieve from msigdbr using the collection.
 #' @param title Plot title (default: gene set name)
 #' @return A ggplot2 object
+#' @family pathway
 #' @export
 plot_gsea_running_score <- function(
   gsea_result,

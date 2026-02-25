@@ -21,3 +21,8 @@ dd <- get_commpass_data_dictionary()
 # Filter to clinical variables
 dplyr::filter(dd, category == "clinical")
 }
+\seealso{
+Other data-dictionary: 
+\code{\link{get_variable_docs}()}
+}
+\concept{data-dictionary}

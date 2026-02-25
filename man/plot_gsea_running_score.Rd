@@ -28,3 +28,14 @@ A ggplot2 object
 Shows the running enrichment score for a specific gene set from fgsea
 results, along with the ranked gene positions.
 }
+\seealso{
+Other pathway: 
+\code{\link{annotate_de_results}()},
+\code{\link{annotate_genes}()},
+\code{\link{plot_enrichment_barplot}()},
+\code{\link{plot_enrichment_dotplot}()},
+\code{\link{run_gsea}()},
+\code{\link{run_ora}()},
+\code{\link{run_pathway_analysis}()}
+}
+\concept{pathway}

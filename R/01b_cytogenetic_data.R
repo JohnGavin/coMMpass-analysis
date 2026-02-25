@@ -10,6 +10,7 @@
 #'
 #' @param clinical_dir Path to clinical data directory (from download_clinical_data)
 #' @return Path to saved cytogenetic parquet file
+#' @family cytogenetics
 #' @export
 #' @examples
 #' \dontrun{

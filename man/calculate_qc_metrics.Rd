@@ -15,3 +15,4 @@ A data frame with QC metrics per sample
 \description{
 Calculate QC metrics for RNA-seq data
 }
+\concept{quality-control}

@@ -1,0 +1,130 @@
+---
+title: "05. Survival Analysis"
+format: html
+vignette: >
+  %\VignetteIndexEntry{05. Survival Analysis}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 6
+)
+library(targets)
+
+# Discover targets store
+proj_dir <- Sys.getenv("TAR_PROJECT")
+tar_store <- NULL
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_store <- file.path(proj_dir, "_targets")
+} else if (dir.exists("_targets")) {
+  tar_store <- "_targets"
+} else if (dir.exists("../_targets")) {
+  tar_store <- "../_targets"
+}
+
+safe_tar_read <- function(name) {
+  if (is.null(tar_store)) return(NULL)
+  tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
+}
+```
+
+## Overview
+
+> See the [Glossary](glossary.html) for term definitions used throughout this project.
+
+- Survival analysis of the CoMMpass cohort stratified by clinical and cytogenetic features
+- **Kaplan-Meier curves** with log-rank tests for group comparisons
+- **Cox proportional hazards models** for multivariate analysis
+- **Forest plots** of hazard ratios with 95% confidence intervals
+
+> **Note:** This vignette was built in CI with `sample_limit=10`. Local builds
+> default to 100 samples. Numbers below reflect the CI subset.
+
+## Overall Survival
+
+```{r km-overall, fig.cap = "Overall Kaplan-Meier survival curve for all CoMMpass patients with valid survival data. Shaded region: 95% confidence interval. Time in days from diagnosis."}
+safe_tar_read("vig_km_overall")
+```
+
+```{r km-overall-text, results='asis'}
+safe_tar_read("vig_km_overall_text")
+```
+
+## Survival by ISS Stage
+
+- [ISS](https://doi.org/10.1200/JCO.2005.04.242) stratifies by serum albumin and beta-2 microglobulin
+- ISS III is expected to have worse survival than ISS I
+- See the [EDA vignette](exploratory-analysis.html) for ISS stage distributions
+
+```{r km-iss, fig.cap = "Kaplan-Meier curves by ISS stage (I, II, III). Log-rank p-value tests whether survival distributions differ across stages. ISS III patients are expected to have shorter survival. See Greipp et al. 2005 for ISS definition."}
+safe_tar_read("vig_km_iss")
+```
+
+## Survival by Cytogenetic Risk Group
+
+Cytogenetic risk per [IMWG 2014 criteria](https://doi.org/10.1200/JCO.2014.55.1519):
+**high-risk** = t(4;14) OR t(14;16) OR del(17p); **standard-risk** = all others.
+
+```{r km-risk, fig.cap = "Kaplan-Meier curves by IMWG cytogenetic risk group (high vs standard). High-risk: t(4;14), t(14;16), or del(17p). Standard-risk: all others. Log-rank p-value shown."}
+safe_tar_read("vig_km_risk")
+```
+
+## Survival by Individual Cytogenetic Markers
+
+Each marker is analyzed separately: patients with vs without the alteration.
+
+```{r km-markers, fig.height = 5, fig.cap = "Kaplan-Meier curves for individual cytogenetic markers. Each panel compares patients with (positive) vs without (negative) the alteration. Markers with fewer than 3 positive or negative patients are skipped."}
+safe_tar_read("vig_km_markers")
+```
+
+## Cox Proportional Hazards
+
+### Basic Model: Age + Gender
+
+```{r cox-basic}
+safe_tar_read("vig_cox_basic_table")
+```
+
+### Full Model: Age + Gender + ISS + Cytogenetic Risk
+
+```{r cox-full}
+safe_tar_read("vig_cox_full_table")
+```
+
+### Forest Plot
+
+```{r forest-plot, fig.cap = "Forest plot of hazard ratios from multivariate Cox regression. Points: HR estimates. Horizontal bars: 95% CI. Dashed line: HR = 1 (no effect). Log scale x-axis. Stars: significance level."}
+safe_tar_read("vig_forest_plot")
+```
+
+### Proportional Hazards Assumption
+
+```{r ph-test}
+safe_tar_read("vig_ph_test_table")
+```
+
+## Model Comparison
+
+```{r model-comparison}
+safe_tar_read("vig_cox_comparison")
+```
+
+## Next Steps
+
+- **Gene expression stratification**: Median-split KM by top DE gene
+  expression (requires DE and VST targets).
+- **Time-varying coefficients**: For covariates violating the PH assumption.
+- **Cure models**: If a plateau is observed in KM curves, consider
+  mixture cure models.
+- See the [cytogenetic landscape](exploratory-analysis.html) for alteration
+  frequencies underlying risk groups.
+- See the [DE results](differential-expression.html) for gene signatures
+  that could inform survival stratification.

@@ -27,3 +27,14 @@ A ggplot2 object
 Plots mean expression (x-axis) vs log2 fold change (y-axis), a standard
 diagnostic for RNA-seq DE analysis.
 }
+\seealso{
+Other differential-expression: 
+\code{\link{compute_pca}()},
+\code{\link{plot_heatmap_de}()},
+\code{\link{plot_pca}()},
+\code{\link{plot_volcano}()},
+\code{\link{run_deseq2}()},
+\code{\link{run_vst}()},
+\code{\link{summarize_de_methods}()}
+}
+\concept{differential-expression}

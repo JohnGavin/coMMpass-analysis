@@ -95,20 +95,83 @@ mod_survival_viz_server <- function(id, shared_data) {
     # Reactive for Cox results
     cox_results <- reactiveVal(NULL)
 
+    # --- Column name mapping ---
+    # Pipeline uses time_days/status; Shiny UI labels use os_time/iss_stage
+    # This helper resolves the actual column names in the data
+    resolve_cols <- function(surv_data, endpoint) {
+      if (endpoint == "os") {
+        time_col <- dplyr::case_when(
+          "time_days" %in% names(surv_data) ~ "time_days",
+          "os_time" %in% names(surv_data) ~ "os_time",
+          TRUE ~ "time"
+        )
+        status_col <- if ("status" %in% names(surv_data)) "status" else "os_status"
+      } else {
+        time_col <- if ("pfs_time" %in% names(surv_data)) "pfs_time" else "time"
+        status_col <- if ("pfs_status" %in% names(surv_data)) "pfs_status" else "status"
+      }
+      list(time = time_col, status = status_col)
+    }
+
+    # Map UI group_by values to pipeline column names
+    resolve_strata <- function(group_by) {
+      switch(group_by,
+        "stage" = "iss_stage",
+        group_by
+      )
+    }
+
+    # Try loading a pre-computed target, return NULL on failure
+    try_tar_read <- function(target_name) {
+      tryCatch(
+        targets::tar_read_raw(target_name),
+        error = function(e) NULL
+      )
+    }
+
+    # Build lookup key for pre-computed KM targets
+    km_target_key <- function(endpoint, group_by) {
+      strata_key <- switch(group_by,
+        "none" = "overall",
+        "risk_group" = "risk_group",
+        "stage" = "iss_stage",
+        "iss_stage" = "iss_stage",
+        "response" = "response",
+        NULL
+      )
+      if (is.null(strata_key)) return(NULL)
+      paste0(endpoint, "_", strata_key)
+    }
+
+    # Lookup index for pre-computed KM targets
+    km_target_map <- list(
+      os_overall    = "km_overall",
+      os_risk_group = "km_by_risk",
+      os_iss_stage  = "km_by_iss",
+      os_response   = "shiny_km_os_by_response",
+      pfs_overall   = "shiny_km_pfs_overall",
+      pfs_risk_group = "shiny_km_pfs_by_risk",
+      pfs_iss_stage = "shiny_km_pfs_by_iss"
+    )
+
+    risk_target_map <- list(
+      os_overall    = "shiny_risk_os_overall",
+      os_risk_group = "shiny_risk_os_by_risk",
+      os_iss_stage  = "shiny_risk_os_by_iss",
+      os_response   = "shiny_risk_os_by_response",
+      pfs_overall   = "shiny_risk_pfs_overall",
+      pfs_risk_group = "shiny_risk_pfs_by_risk",
+      pfs_iss_stage = "shiny_risk_pfs_by_iss"
+    )
+
     # Survival summary
     output$survival_summary <- renderTable({
       req(shared_data$survival_data)
 
       surv_data <- shared_data$survival_data
-
-      # Select time and status columns
-      if (input$survival_type == "os") {
-        time_col <- if ("os_time" %in% names(surv_data)) "os_time" else "time"
-        status_col <- if ("os_status" %in% names(surv_data)) "os_status" else "status"
-      } else {
-        time_col <- if ("pfs_time" %in% names(surv_data)) "pfs_time" else "time"
-        status_col <- if ("pfs_status" %in% names(surv_data)) "pfs_status" else "status"
-      }
+      cols <- resolve_cols(surv_data, input$survival_type)
+      time_col <- cols$time
+      status_col <- cols$status
 
       if (time_col %in% names(surv_data) && status_col %in% names(surv_data)) {
         data.frame(
@@ -136,19 +199,14 @@ mod_survival_viz_server <- function(id, shared_data) {
     output$km_plot <- renderPlotly({
       req(shared_data$survival_data)
 
-      library(survival)
-
       surv_data <- shared_data$survival_data
-
-      # Select appropriate columns
-      if (input$survival_type == "os") {
-        time_col <- if ("os_time" %in% names(surv_data)) "os_time" else "time"
-        status_col <- if ("os_status" %in% names(surv_data)) "os_status" else "status"
-        title_text <- "Overall Survival"
+      cols <- resolve_cols(surv_data, input$survival_type)
+      time_col <- cols$time
+      status_col <- cols$status
+      title_text <- if (input$survival_type == "os") {
+        "Overall Survival"
       } else {
-        time_col <- if ("pfs_time" %in% names(surv_data)) "pfs_time" else "time"
-        status_col <- if ("pfs_status" %in% names(surv_data)) "pfs_status" else "status"
-        title_text <- "Progression-Free Survival"
+        "Progression-Free Survival"
       }
 
       # Check if columns exist
@@ -166,12 +224,13 @@ mod_survival_viz_server <- function(id, shared_data) {
       }
 
       # Create survival object and fit
-      if (input$group_by != "none" && input$group_by %in% names(surv_data)) {
-        formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ ", input$group_by))
-        fit <- survfit(formula, data = surv_data)
+      strata_col <- resolve_strata(input$group_by)
+      if (input$group_by != "none" && strata_col %in% names(surv_data)) {
+        formula <- as.formula(paste0("survival::Surv(", time_col, ", ", status_col, ") ~ ", strata_col))
+        fit <- survival::survfit(formula, data = surv_data)
 
         # Get unique groups
-        groups <- unique(surv_data[[input$group_by]])
+        groups <- unique(surv_data[[strata_col]])
         n_groups <- length(groups)
 
         # Create plot data for each stratum
@@ -213,7 +272,7 @@ mod_survival_viz_server <- function(id, shared_data) {
 
         p <- plot_ly() %>%
           layout(
-            title = paste(title_text, "by", input$group_by),
+            title = paste(title_text, "by", strata_col),
             xaxis = list(title = "Time (days)"),
             yaxis = list(title = "Survival Probability", range = c(0, 1)),
             hovermode = 'x unified'
@@ -232,8 +291,8 @@ mod_survival_viz_server <- function(id, shared_data) {
 
       } else {
         # Overall survival without groups
-        formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ 1"))
-        fit <- survfit(formula, data = surv_data)
+        formula <- as.formula(paste0("survival::Surv(", time_col, ", ", status_col, ") ~ 1"))
+        fit <- survival::survfit(formula, data = surv_data)
 
         surv_df <- data.frame(
           time = c(0, fit$time),
@@ -275,35 +334,28 @@ mod_survival_viz_server <- function(id, shared_data) {
     output$km_stats <- renderPrint({
       req(shared_data$survival_data)
 
-      library(survival)
-
       surv_data <- shared_data$survival_data
-
-      # Select appropriate columns
-      if (input$survival_type == "os") {
-        time_col <- if ("os_time" %in% names(surv_data)) "os_time" else "time"
-        status_col <- if ("os_status" %in% names(surv_data)) "os_status" else "status"
-      } else {
-        time_col <- if ("pfs_time" %in% names(surv_data)) "pfs_time" else "time"
-        status_col <- if ("pfs_status" %in% names(surv_data)) "pfs_status" else "status"
-      }
+      cols <- resolve_cols(surv_data, input$survival_type)
+      time_col <- cols$time
+      status_col <- cols$status
 
       if (time_col %in% names(surv_data) && status_col %in% names(surv_data)) {
-        if (input$group_by != "none" && input$group_by %in% names(surv_data)) {
-          formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ ", input$group_by))
+        strata_col <- resolve_strata(input$group_by)
+        if (input$group_by != "none" && strata_col %in% names(surv_data)) {
+          formula <- as.formula(paste0("survival::Surv(", time_col, ", ", status_col, ") ~ ", strata_col))
 
           # Log-rank test
-          survdiff_result <- survdiff(formula, data = surv_data)
+          survdiff_result <- survival::survdiff(formula, data = surv_data)
           p_value <- 1 - pchisq(survdiff_result$chisq, length(survdiff_result$n) - 1)
 
           cat("Log-rank test p-value:", format(p_value, digits = 4), "\n")
 
           # Median survival by group
-          fit <- survfit(formula, data = surv_data)
+          fit <- survival::survfit(formula, data = surv_data)
           print(fit)
         } else {
-          formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ 1"))
-          fit <- survfit(formula, data = surv_data)
+          formula <- as.formula(paste0("survival::Surv(", time_col, ", ", status_col, ") ~ 1"))
+          fit <- survival::survfit(formula, data = surv_data)
           print(fit)
         }
       } else {
@@ -316,35 +368,35 @@ mod_survival_viz_server <- function(id, shared_data) {
       req(shared_data$survival_data)
       req(length(input$cox_covariates) > 0)
 
-      library(survival)
-      library(broom)
-
       surv_data <- shared_data$survival_data
+      cols <- resolve_cols(surv_data, input$survival_type)
+      time_col <- cols$time
+      status_col <- cols$status
 
-      # Select appropriate columns
-      if (input$survival_type == "os") {
-        time_col <- if ("os_time" %in% names(surv_data)) "os_time" else "time"
-        status_col <- if ("os_status" %in% names(surv_data)) "os_status" else "status"
-      } else {
-        time_col <- if ("pfs_time" %in% names(surv_data)) "pfs_time" else "time"
-        status_col <- if ("pfs_status" %in% names(surv_data)) "pfs_status" else "status"
-      }
+      # Map UI covariate names to pipeline column names
+      covar_map <- c(
+        "age" = "age_years",
+        "stage" = "iss_stage",
+        "risk_group" = "risk_group"
+      )
+      mapped_covars <- unname(covar_map[input$cox_covariates])
+      mapped_covars <- mapped_covars[!is.na(mapped_covars)]
 
       # Check which covariates are available
-      available_covars <- intersect(input$cox_covariates, names(surv_data))
+      available_covars <- intersect(mapped_covars, names(surv_data))
 
       if (length(available_covars) > 0 && time_col %in% names(surv_data)) {
         # Create formula
         formula <- as.formula(paste0(
-          "Surv(", time_col, ", ", status_col, ") ~ ",
+          "survival::Surv(", time_col, ", ", status_col, ") ~ ",
           paste(available_covars, collapse = " + ")
         ))
 
         # Fit Cox model
-        cox_fit <- coxph(formula, data = surv_data)
+        cox_fit <- survival::coxph(formula, data = surv_data)
 
         # Store results
-        cox_results(tidy(cox_fit, exponentiate = TRUE, conf.int = TRUE))
+        cox_results(broom::tidy(cox_fit, exponentiate = TRUE, conf.int = TRUE))
       }
     })
 
@@ -418,54 +470,64 @@ mod_survival_viz_server <- function(id, shared_data) {
     output$risk_table <- renderDT({
       req(shared_data$survival_data)
 
-      library(survival)
-
       surv_data <- shared_data$survival_data
-
-      # Select appropriate columns
-      if (input$survival_type == "os") {
-        time_col <- if ("os_time" %in% names(surv_data)) "os_time" else "time"
-        status_col <- if ("os_status" %in% names(surv_data)) "os_status" else "status"
-      } else {
-        time_col <- if ("pfs_time" %in% names(surv_data)) "pfs_time" else "time"
-        status_col <- if ("pfs_status" %in% names(surv_data)) "pfs_status" else "status"
-      }
+      cols <- resolve_cols(surv_data, input$survival_type)
+      time_col <- cols$time
+      status_col <- cols$status
 
       if (time_col %in% names(surv_data) && status_col %in% names(surv_data)) {
-        # Create risk table at specific time points
-        time_points <- c(0, 365, 730, 1095, 1460)  # 0, 1, 2, 3, 4 years
+        # Try pre-computed risk table first
+        key <- km_target_key(input$survival_type, input$group_by)
+        pre_risk <- if (!is.null(key) && key %in% names(risk_target_map)) {
+          try_tar_read(risk_target_map[[key]])
+        }
 
-        if (input$group_by != "none" && input$group_by %in% names(surv_data)) {
-          formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ ", input$group_by))
-          fit <- summary(survfit(formula, data = surv_data), times = time_points)
-
-          risk_table <- data.frame(
-            Time = rep(time_points, length(fit$strata)),
-            Group = rep(names(fit$strata), each = length(time_points)),
-            `N at Risk` = fit$n.risk,
-            `N Events` = fit$n.event,
-            Survival = round(fit$surv, 3),
-            stringsAsFactors = FALSE
-          )
+        if (!is.null(pre_risk) && is.data.frame(pre_risk) && nrow(pre_risk) > 0) {
+          risk_table <- pre_risk
         } else {
-          formula <- as.formula(paste0("Surv(", time_col, ", ", status_col, ") ~ 1"))
-          fit <- summary(survfit(formula, data = surv_data), times = time_points)
+          # Fallback: compute on-the-fly
+          time_points <- c(0, 365, 730, 1095, 1460)
+          strata_col <- resolve_strata(input$group_by)
 
-          risk_table <- data.frame(
-            Time = time_points,
-            `N at Risk` = fit$n.risk,
-            `N Events` = fit$n.event,
-            Survival = round(fit$surv, 3),
-            stringsAsFactors = FALSE
-          )
+          if (input$group_by != "none" && strata_col %in% names(surv_data)) {
+            formula <- as.formula(paste0(
+              "survival::Surv(", time_col, ", ", status_col, ") ~ ", strata_col
+            ))
+            fit <- summary(
+              survival::survfit(formula, data = surv_data),
+              times = time_points
+            )
+
+            risk_table <- data.frame(
+              Time = fit$time,
+              Group = as.character(fit$strata),
+              N_at_Risk = fit$n.risk,
+              N_Events = fit$n.event,
+              Survival = round(fit$surv, 3),
+              stringsAsFactors = FALSE
+            )
+          } else {
+            formula <- as.formula(paste0(
+              "survival::Surv(", time_col, ", ", status_col, ") ~ 1"
+            ))
+            fit <- summary(
+              survival::survfit(formula, data = surv_data),
+              times = time_points
+            )
+
+            risk_table <- data.frame(
+              Time = time_points,
+              N_at_Risk = fit$n.risk,
+              N_Events = fit$n.event,
+              Survival = round(fit$surv, 3),
+              stringsAsFactors = FALSE
+            )
+          }
         }
 
         datatable(
           risk_table,
-          options = list(
-            pageLength = 10,
-            dom = 't'
-          ),
+          options = list(pageLength = 10, dom = "t"),
           rownames = FALSE
         )
       } else {
