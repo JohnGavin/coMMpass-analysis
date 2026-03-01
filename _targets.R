@@ -38,6 +38,7 @@ for (plan_file in plan_files) {
 # Combine all plans into main pipeline
 c(
   plan_nix_sync,       # DESCRIPTION -> Nix drift detection
+  plan_skill_drift,    # Skill <-> R source drift detection
   plan_data_acquisition,
   plan_data_cleaning,  # Clean and integrate data
   plan_cytogenetic,    # Cytogenetic marker extraction from clinical data
