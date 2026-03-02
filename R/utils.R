@@ -1,6 +1,26 @@
 # R/utils.R
 # Utility functions for CoMMpass analysis
 
+#' Get counts assay from SummarizedExperiment
+#' 
+#' GDC STAR-Counts uses 'unstranded', but fallback to 'counts' if present
+#' @param se SummarizedExperiment object
+#' @return Counts matrix
+#' @export
+get_counts_assay <- function(se) {
+  assay_names <- SummarizedExperiment::assayNames(se)
+  if ('unstranded' %in% assay_names) {
+    return(SummarizedExperiment::assay(se, 'unstranded'))
+  } else if ('counts' %in% assay_names) {
+    return(SummarizedExperiment::assay(se, 'counts'))
+  } else if (length(assay_names) > 0) {
+    logger::log_warn('Using first assay: {assay_names[1]}')
+    return(SummarizedExperiment::assay(se, 1))
+  } else {
+    cli::cli_abort('No assays found in SummarizedExperiment')
+  }
+}
+
 #' Setup logging
 #'
 #' @param log_file Optional path to a log file. If NULL, logs to console.
@@ -56,7 +76,7 @@ save_timestamped <- function(object, base_name, dir = "results") {
 #'
 #' @param se_data A SummarizedExperiment object with a "counts" assay
 summarize_data <- function(se_data) {
-  counts <- SummarizedExperiment::assay(se_data, "counts")
+  counts <- get_counts_assay(se_data)
 
   summary_stats <- list(
     n_samples = ncol(counts),
