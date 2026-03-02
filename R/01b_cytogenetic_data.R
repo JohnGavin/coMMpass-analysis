@@ -18,7 +18,7 @@
 #' cyto <- arrow::read_parquet(cyto_file)
 #' }
 extract_cytogenetic_data <- function(clinical_dir) {
-  clinical_file <- file.path(clinical_dir, "clinical_data.rds")
+  clinical_file <- file.path(clinical_dir, "clinical_data.parquet")
   if (!file.exists(clinical_file)) {
     cli::cli_abort(c(
       "x" = "Clinical data not found at {clinical_file}",
@@ -26,7 +26,7 @@ extract_cytogenetic_data <- function(clinical_dir) {
     ))
   }
 
-  clinical <- readRDS(clinical_file)
+  clinical <- arrow::read_parquet(clinical_file)
   logger::log_info("Extracting cytogenetic markers from {nrow(clinical)} patients")
 
   # Standardize column names for matching
@@ -99,8 +99,6 @@ extract_cytogenetic_data <- function(clinical_dir) {
   output_file <- file.path(clinical_dir, "cytogenetic_data.parquet")
   arrow::write_parquet(cyto, output_file, compression = "zstd")
   logger::log_info("Saved cytogenetic data to {output_file}")
-
-  saveRDS(cyto, file.path(clinical_dir, "cytogenetic_data.rds"))
 
   return(output_file)
 }

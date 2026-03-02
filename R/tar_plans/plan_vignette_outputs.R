@@ -64,15 +64,7 @@ plan_vignette_outputs <- list(
       if (!inherits(se, "SummarizedExperiment")) return(NULL)
 
       assay_names <- SummarizedExperiment::assayNames(se)
-      counts <- if ("counts" %in% assay_names) {
-        SummarizedExperiment::assay(se, "counts")
-      } else if ("unstranded" %in% assay_names) {
-        SummarizedExperiment::assay(se, "unstranded")
-      } else if (length(assay_names) > 0) {
-        SummarizedExperiment::assay(se, 1)
-      } else {
-        return(NULL)
-      }
+      counts <- get_counts_assay(se)
 
       sample_stats <- data.frame(
         Sample = colnames(counts),
@@ -119,15 +111,7 @@ plan_vignette_outputs <- list(
       if (!inherits(se, "SummarizedExperiment")) return(NULL)
 
       assay_names <- SummarizedExperiment::assayNames(se)
-      counts <- if ("counts" %in% assay_names) {
-        SummarizedExperiment::assay(se, "counts")
-      } else if ("unstranded" %in% assay_names) {
-        SummarizedExperiment::assay(se, "unstranded")
-      } else if (length(assay_names) > 0) {
-        SummarizedExperiment::assay(se, 1)
-      } else {
-        return(NULL)
-      }
+      counts <- get_counts_assay(se)
 
       log_counts <- log10(counts + 1)
       mean_expr <- rowMeans(log_counts)
@@ -205,9 +189,9 @@ plan_vignette_outputs <- list(
   tar_target(
     vig_clinical_column_info,
     {
-      rds_path <- file.path(clinical_data, "clinical_data.rds")
-      if (!file.exists(rds_path)) return(NULL)
-      clin <- readRDS(rds_path)
+      pq_path <- file.path(clinical_data, "clinical_data.parquet")
+      if (!file.exists(pq_path)) return(NULL)
+      clin <- arrow::read_parquet(pq_path)
       if (!is.data.frame(clin) || nrow(clin) == 0) return(NULL)
       names(clin) <- make.unique(names(clin))
 
@@ -243,8 +227,9 @@ plan_vignette_outputs <- list(
                    " med=", signif(median(vals), 3),
                    " max=", signif(max(vals), 3))
           } else {
-            top <- names(sort(table(vals), decreasing = TRUE))[
-              1:min(3, length(unique(vals)))
+            vals_chr <- as.character(vals)
+            top <- names(sort(table(vals_chr), decreasing = TRUE))[
+              1:min(3, length(unique(vals_chr)))
             ]
             paste(top, collapse = ", ")
           }
@@ -390,7 +375,7 @@ plan_vignette_outputs <- list(
       if (is.null(filtered_data)) return(NULL)
       if (!inherits(filtered_data, "SummarizedExperiment")) return(NULL)
 
-      filtered_counts <- SummarizedExperiment::assay(filtered_data, "counts")
+      filtered_counts <- get_counts_assay(filtered_data)
       text <- paste0(
         "\n### After Filtering\n\n",
         "- **Samples retained:** ", ncol(filtered_counts), "\n",
@@ -403,21 +388,13 @@ plan_vignette_outputs <- list(
         se <- readRDS(raw_rnaseq)
         if (inherits(se, "SummarizedExperiment")) {
           assay_names <- SummarizedExperiment::assayNames(se)
-          orig <- if ("counts" %in% assay_names) {
-            SummarizedExperiment::assay(se, "counts")
-          } else if ("unstranded" %in% assay_names) {
-            SummarizedExperiment::assay(se, "unstranded")
-          } else if (length(assay_names) > 0) {
-            SummarizedExperiment::assay(se, 1)
-          } else {
-            NULL
-          }
-          if (!is.null(orig)) {
+          counts <- get_counts_assay(se)
+          if (!is.null(counts)) {
             text <- paste0(text,
               "- **Genes removed:** ",
-              format(nrow(orig) - nrow(filtered_counts), big.mark = ","),
+              format(nrow(counts) - nrow(filtered_counts), big.mark = ","),
               sprintf(" (%.1f%%)",
-                      100 * (1 - nrow(filtered_counts) / nrow(orig))),
+                      100 * (1 - nrow(filtered_counts) / nrow(counts))),
               "\n"
             )
           }
@@ -1446,9 +1423,9 @@ plan_vignette_outputs <- list(
   tar_target(
     vig_dd_clinical_text,
     {
-      rds_path <- file.path(clinical_data, "clinical_data.rds")
-      if (!file.exists(rds_path)) return(NULL)
-      clin <- readRDS(rds_path)
+      pq_path <- file.path(clinical_data, "clinical_data.parquet")
+      if (!file.exists(pq_path)) return(NULL)
+      clin <- arrow::read_parquet(pq_path)
       if (!is.data.frame(clin) || nrow(clin) == 0) return(NULL)
       paste0(
         "### Summary\n\n",
@@ -1465,9 +1442,9 @@ plan_vignette_outputs <- list(
   tar_target(
     vig_dd_clinical_table,
     {
-      rds_path <- file.path(clinical_data, "clinical_data.rds")
-      if (!file.exists(rds_path)) return(NULL)
-      clin <- readRDS(rds_path)
+      pq_path <- file.path(clinical_data, "clinical_data.parquet")
+      if (!file.exists(pq_path)) return(NULL)
+      clin <- arrow::read_parquet(pq_path)
       if (!is.data.frame(clin) || nrow(clin) == 0) return(NULL)
 
       col_info <- data.frame(
@@ -1490,8 +1467,9 @@ plan_vignette_outputs <- list(
                    " med=", signif(median(vals), 3),
                    " max=", signif(max(vals), 3))
           } else {
-            top <- names(sort(table(vals), decreasing = TRUE))[
-              1:min(3, length(unique(vals)))
+            vals_chr <- as.character(vals)
+            top <- names(sort(table(vals_chr), decreasing = TRUE))[
+              1:min(3, length(unique(vals_chr)))
             ]
             paste(top, collapse = ", ")
           }
@@ -1550,9 +1528,9 @@ plan_vignette_outputs <- list(
   tar_target(
     vig_dd_biospecimen_text,
     {
-      bio_rds <- file.path(clinical_data, "biospecimen_data.rds")
-      if (!file.exists(bio_rds)) return(NULL)
-      bio <- readRDS(bio_rds)
+      bio_pq <- file.path(clinical_data, "biospecimen_data.parquet")
+      if (!file.exists(bio_pq)) return(NULL)
+      bio <- arrow::read_parquet(bio_pq)
       if (!is.data.frame(bio) || nrow(bio) == 0) return(NULL)
       paste0(
         "- **Total records:** ", format(nrow(bio), big.mark = ","), "\n",
@@ -1565,9 +1543,9 @@ plan_vignette_outputs <- list(
   tar_target(
     vig_dd_biospecimen_table,
     {
-      bio_rds <- file.path(clinical_data, "biospecimen_data.rds")
-      if (!file.exists(bio_rds)) return(NULL)
-      bio <- readRDS(bio_rds)
+      bio_pq <- file.path(clinical_data, "biospecimen_data.parquet")
+      if (!file.exists(bio_pq)) return(NULL)
+      bio <- arrow::read_parquet(bio_pq)
       if (!is.data.frame(bio) || nrow(bio) == 0) return(NULL)
 
       bio_cols <- data.frame(

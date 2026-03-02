@@ -13,9 +13,9 @@ plan_eda <- list(
     eda_clinical_summary,
     {
       # clinical_data is a directory path; load the RDS from it
-      rds_path <- file.path(clinical_data, "clinical_data.rds")
-      if (!file.exists(rds_path)) return(NULL)
-      clin <- readRDS(rds_path)
+      pq_path <- file.path(clinical_data, "clinical_data.parquet")
+      if (!file.exists(pq_path)) return(NULL)
+      clin <- arrow::read_parquet(pq_path)
       if (!is.data.frame(clin) || nrow(clin) == 0) return(NULL)
       names(clin) <- make.unique(names(clin))
 
@@ -52,9 +52,9 @@ plan_eda <- list(
     eda_biospecimen_summary,
     {
       # biospecimen lives in the same directory as clinical_data
-      rds_path <- file.path(clinical_data, "biospecimen_data.rds")
-      if (!file.exists(rds_path)) return(NULL)
-      bio <- readRDS(rds_path)
+      pq_path <- file.path(clinical_data, "biospecimen_data.parquet")
+      if (!file.exists(pq_path)) return(NULL)
+      bio <- arrow::read_parquet(pq_path)
       if (!is.data.frame(bio) || nrow(bio) == 0) return(NULL)
       names(bio) <- make.unique(names(bio))
 
@@ -127,23 +127,16 @@ plan_eda <- list(
   tar_target(
     eda_duckdb_demo,
     {
-      # Load clinical data from RDS, write temp parquet, query with DuckDB
-      rds_path <- file.path(clinical_data, "clinical_data.rds")
-      if (!file.exists(rds_path)) return(NULL)
-      clin <- readRDS(rds_path)
-      if (!is.data.frame(clin) || nrow(clin) == 0) return(NULL)
-
-      # Write to a temporary parquet for the DuckDB demo
-      tmp_parquet <- tempfile(fileext = ".parquet")
-      arrow::write_parquet(clin, tmp_parquet)
-      on.exit(unlink(tmp_parquet), add = TRUE)
+      # Query clinical parquet directly with DuckDB
+      pq_path <- file.path(clinical_data, "clinical_data.parquet")
+      if (!file.exists(pq_path)) return(NULL)
 
       con <- DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
       on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
 
       DBI::dbExecute(con, paste0(
         "CREATE VIEW clinical AS SELECT * FROM read_parquet('",
-        tmp_parquet, "')"
+        pq_path, "')"
       ))
 
       # Example 1: simple select via dplyr/tbl
@@ -156,11 +149,11 @@ plan_eda <- list(
 
       # Example 2: aggregation via dplyr/tbl
       agg_result <- clinical_tbl |>
-        dplyr::filter(!is.na(gender)) |>
+        dplyr::filter(!is.na(gender), age_at_diagnosis != "NA") |>
         dplyr::group_by(gender) |>
         dplyr::summarise(
           n = dplyr::n(),
-          mean_age_years = round(mean(age_at_diagnosis / 365.25,
+          mean_age_years = round(mean(as.numeric(age_at_diagnosis) / 365.25,
                                        na.rm = TRUE), 1)
         ) |>
         dplyr::collect()
@@ -177,9 +170,9 @@ plan_eda <- list(
   tar_target(
     eda_iss_summary,
     {
-      rds_path <- file.path(clinical_data, "clinical_data.rds")
-      if (!file.exists(rds_path)) return(NULL)
-      clin <- readRDS(rds_path)
+      pq_path <- file.path(clinical_data, "clinical_data.parquet")
+      if (!file.exists(pq_path)) return(NULL)
+      clin <- arrow::read_parquet(pq_path)
       if (!is.data.frame(clin) || nrow(clin) == 0) return(NULL)
       names(clin) <- tolower(make.unique(names(clin)))
 
@@ -267,9 +260,9 @@ plan_eda <- list(
   tar_target(
     eda_missing_summary,
     {
-      rds_path <- file.path(clinical_data, "clinical_data.rds")
-      if (!file.exists(rds_path)) return(NULL)
-      clin <- readRDS(rds_path)
+      pq_path <- file.path(clinical_data, "clinical_data.parquet")
+      if (!file.exists(pq_path)) return(NULL)
+      clin <- arrow::read_parquet(pq_path)
       if (!is.data.frame(clin) || nrow(clin) == 0) return(NULL)
 
       n_vars <- ncol(clin)
@@ -319,12 +312,12 @@ plan_eda <- list(
     eda_integration_summary,
     {
       # Load both clinical and biospecimen from the clinical_data directory
-      clin_path <- file.path(clinical_data, "clinical_data.rds")
-      bio_path  <- file.path(clinical_data, "biospecimen_data.rds")
+      clin_path <- file.path(clinical_data, "clinical_data.parquet")
+      bio_path  <- file.path(clinical_data, "biospecimen_data.parquet")
       if (!file.exists(clin_path) || !file.exists(bio_path)) return(NULL)
 
-      clin <- readRDS(clin_path)
-      bio  <- readRDS(bio_path)
+      clin <- arrow::read_parquet(clin_path)
+      bio  <- arrow::read_parquet(bio_path)
       if (!is.data.frame(clin) || !is.data.frame(bio)) return(NULL)
 
       clin_ids <- unique(clin$submitter_id)

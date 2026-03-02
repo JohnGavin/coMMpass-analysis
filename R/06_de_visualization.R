@@ -1,6 +1,6 @@
 # R/06_de_visualization.R
 # Standalone DE visualization functions
-# Extracted from shiny/modules/mod_de_viz.R for use in vignettes and reports
+# Extracted from inst/shiny/modules/mod_de_viz.R for use in vignettes and reports
 
 #' @importFrom stats prcomp setNames
 NULL
@@ -65,7 +65,7 @@ run_vst <- function(se_data, blind = TRUE) {
   }
   if (is.null(se_data)) return(NULL)
 
-  counts <- SummarizedExperiment::assay(se_data, "counts")
+  counts <- get_counts_assay(se_data)
   if (ncol(counts) < 2) {
     logger::log_warn("Need at least 2 samples for VST")
     return(NULL)

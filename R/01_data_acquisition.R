@@ -136,7 +136,7 @@ save_rnaseq_parquet <- function(se, data_dir) {
   if ("unstranded" %in% assay_names) {
     counts_mat <- SummarizedExperiment::assay(se, "unstranded")
   } else if ("counts" %in% assay_names) {
-    counts_mat <- SummarizedExperiment::assay(se, "counts")
+    counts_mat <- get_counts_assay(se)
   } else {
     counts_mat <- SummarizedExperiment::assay(se, 1)
     logger::log_warn(
@@ -155,6 +155,17 @@ save_rnaseq_parquet <- function(se, data_dir) {
 
   # Sample metadata
   sample_meta <- as.data.frame(SummarizedExperiment::colData(se))
+  
+  # Flatten list columns (arrow cannot write list columns to parquet)
+  list_cols <- sapply(sample_meta, function(x) is.list(x) && !is.data.frame(x))
+  if (any(list_cols)) {
+    for (col_name in names(sample_meta)[list_cols]) {
+      sample_meta[[col_name]] <- sapply(
+        sample_meta[[col_name]],
+        function(x) if (length(x) == 0) NA_character_ else paste(x, collapse = "; ")
+      )
+    }
+  }
   sample_file <- file.path(data_dir, "rnaseq_sample_metadata.parquet")
   arrow::write_parquet(sample_meta, sample_file, compression = "zstd")
   logger::log_info("Saved sample metadata to {sample_file}")

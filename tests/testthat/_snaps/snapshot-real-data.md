@@ -222,36 +222,37 @@
     Code
       print(sort(names(df)))
     Output
-      [1] "age"        "patient_id" "risk_group" "stage"      "status"    
-      [6] "time"      
+       [1] "age_years"  "del_17p"    "del_1p"     "gain_1q"    "gender"    
+       [6] "iss_stage"  "patient_id" "risk_group" "status"     "t_11_14"   
+      [11] "t_14_16"    "t_14_20"    "t_4_14"     "time_days" 
     Code
       print((function(x) sort(names(x)))(sapply(df, class)))
     Output
-      [1] "age"        "patient_id" "risk_group" "stage"      "status"    
-      [6] "time"      
+       [1] "age_years"  "del_17p"    "del_1p"     "gain_1q"    "gender"    
+       [6] "iss_stage"  "patient_id" "risk_group" "status"     "t_11_14"   
+      [11] "t_14_16"    "t_14_20"    "t_4_14"     "time_days" 
     Code
       cat("Dimensions:", nrow(df), "x", ncol(df), "\n")
     Output
-      Dimensions: 100 x 6 
+      Dimensions: 994 x 14 
 
 # survival_data boundaries snapshot
 
     Code
       (function(r) cat("time range:", r[1], "to", r[2], "\n"))(range(df$time, na.rm = TRUE))
     Output
-      time range: 183.0446 to 611.8936 
+      time range: 1 to 1984 
     Code
       print(table(df$status, useNA = "ifany"))
     Output
       
-       0  1 
-      59 41 
+        0   1 
+      803 191 
     Code
       print(sort(table(df$risk_group, useNA = "ifany")))
     Output
-      
-               low intermediate         high 
-                29           35           36 
+      <NA> 
+       994 
 
 # deseq2_results structure snapshot
 
@@ -262,7 +263,7 @@
     Code
       cat("names:", paste(sort(names(res)), collapse = ", "), "\n")
     Output
-      names: method, n_deg, results_table 
+      names: method, n_deg, note, results_table 
     Code
       cat("method:", res$method, "\n")
     Output
@@ -270,16 +271,16 @@
     Code
       cat("n_deg:", res$n_deg, "\n")
     Output
-      n_deg: 100 
+      n_deg: 0 
     Code
       cat("results_table cols:", paste(names(res$results_table), collapse = ", "),
       "\n")
     Output
-      results_table cols: gene, log2FC, padj 
+      results_table cols: gene, log2FoldChange, padj 
     Code
       cat("results_table nrow:", nrow(res$results_table), "\n")
     Output
-      results_table nrow: 100 
+      results_table nrow: 0 
 
 # deseq2_results significance snapshot
 
@@ -287,12 +288,17 @@
       sig <- sum(res$results_table$padj < 0.05, na.rm = TRUE)
       cat("Significant (padj < 0.05):", sig, "\n")
     Output
-      Significant (padj < 0.05): 3 
+      Significant (padj < 0.05): 0 
     Code
       (function(r) cat("log2FC range:", r[1], "to", r[2], "\n"))(range(res$
         results_table$log2FC, na.rm = TRUE))
+    Condition
+      Warning in `min()`:
+      no non-missing arguments to min; returning Inf
+      Warning in `max()`:
+      no non-missing arguments to max; returning -Inf
     Output
-      log2FC range: -2.659667 to 2.917121 
+      log2FC range: Inf to -Inf 
 
 # edger_results structure snapshot
 
@@ -303,7 +309,7 @@
     Code
       cat("names:", paste(sort(names(res)), collapse = ", "), "\n")
     Output
-      names: method, n_deg, results_table 
+      names: method, n_deg, note, results_table 
     Code
       cat("method:", res$method, "\n")
     Output
@@ -311,16 +317,16 @@
     Code
       cat("n_deg:", res$n_deg, "\n")
     Output
-      n_deg: 95 
+      n_deg: 0 
     Code
       cat("results_table cols:", paste(names(res$results_table), collapse = ", "),
       "\n")
     Output
-      results_table cols: gene, log2FC, padj 
+      results_table cols: gene, log2FoldChange, padj 
     Code
       cat("results_table nrow:", nrow(res$results_table), "\n")
     Output
-      results_table nrow: 95 
+      results_table nrow: 0 
 
 # edger_results significance snapshot
 
@@ -328,12 +334,17 @@
       sig <- sum(res$results_table$padj < 0.05, na.rm = TRUE)
       cat("Significant (padj < 0.05):", sig, "\n")
     Output
-      Significant (padj < 0.05): 7 
+      Significant (padj < 0.05): 0 
     Code
       (function(r) cat("log2FC range:", r[1], "to", r[2], "\n"))(range(res$
         results_table$log2FC, na.rm = TRUE))
+    Condition
+      Warning in `min()`:
+      no non-missing arguments to min; returning Inf
+      Warning in `max()`:
+      no non-missing arguments to max; returning -Inf
     Output
-      log2FC range: -2.194294 to 2.632439 
+      log2FC range: Inf to -Inf 
 
 # limma_results structure snapshot
 
@@ -344,7 +355,7 @@
     Code
       cat("names:", paste(sort(names(res)), collapse = ", "), "\n")
     Output
-      names: method, n_deg, results_table 
+      names: method, n_deg, note, results_table 
     Code
       cat("method:", res$method, "\n")
     Output
@@ -352,16 +363,16 @@
     Code
       cat("n_deg:", res$n_deg, "\n")
     Output
-      n_deg: 90 
+      n_deg: 0 
     Code
       cat("results_table cols:", paste(names(res$results_table), collapse = ", "),
       "\n")
     Output
-      results_table cols: gene, log2FC, padj 
+      results_table cols: gene, log2FoldChange, padj 
     Code
       cat("results_table nrow:", nrow(res$results_table), "\n")
     Output
-      results_table nrow: 90 
+      results_table nrow: 0 
 
 # gsea_results structure snapshot
 

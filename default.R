@@ -8,7 +8,12 @@ parse_field <- function(field) {
   gsub("\\s*\\([^)]+\\)", "", trimws(pkgs)) |>
     (\(x) x[nzchar(x) & !is.na(x)])()
 }
+# Packages excluded from Nix build (broken upstream hashes or unavailable)
+nix_exclude <- c(
+  "msigdbr"  # broken sha256 in rstats-on-nix (all tested dates Aug 2025-Feb 2026)
+)
 desc_deps <- unique(c(parse_field("Imports"), parse_field("Suggests")))
+desc_deps <- desc_deps[!desc_deps %in% nix_exclude]
 
 # Dev tools not in DESCRIPTION (intentionally excluded from package deps)
 dev_extras <- c(
@@ -20,7 +25,7 @@ r_pkgs <- unique(c(desc_deps, dev_extras)) |> sort()
 # Bioconductor packages (subset of desc_deps that need Bioc)
 bioc_pkgs <- c(
   "TCGAbiolinks", "GenomicDataCommons", "SummarizedExperiment",
-  "DESeq2", "edgeR", "limma"
+  "DESeq2", "edgeR", "limma", "fgsea"
 )
 
 # Remove bioc packages from r_pkgs (they go in a separate arg)

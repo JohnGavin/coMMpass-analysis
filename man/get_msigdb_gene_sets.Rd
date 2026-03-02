@@ -25,7 +25,9 @@ or \code{"c7"} (immunologic).}
 Named list of character vectors (pathway name -> gene IDs).
 }
 \description{
-Retrieves gene sets from the Molecular Signatures Database (MSigDB) via
-the msigdbr package. Returns a named list suitable for fgsea.
+Retrieves gene sets from the Molecular Signatures Database (MSigDB).
+First attempts to load pre-converted local RDS files (see
+[load_local_gene_sets()]). Falls back to the \code{msigdbr} package
+if local data is unavailable.
 }
 \keyword{internal}

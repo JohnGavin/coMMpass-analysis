@@ -15,11 +15,9 @@ _targets/
 
 # Nix
 result
-R-lib/
 nix-shell-root
 
 # Local files
-run.log
 *.log
 
 # Local links
@@ -37,17 +35,16 @@ shinylive-sw.js
 _extensions/
 _quarto.yml
 
-# Scratch/test files
-test_simple*
-test_dashboard.R
-fix_dashboard.R
-render_dashboard.R
-verify_env.R
-build_site.R
+# Build artifacts
+test_simple_files/
+test_simple.html
+*.DS_Store
+
+# Pipeline output
+results/
 
 # Backup files
 *.backup
 *.bak
-results/
 _targets.yaml
 /.quarto/

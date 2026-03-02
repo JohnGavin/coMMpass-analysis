@@ -20,7 +20,7 @@ plan_pathway_analysis <- list(
         )
       }
     },
-    packages = c("fgsea", "msigdbr")
+    packages = c("fgsea")
   ),
 
   # GSEA on DESeq2 results using KEGG pathways
@@ -40,7 +40,7 @@ plan_pathway_analysis <- list(
         )
       }
     },
-    packages = c("fgsea", "msigdbr")
+    packages = c("fgsea")
   ),
 
   # ORA on consensus DE genes using Hallmark gene sets
@@ -62,8 +62,7 @@ plan_pathway_analysis <- list(
           gene_id_type = "ensembl_gene"
         )
       }
-    },
-    packages = c("msigdbr")
+    }
   ),
 
   # Summary report (updated references)

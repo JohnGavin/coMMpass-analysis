@@ -7,10 +7,11 @@
 #' @return A data frame with QC metrics per sample
 #' @family quality-control
 #' @export
+
 calculate_qc_metrics <- function(se_data) {
   logger::log_info("Calculating QC metrics...")
 
-  counts <- SummarizedExperiment::assay(se_data, "counts")
+  counts <- get_counts_assay(se_data)
 
   metrics <- data.frame(
     sample = colnames(counts),
@@ -41,7 +42,7 @@ calculate_qc_metrics <- function(se_data) {
 #' @param min_samples Minimum samples with counts above threshold
 #' @return Filtered SummarizedExperiment
 filter_low_quality <- function(se_data, min_counts = 10, min_samples = 3) {
-  counts <- SummarizedExperiment::assay(se_data, "counts")
+  counts <- get_counts_assay(se_data)
 
   # Filter genes
   keep_genes <- rowSums(counts >= min_counts) >= min_samples
@@ -66,7 +67,7 @@ filter_low_quality <- function(se_data, min_counts = 10, min_samples = 3) {
 normalize_rnaseq <- function(se_data, method = "TMM") {
   logger::log_info("Normalizing data using {method} method...")
 
-  counts <- SummarizedExperiment::assay(se_data, "counts")
+  counts <- get_counts_assay(se_data)
 
   # Create DGEList object
   dge <- edgeR::DGEList(counts = counts)

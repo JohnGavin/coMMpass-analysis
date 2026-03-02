@@ -242,7 +242,7 @@ extract_counts <- function(se_data) {
   if ("unstranded" %in% assay_names) {
     counts <- SummarizedExperiment::assay(se_data, "unstranded")
   } else if ("counts" %in% assay_names) {
-    counts <- SummarizedExperiment::assay(se_data, "counts")
+    counts <- get_counts_assay(se_data)
   } else {
     counts <- SummarizedExperiment::assay(se_data, 1)
   }

@@ -19,6 +19,7 @@ let
       # Analysis packages
       DESeq2
       edgeR
+      fgsea
       limma
       survival
       # Note: survminer not in nixpkgs - removed from pipeline requirements
@@ -48,6 +49,9 @@ let
       mirai
       nanonext
       tictoc
+      # Vignette rendering dependencies
+      DT
+      plotly
       # CI-specific: documentation and testing
       devtools
       gert

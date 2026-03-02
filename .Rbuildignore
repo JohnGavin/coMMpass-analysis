@@ -20,7 +20,6 @@
 ^plans$
 ^result$
 ^results$
-^logs$
 
 # RStudio
 ^.*\.Rproj$
@@ -33,39 +32,9 @@
 ^vignettes/BUILD_SHINYLIVE\.md$
 ^vignettes/SHINYLIVE_QUICKSTART\.md$
 ^vignettes/build_shinylive\.sh$
-^build_site\.R$
-^shinylive-sw\.js$
 ^\.quarto$
 ^_quarto\.yml$
 ^_extensions$
-
-# Quarto/Shinylive rendered output
-^test_simple\.html$
-^test_simple\.qmd$
-^test_simple_files$
-
-# Development/test scripts
-^final_test\.R$
-^fix_dashboard\.R$
-^render_dashboard\.R$
-^test_dashboard\.R$
-^test_deseq2\.R$
-^test_packages\.R$
-^verify_deseq2\.R$
-^verify_env\.R$
-
-# Dev artifacts
-^R-lib$
-^shiny$
-^run\.log$
-
-# Documentation/planning files
-^AGENTS\.md$
-^PLAN_CoMMpass_Analysis\.md$
-^SHINYLIVE_CONVERSION_SUMMARY\.md$
-^SHINYLIVE_EXPORT_REPORT\.md$
-^TEST_RESULTS\.md$
-^prompt_commpass_data\.md$
 
 # pkgdown
 ^_pkgdown\.yml$

@@ -74,10 +74,40 @@ build_gene_ranks <- function(de_table, gene_id_type = "ensembl_gene") {
   sort(ranks, decreasing = TRUE)
 }
 
+#' Load pre-converted local MSigDB gene sets
+#'
+#' Loads gene set lists from parquet files shipped in
+#' \code{inst/extdata/msigdb/}. These files are created by
+#' \code{R/dev/create_msigdb_data.R} and bypass the need for the
+#' \code{msigdbr} package at runtime (which has a broken Nix hash).
+#'
+#' @param collection Collection shorthand: \code{"hallmark"} or \code{"kegg"}.
+#' @return Named list of character vectors (pathway name -> Ensembl gene IDs),
+#'   or \code{NULL} if the local file is not found.
+#' @keywords internal
+load_local_gene_sets <- function(collection) {
+  file_map <- list(
+    hallmark = "hallmark_ensembl.parquet",
+    kegg = "kegg_ensembl.parquet"
+  )
+  if (!collection %in% names(file_map)) return(NULL)
+
+  pq_file <- system.file(
+    "extdata", "msigdb", file_map[[collection]],
+    package = "coMMpass"
+  )
+
+  if (pq_file == "" || !file.exists(pq_file)) return(NULL)
+  pq_df <- arrow::read_parquet(pq_file)
+  split(pq_df$ensembl_gene, pq_df$gs_name)
+}
+
 #' Get gene set collections from MSigDB
 #'
-#' Retrieves gene sets from the Molecular Signatures Database (MSigDB) via
-#' the msigdbr package. Returns a named list suitable for fgsea.
+#' Retrieves gene sets from the Molecular Signatures Database (MSigDB).
+#' First attempts to load pre-converted local RDS files (see
+#' [load_local_gene_sets()]). Falls back to the \code{msigdbr} package
+#' if local data is unavailable.
 #'
 #' @param collection Character string specifying the collection:
 #'   \code{"hallmark"}, \code{"kegg"}, \code{"reactome"}, \code{"go_bp"},
@@ -91,8 +121,22 @@ build_gene_ranks <- function(de_table, gene_id_type = "ensembl_gene") {
 get_msigdb_gene_sets <- function(collection = "hallmark",
                                   gene_id_type = "ensembl_gene",
                                   organism = "Homo sapiens") {
+  # Try local pre-converted gene sets first (avoids msigdbr dependency)
+  if (gene_id_type == "ensembl_gene" && organism == "Homo sapiens") {
+    local_sets <- load_local_gene_sets(collection)
+    if (!is.null(local_sets)) {
+      logger::log_info(
+        "Loaded {length(local_sets)} {collection} gene sets from local data"
+      )
+      return(local_sets)
+    }
+  }
+
   if (!requireNamespace("msigdbr", quietly = TRUE)) {
-    cli::cli_abort("Package {.pkg msigdbr} required but not installed")
+    cli::cli_abort(c(
+      "x" = "Package {.pkg msigdbr} required but not installed",
+      "i" = "Run {.file R/dev/create_msigdb_data.R} to generate local gene sets"
+    ))
   }
 
   # Map collection shorthand to msigdbr parameters
@@ -449,10 +493,6 @@ run_pathway_analysis <- function(de_genes, method = "hallmark") {
       results = data.frame(),
       method = method
     ))
-  }
-
-  if (!requireNamespace("msigdbr", quietly = TRUE)) {
-    cli::cli_abort("Package {.pkg msigdbr} required but not installed")
   }
 
   # Get universe from first available DE method
