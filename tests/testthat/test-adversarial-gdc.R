@@ -58,7 +58,7 @@ test_that("get_counts_assay prefers 'unstranded' assay", {
   se <- SummarizedExperiment::SummarizedExperiment(
     assays = list(unstranded = counts_mat, tpm_unstranded = other_mat)
   )
-  result <- coMMpass:::get_counts_assay(se)
+  result <- get_counts_assay(se)
   expect_equal(result[1, 1], 1L)
 })
 
@@ -70,12 +70,12 @@ test_that("extract_counts prefers 'unstranded' assay", {
   se <- SummarizedExperiment::SummarizedExperiment(
     assays = list(unstranded = counts_mat, tpm_unstranded = other_mat)
   )
-  result <- coMMpass:::extract_counts(se)
+  result <- extract_counts(se)
   expect_equal(result[1, 1], 1L)
 })
 
 test_that("save_rnaseq_parquet checks 'unstranded' first (source inspection)", {
-  fn_body <- deparse(body(coMMpass:::save_rnaseq_parquet))
+  fn_body <- deparse(body(save_rnaseq_parquet))
   expect_true(any(grepl('"unstranded"', fn_body)))
 })
 
@@ -97,7 +97,7 @@ test_that("build_gene_ranks strips Ensembl version suffixes", {
     row.names = c("ENSG00000000003.15", "ENSG00000000005.6",
                   "ENSG00000000419.14")
   )
-  result <- coMMpass:::build_gene_ranks(de_table, gene_id_type = "ensembl_gene")
+  result <- build_gene_ranks(de_table, gene_id_type = "ensembl_gene")
   expect_false(any(grepl("\\.", names(result))))
   expect_true(all(grepl("^ENSG\\d+$", names(result))))
 })
@@ -107,7 +107,7 @@ test_that("build_gene_ranks preserves versions for non-ensembl IDs", {
     stat = c(3.5, -2.1),
     row.names = c("TP53", "KRAS")
   )
-  result <- coMMpass:::build_gene_ranks(de_table, gene_id_type = "gene_symbol")
+  result <- build_gene_ranks(de_table, gene_id_type = "gene_symbol")
   expect_setequal(names(result), c("TP53", "KRAS"))
 })
 
@@ -130,7 +130,7 @@ test_that("run_deseq2 uses apeglm shrinkage (source inspection)", {
 })
 
 test_that("run_deseq2_paired uses apeglm shrinkage (source inspection)", {
-  fn_body <- deparse(body(coMMpass:::run_deseq2_paired))
+  fn_body <- deparse(body(run_deseq2_paired))
   expect_true(any(grepl('"apeglm"', fn_body)))
 })
 
@@ -139,13 +139,13 @@ test_that("run_deseq2_paired uses apeglm shrinkage (source inspection)", {
 # ================================================================
 
 test_that("get_msigdb_gene_sets maps hallmark to category H", {
-  fn_body <- paste(deparse(body(coMMpass:::get_msigdb_gene_sets)), collapse = " ")
+  fn_body <- paste(deparse(body(get_msigdb_gene_sets)), collapse = " ")
   expect_true(grepl('"H"', fn_body))
   expect_true(grepl("hallmark", fn_body))
 })
 
 test_that("get_msigdb_gene_sets maps kegg to C2:CP:KEGG_MEDICUS", {
-  fn_body <- paste(deparse(body(coMMpass:::get_msigdb_gene_sets)), collapse = " ")
+  fn_body <- paste(deparse(body(get_msigdb_gene_sets)), collapse = " ")
   expect_true(grepl("KEGG_MEDICUS", fn_body))
   expect_true(grepl('"C2"', fn_body))
 })
@@ -155,7 +155,7 @@ test_that("get_msigdb_gene_sets rejects unknown collections", {
 
   # check happens in the msigdbr fallback path. Test with a mock or
   # check the source directly.
-  fn_body <- paste(deparse(body(coMMpass:::get_msigdb_gene_sets)), collapse = " ")
+  fn_body <- paste(deparse(body(get_msigdb_gene_sets)), collapse = " ")
   expect_true(grepl("Unknown|not found|Valid", fn_body, ignore.case = TRUE))
 })
 
