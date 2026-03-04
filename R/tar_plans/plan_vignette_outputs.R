@@ -180,7 +180,7 @@ plan_vignette_outputs <- list(
             bargap = 0.05
           )
       }
-      p
+      strip_plotly(p)
     },
     packages = c("SummarizedExperiment", "plotly", "dplyr")
   ),
