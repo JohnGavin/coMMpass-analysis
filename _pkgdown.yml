@@ -67,6 +67,7 @@ articles:
   - differential-expression
   - survival-analysis
   - pipeline-dag
+  - telemetry
   - api-usage
   - glossary
 

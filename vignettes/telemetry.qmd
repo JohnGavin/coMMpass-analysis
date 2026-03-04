@@ -1,0 +1,188 @@
+---
+title: "Pipeline Telemetry"
+format: html
+vignette: >
+  %\VignetteIndexEntry{Pipeline Telemetry}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  collapse = TRUE,
+  comment = "#>"
+)
+library(targets)
+
+# Discover target store
+store_candidates <- c(
+  here::here("_targets"),
+  file.path(Sys.getenv("TARGETS_STORE", unset = "_targets")),
+  "_targets"
+)
+for (store in store_candidates) {
+  if (dir.exists(store)) {
+    Sys.setenv(TAR_STORE = store)
+    break
+  }
+}
+```
+
+Pipeline build telemetry from `targets::tar_meta()`. These are metadata
+introspection calls (allowed exception to the zero-computation rule).
+
+## Build Timing
+
+Targets ordered by build duration. Long-running targets are candidates
+for caching optimization or parallel execution via `crew`.
+
+```{r timing-table}
+#| fig.cap: "Target build times. Seconds: wall-clock time per target.
+#|   Bytes: serialized object size. Top targets by duration are data
+#|   downloads (raw_rnaseq, clinical_data) and DESeq2 paired analysis.
+#|   Source: targets::tar_meta()."
+meta <- targets::tar_meta(store = Sys.getenv("TAR_STORE", "_targets"))
+meta_timed <- meta[!is.na(meta$seconds), c("name", "seconds", "bytes")]
+meta_timed <- meta_timed[order(-meta_timed$seconds), ]
+meta_timed$bytes_fmt <- ifelse(
+  is.na(meta_timed$bytes), "—",
+  ifelse(meta_timed$bytes > 1e6,
+    paste0(round(meta_timed$bytes / 1e6, 1), " MB"),
+    ifelse(meta_timed$bytes > 1e3,
+      paste0(round(meta_timed$bytes / 1e3, 1), " KB"),
+      paste0(meta_timed$bytes, " B")
+    )
+  )
+)
+DT::datatable(
+  meta_timed[, c("name", "seconds", "bytes_fmt")],
+  colnames = c("Target", "Seconds", "Size"),
+  caption = htmltools::tags$caption(
+    style = "caption-side: bottom; text-align: left;",
+    "Build timing for all targets. Seconds = wall-clock build time. ",
+    "Size = serialized object size on disk. ",
+    "Key: raw_rnaseq and clinical_data dominate build time (GDC downloads). ",
+    "Source: targets::tar_meta()."
+  ),
+  options = list(pageLength = 20, dom = "Bfrtip", order = list(list(1, "desc"))),
+  rownames = FALSE
+)
+```
+
+## Build Status Summary
+
+```{r status-summary}
+meta <- targets::tar_meta(store = Sys.getenv("TAR_STORE", "_targets"))
+n_total <- nrow(meta)
+n_error <- sum(!is.na(meta$error))
+n_warn <- sum(!is.na(meta$warnings))
+n_timed <- sum(!is.na(meta$seconds))
+total_secs <- sum(meta$seconds, na.rm = TRUE)
+total_bytes <- sum(meta$bytes, na.rm = TRUE)
+```
+
+```{r status-table}
+DT::datatable(
+  data.frame(
+    Metric = c("Total targets", "With timing data", "With errors",
+               "With warnings", "Total build time", "Total serialized size"),
+    Value = c(
+      as.character(n_total),
+      as.character(n_timed),
+      as.character(n_error),
+      as.character(n_warn),
+      paste0(round(total_secs / 60, 1), " min"),
+      paste0(round(total_bytes / 1e6, 1), " MB")
+    ),
+    stringsAsFactors = FALSE
+  ),
+  caption = htmltools::tags$caption(
+    style = "caption-side: bottom; text-align: left;",
+    "Pipeline health summary. Total build time is sequential sum; ",
+    "actual wall-clock is lower with crew parallelism. ",
+    "Source: targets::tar_meta()."
+  ),
+  options = list(dom = "t", paging = FALSE),
+  rownames = FALSE
+)
+```
+
+## Errors and Warnings
+
+```{r errors}
+meta <- targets::tar_meta(store = Sys.getenv("TAR_STORE", "_targets"))
+issues <- meta[!is.na(meta$error) | !is.na(meta$warnings),
+               c("name", "error", "warnings")]
+if (nrow(issues) > 0) {
+  DT::datatable(
+    issues,
+    caption = htmltools::tags$caption(
+      style = "caption-side: bottom; text-align: left;",
+      "Targets with errors or warnings from the last build. ",
+      "Investigate these before relying on downstream targets. ",
+      "Source: targets::tar_meta()."
+    ),
+    options = list(dom = "t", paging = FALSE),
+    rownames = FALSE
+  )
+} else {
+  cat("No errors or warnings in the last build.\n")
+}
+```
+
+## Outdated Targets
+
+Targets that need rebuilding due to changed code or upstream dependencies.
+
+```{r outdated}
+tryCatch({
+  outdated <- targets::tar_outdated(reporter = "silent")
+  if (length(outdated) > 0) {
+    DT::datatable(
+      data.frame(Target = outdated),
+      caption = htmltools::tags$caption(
+        style = "caption-side: bottom; text-align: left;",
+        "Targets needing rebuild. Run tar_make() to update. ",
+        "Source: targets::tar_outdated()."
+      ),
+      options = list(dom = "t", paging = FALSE),
+      rownames = FALSE
+    )
+  } else {
+    cat("All targets are up to date.\n")
+  }
+}, error = function(e) {
+  cat("*Cannot determine outdated targets: ", conditionMessage(e), "*\n")
+})
+```
+
+## Size Distribution
+
+```{r size-plot, fig.cap="Target serialized sizes (log10 bytes). Comparison: most targets are under 1 MB; a few data objects (expression matrices, DE results) exceed 1 MB. Dashed line = 1 MB threshold. Source: targets::tar_meta()."}
+#| fig.height: 5
+meta <- targets::tar_meta(store = Sys.getenv("TAR_STORE", "_targets"))
+meta_sized <- meta[!is.na(meta$bytes) & meta$bytes > 0, ]
+if (nrow(meta_sized) > 0 && requireNamespace("ggplot2", quietly = TRUE)) {
+  ggplot2::ggplot(
+    meta_sized,
+    ggplot2::aes(x = log10(bytes), y = stats::reorder(name, bytes))
+  ) +
+    ggplot2::geom_col(fill = "steelblue", width = 0.6) +
+    ggplot2::geom_vline(xintercept = log10(1e6), linetype = "dashed",
+                        color = "red", alpha = 0.5) +
+    ggplot2::annotate("text", x = log10(1e6), y = 1, label = "1 MB",
+                      hjust = -0.2, color = "red", size = 3) +
+    ggplot2::labs(
+      title = "Target Sizes (serialized)",
+      subtitle = paste0(nrow(meta_sized), " targets with stored objects"),
+      x = "log10(bytes)", y = NULL
+    ) +
+    ggplot2::theme_minimal(base_size = 10) +
+    ggplot2::theme(axis.text.y = ggplot2::element_text(size = 5))
+} else {
+  cat("*No size data available or ggplot2 not installed.*\n")
+}
+```
