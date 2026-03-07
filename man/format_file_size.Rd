@@ -24,6 +24,8 @@ format_file_size(c(1024, 1048576, 5000877192))
 \seealso{
 Other utilities: 
 \code{\link{create_summary_table}()},
-\code{\link{format_with_commas}()}
+\code{\link{example_data}()},
+\code{\link{format_with_commas}()},
+\code{\link{strip_plotly}()}
 }
 \concept{utilities}
