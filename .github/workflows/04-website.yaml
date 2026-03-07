@@ -1,69 +1,53 @@
-name: 04 Build Website
+name: Deploy to GitHub Pages
 
 on:
-  workflow_run:
-    workflows: ["03 Compute Analysis"]
-    types:
-      - completed
+  push:
+    branches: [main]
+    paths:
+      - 'R/**'
+      - 'man/**'
+      - 'vignettes/**'
+      - '_pkgdown.yml'
+      - 'pkgdown/**'
+      - 'DESCRIPTION'
+      - 'README.md'
+      - '.github/workflows/04-website.yaml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
-  build-site:
+  deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
-    permissions:
-      contents: write
-      actions: read
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v30
+
+      - uses: r-lib/actions/setup-r@v2
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: quarto-dev/quarto-actions/setup@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
-      - uses: cachix/cachix-action@v14
+          extra-packages: pkgdown
+
+      - name: Build pkgdown site
+        run: Rscript -e "pkgdown::build_site(new_process = FALSE)"
+
+      - uses: actions/upload-pages-artifact@v3
         with:
-          name: johngavin
-          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-          extraPullNames: rstats-on-nix
+          path: docs
 
-      - name: Check if previous runs exist
-        id: runs-exist
-        run: git ls-remote --exit-code --heads origin targets-runs
-        continue-on-error: true
-
-      - name: Checkout previous run
-        if: steps.runs-exist.outcome == 'success'
-        uses: actions/checkout@v4
-        with:
-          ref: targets-runs
-          fetch-depth: 1
-          path: .targets-runs
-
-      - name: Restore output files from previous run
-        if: steps.runs-exist.outcome == 'success'
-        run: |
-          nix-shell --pure default_ci.nix --run "Rscript -e 'for (dest in scan(\".targets-runs/.targets-files\", what = character())) {
-            source <- file.path(\".targets-runs\", dest)
-            if (!file.exists(dirname(dest))) dir.create(dirname(dest), recursive = TRUE)
-            if (file.exists(source)) file.rename(source, dest)
-          }'"
-
-      - name: Build Website
-        run: |
-          echo "TAR_PROJECT=$PWD" >> $GITHUB_ENV
-          nix-shell --pure default_ci.nix --run "Rscript build_site.R"
-
-      - name: Upload Website
-        uses: actions/upload-artifact@v4
-        with:
-          name: github-pages
-          path: docs/
-
-      - name: Upload failure artifact
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: website-failure-${{ github.run_id }}
-          path: _targets/meta/
-          retention-days: 7
+      - uses: actions/deploy-pages@v4
+        id: deployment
