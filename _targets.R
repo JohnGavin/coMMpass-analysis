@@ -53,6 +53,7 @@ c(
   plan_pathway_analysis,
   plan_gene_annotation,    # Ensembl -> symbol, enrichment viz data
   plan_cytogenetic_viz,    # Oncoprint and co-occurrence visualization
+  plan_gene_correlations,  # Gene-gene correlation analysis
   plan_api,             # Static JSON API generation (Phase 1)
   plan_pkgctx,          # Auto-generate .ctx.yaml API context files
   plan_dag_validation   # Cross-layer dependency validation

@@ -113,3 +113,75 @@ test_that("run_km_by_markers handles empty data", {
   expect_type(results, "list")
   expect_equal(length(results), 0)
 })
+
+# --- run_km_by_expression ---
+
+# Helper: create mock expression matrix matching survival data
+mock_expr_matrix <- function(patient_ids, n_genes = 50) {
+  set.seed(42)
+  mat <- matrix(rnorm(n_genes * length(patient_ids), mean = 10, sd = 2),
+                nrow = n_genes, ncol = length(patient_ids))
+  rownames(mat) <- paste0("GENE", seq_len(n_genes))
+  colnames(mat) <- patient_ids
+  mat
+}
+
+test_that("run_km_by_expression median split returns KM result", {
+  skip_if_not_installed("survival")
+  surv <- mock_surv_data(40)
+  mat <- mock_expr_matrix(surv$patient_id)
+  result <- run_km_by_expression(surv, mat, "GENE1", split = "median")
+  expect_type(result, "list")
+  expect_false(is.null(result$fit))
+  expect_equal(result$gene, "GENE1")
+  expect_equal(result$split_method, "median")
+})
+
+test_that("run_km_by_expression top_bottom_20 works", {
+  skip_if_not_installed("survival")
+  surv <- mock_surv_data(50)
+  mat <- mock_expr_matrix(surv$patient_id)
+  result <- run_km_by_expression(surv, mat, "GENE1", split = "top_bottom_20")
+  expect_type(result, "list")
+  expect_equal(result$split_method, "top_bottom_20")
+})
+
+test_that("run_km_by_expression tertile split works", {
+  skip_if_not_installed("survival")
+  surv <- mock_surv_data(60)
+  mat <- mock_expr_matrix(surv$patient_id)
+  result <- run_km_by_expression(surv, mat, "GENE1", split = "tertile")
+  expect_type(result, "list")
+  expect_equal(result$split_method, "tertile")
+})
+
+test_that("run_km_by_expression quartile split works", {
+  skip_if_not_installed("survival")
+  surv <- mock_surv_data(60)
+  mat <- mock_expr_matrix(surv$patient_id)
+  result <- run_km_by_expression(surv, mat, "GENE1", split = "quartile")
+  expect_type(result, "list")
+  expect_equal(result$split_method, "quartile")
+})
+
+test_that("run_km_by_expression handles missing gene", {
+  skip_if_not_installed("survival")
+  surv <- mock_surv_data()
+  mat <- mock_expr_matrix(surv$patient_id)
+  result <- run_km_by_expression(surv, mat, "MISSING_GENE")
+  expect_true(is.null(result$fit))
+  expect_true(!is.null(result$note))
+})
+
+test_that("run_km_by_expression handles NULL input", {
+  result <- run_km_by_expression(NULL, NULL, "GENE1")
+  expect_true(is.null(result$fit))
+})
+
+test_that("run_km_by_expression handles no matching patients", {
+  skip_if_not_installed("survival")
+  surv <- mock_surv_data(10)
+  mat <- mock_expr_matrix(paste0("OTHER_", 1:10))
+  result <- run_km_by_expression(surv, mat, "GENE1")
+  expect_true(is.null(result$fit))
+})

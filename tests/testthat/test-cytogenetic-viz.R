@@ -202,3 +202,50 @@ test_that("summarize_cytogenetics computes correct percentages", {
   expect_equal(t414_row$n_tested, 10)
   expect_equal(t414_row$pct, 30.0)
 })
+
+# --- plot_expression_by_subtype ---
+
+# Helper: mock expression matrix matching cytogenetic patient IDs
+mock_expr_for_cyto <- function(cyto_data, n_genes = 10) {
+  set.seed(42)
+  pids <- cyto_data$patient_id
+  mat <- matrix(rnorm(n_genes * length(pids), mean = 10, sd = 2),
+                nrow = n_genes, ncol = length(pids))
+  rownames(mat) <- paste0("GENE", seq_len(n_genes))
+  colnames(mat) <- pids
+  mat
+}
+
+test_that("plot_expression_by_subtype creates ggplot", {
+  cyto <- mock_cyto_data(30)
+  mat <- mock_expr_for_cyto(cyto)
+  p <- plot_expression_by_subtype(mat, cyto, "GENE1")
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot_expression_by_subtype handles NULL input", {
+  p <- plot_expression_by_subtype(NULL, NULL, "GENE1")
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot_expression_by_subtype handles missing gene", {
+  cyto <- mock_cyto_data(20)
+  mat <- mock_expr_for_cyto(cyto)
+  p <- plot_expression_by_subtype(mat, cyto, "MISSING_GENE")
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot_expression_by_subtype accepts custom markers", {
+  cyto <- mock_cyto_data(30)
+  mat <- mock_expr_for_cyto(cyto)
+  p <- plot_expression_by_subtype(mat, cyto, "GENE1",
+                                   markers = c("t_4_14", "del_17p"))
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("plot_expression_by_subtype supports t.test", {
+  cyto <- mock_cyto_data(30)
+  mat <- mock_expr_for_cyto(cyto)
+  p <- plot_expression_by_subtype(mat, cyto, "GENE1", test = "t.test")
+  expect_s3_class(p, "ggplot")
+})
