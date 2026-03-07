@@ -46,6 +46,7 @@ for caching optimization or parallel execution via `crew`.
 #|   Source: targets::tar_meta()."
 meta <- targets::tar_meta(store = Sys.getenv("TAR_STORE", "_targets"))
 meta_timed <- meta[!is.na(meta$seconds), c("name", "seconds", "bytes")]
+meta_timed$seconds <- as.numeric(meta_timed$seconds)
 meta_timed <- meta_timed[order(-meta_timed$seconds), ]
 meta_timed$bytes_fmt <- ifelse(
   is.na(meta_timed$bytes), "—",

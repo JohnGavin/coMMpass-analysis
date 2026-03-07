@@ -15,7 +15,9 @@ A named list with three elements:
     `gene_type`. colData contains `submitter_id` and `sample_type`.}
   \item{clinical}{A data.frame (20 patients) with columns `submitter_id`,
     `vital_status`, `days_to_death`, `days_to_last_follow_up`,
-    `age_at_diagnosis` (in days), `gender`, `iss_stage`.}
+    `age_at_diagnosis` (in days), `gender`, `iss_stage`,
+    `heavy_chain` (myeloma isotype), `light_chain` (Kappa/Lambda),
+    `ecog_status` (0-4), `ldh` (U/L).}
   \item{cytogenetic}{A data.frame (20 patients) with columns `patient_id`,
     `t_4_14`, `t_11_14`, `t_14_16`, `del_17p`, `gain_1q`, `risk_group`.}
 }

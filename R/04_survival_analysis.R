@@ -104,6 +104,19 @@ prepare_survival_data <- function(clinical_data, cyto_file = NULL) {
     surv$gender <- tolower(clin_valid$gender)
   }
 
+  # Myeloma subtype markers
+  if ("heavy_chain" %in% names(clin_valid)) {
+    surv$heavy_chain <- clin_valid$heavy_chain
+  }
+  if ("light_chain" %in% names(clin_valid)) {
+    surv$light_chain <- clin_valid$light_chain
+  }
+
+  # ECOG performance status
+  if ("ecog_status" %in% names(clin_valid)) {
+    surv$ecog_status <- clin_valid$ecog_status
+  }
+
   # Merge cytogenetic data if available
   if (!is.null(cyto_file)) {
     cyto <- NULL

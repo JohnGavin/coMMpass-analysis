@@ -135,6 +135,20 @@ create_example_clinical <- function(patient_ids) {
       replace = TRUE,
       prob = c(0.3, 0.35, 0.25, 0.1)
     ),
+    heavy_chain = sample(
+      c("IgG", "IgA", "IgD", "Light chain only"),
+      n,
+      replace = TRUE,
+      prob = c(0.57, 0.20, 0.02, 0.21)
+    ),
+    light_chain = sample(
+      c("Kappa", "Lambda"),
+      n,
+      replace = TRUE,
+      prob = c(0.65, 0.35)
+    ),
+    ecog_status = sample(0:4, n, replace = TRUE, prob = c(0.25, 0.40, 0.20, 0.10, 0.05)),
+    ldh = round(rnorm(n, 200, 60)),
     stringsAsFactors = FALSE
   )
 }
