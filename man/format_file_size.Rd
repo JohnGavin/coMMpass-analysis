@@ -25,7 +25,9 @@ format_file_size(c(1024, 1048576, 5000877192))
 Other utilities: 
 \code{\link{create_summary_table}()},
 \code{\link{example_data}()},
+\code{\link{export_h5ad}()},
 \code{\link{format_with_commas}()},
+\code{\link{gene_report}()},
 \code{\link{strip_plotly}()}
 }
 \concept{utilities}

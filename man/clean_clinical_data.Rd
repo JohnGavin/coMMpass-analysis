@@ -18,6 +18,8 @@ Standardizes clinical data column names and formats
 \seealso{
 Other data-cleaning: 
 \code{\link{clean_expression_data}()},
-\code{\link{integrate_clinical_expression}()}
+\code{\link{clean_treatment_data}()},
+\code{\link{integrate_clinical_expression}()},
+\code{\link{summarize_treatment}()}
 }
 \concept{data-cleaning}

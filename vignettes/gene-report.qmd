@@ -1,0 +1,177 @@
+---
+title: "Gene Report"
+format: html
+params:
+  gene: "CD70"
+vignette: >
+  %\VignetteIndexEntry{Gene Report}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 8,
+  fig.height = 6
+)
+library(targets)
+
+# Discover targets store
+proj_dir <- Sys.getenv("TAR_PROJECT")
+tar_store <- NULL
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_store <- file.path(proj_dir, "_targets")
+} else if (dir.exists("_targets")) {
+  tar_store <- "_targets"
+} else if (dir.exists("../_targets")) {
+  tar_store <- "../_targets"
+}
+
+safe_tar_read <- function(name) {
+  if (is.null(tar_store)) return(NULL)
+  tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
+}
+
+gene <- params$gene
+```
+
+## `r gene` — Single Gene Characterization
+
+This report provides a multi-faceted characterization of **`r gene`** across
+the CoMMpass cohort: expression distribution, survival stratification,
+cytogenetic context, and co-expression correlations.
+
+> Generated with `gene_report("`r gene`")`. See `?gene_report` for usage.
+
+## Expression Distribution
+
+```{r expression-dist, fig.cap = paste0(gene, " expression distribution across samples (VST-transformed).")}
+vst_counts <- safe_tar_read("vst_counts")
+if (!is.null(vst_counts) && gene %in% rownames(SummarizedExperiment::assay(vst_counts, "vst"))) {
+  vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
+  expr_vals <- as.numeric(vst_mat[gene, ])
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    df <- data.frame(expression = expr_vals)
+    ggplot2::ggplot(df, ggplot2::aes(x = expression)) +
+      ggplot2::geom_histogram(bins = 30, fill = "#2166AC", alpha = 0.7) +
+      ggplot2::geom_vline(xintercept = median(expr_vals), linetype = "dashed",
+                           color = "#B2182B") +
+      ggplot2::labs(
+        title = paste0(gene, " Expression Distribution"),
+        subtitle = paste0("n = ", length(expr_vals), " samples | ",
+                           "Median = ", round(median(expr_vals), 2),
+                           " | SD = ", round(sd(expr_vals), 2)),
+        x = "VST Expression", y = "Count"
+      ) +
+      ggplot2::theme_minimal(base_size = 12)
+  }
+} else {
+  cat(paste0("Gene ", gene, " not found in VST matrix or targets store not available."))
+}
+```
+
+## Survival by Expression
+
+Patients split at median `r gene` expression into High/Low groups.
+
+```{r km-expression, fig.cap = paste0("Kaplan-Meier curves stratified by median ", gene, " expression.")}
+survival_data <- safe_tar_read("survival_data")
+if (!is.null(vst_counts) && !is.null(survival_data) &&
+    gene %in% rownames(SummarizedExperiment::assay(vst_counts, "vst"))) {
+  vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
+  km_res <- coMMpass::run_km_by_expression(
+    survival_data, vst_mat, gene = gene, split = "median"
+  )
+  if (!is.null(km_res$fit)) {
+    coMMpass::plot_km(km_res,
+      title = paste0("Survival by ", gene, " Expression (Median Split)"))
+  } else {
+    cat(paste0("KM analysis not possible: ", km_res$note))
+  }
+} else {
+  cat("Survival or expression data not available in targets store.")
+}
+```
+
+## Expression by Cytogenetic Subtype
+
+```{r expr-subtype, fig.cap = paste0(gene, " expression by cytogenetic marker status.")}
+cyto_data <- safe_tar_read("cytogenetic_data")
+if (!is.null(vst_counts) && !is.null(cyto_data) &&
+    gene %in% rownames(SummarizedExperiment::assay(vst_counts, "vst"))) {
+  vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
+  cyto_df <- if (is.character(cyto_data) && file.exists(cyto_data)) {
+    arrow::read_parquet(cyto_data)
+  } else if (is.data.frame(cyto_data)) {
+    cyto_data
+  } else {
+    NULL
+  }
+  if (!is.null(cyto_df)) {
+    coMMpass::plot_expression_by_subtype(vst_mat, cyto_df, gene = gene)
+  } else {
+    cat("Cytogenetic data not available.")
+  }
+} else {
+  cat("Expression or cytogenetic data not available in targets store.")
+}
+```
+
+## Gene-Gene Correlations
+
+Top correlated genes with `r gene` (Pearson, VST expression).
+
+```{r correlations}
+if (!is.null(vst_counts) &&
+    gene %in% rownames(SummarizedExperiment::assay(vst_counts, "vst"))) {
+  vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
+
+  # Top 500 most variable genes as candidates
+  gene_vars <- apply(vst_mat, 1, var)
+  top_candidates <- names(sort(gene_vars, decreasing = TRUE))[1:500]
+  top_candidates <- setdiff(top_candidates, gene)
+
+  cor_batch <- coMMpass::correlate_genes_batch(
+    vst_mat, target_gene = gene,
+    candidate_genes = top_candidates, method = "pearson"
+  )
+  if (nrow(cor_batch) > 0) {
+    top10 <- head(cor_batch, 10)
+    knitr::kable(
+      top10[, c("gene", "estimate", "p_value", "padj")],
+      digits = c(0, 3, 4, 4),
+      col.names = c("Gene", "Pearson R", "p-value", "Adjusted p"),
+      caption = paste0("Top 10 genes correlated with ", gene,
+                        " (n = ", top10$n_samples[1], " samples)")
+    )
+  } else {
+    cat("No correlation results available.")
+  }
+} else {
+  cat("VST data not available in targets store.")
+}
+```
+
+```{r top-correlation-plot, fig.cap = paste0("Scatter plot of ", gene, " vs top correlated gene.")}
+if (exists("cor_batch") && nrow(cor_batch) > 0) {
+  top_gene <- cor_batch$gene[1]
+  cor_res <- coMMpass::correlate_genes(vst_mat, gene, top_gene)
+  coMMpass::plot_gene_correlation(cor_res)
+}
+```
+
+## Reproducibility
+
+<details>
+<summary>Session Info (click to expand)</summary>
+
+```{r session-info}
+sessionInfo()
+```
+
+</details>

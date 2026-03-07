@@ -28,6 +28,7 @@ Imports:
     stringr,
     tibble
 Suggests:
+    anndataR,
     AnnotationDbi,
     apeglm,
     quarto,

@@ -20,6 +20,8 @@ Combines clinical and expression data with consistent sample IDs
 \seealso{
 Other data-cleaning: 
 \code{\link{clean_clinical_data}()},
-\code{\link{clean_expression_data}()}
+\code{\link{clean_expression_data}()},
+\code{\link{clean_treatment_data}()},
+\code{\link{summarize_treatment}()}
 }
 \concept{data-cleaning}

@@ -70,6 +70,58 @@ clean_clinical_data <- function(clinical_raw) {
     }
   }
 
+  # --- Numeric biomarker validation (#63) ---
+  # GDC column name aliases -> canonical names
+  gdc_aliases <- c(
+    serum_beta_2_microglobulin = "b2m",
+    beta_2_microglobulin = "b2m",
+    serum_albumin = "albumin",
+    serum_free_kappa = "flc_kappa",
+    serum_free_lambda = "flc_lambda",
+    lactate_dehydrogenase = "ldh"
+  )
+  for (alias in names(gdc_aliases)) {
+    canon <- gdc_aliases[alias]
+    if (alias %in% names(clinical) && !canon %in% names(clinical)) {
+      names(clinical)[names(clinical) == alias] <- canon
+    }
+  }
+
+  # Derive FLC ratio if kappa and lambda present
+  if (all(c("flc_kappa", "flc_lambda") %in% names(clinical))) {
+    lambda <- as.numeric(clinical$flc_lambda)
+    clinical$flc_ratio <- ifelse(
+      !is.na(lambda) & lambda > 0,
+      round(as.numeric(clinical$flc_kappa) / lambda, 2),
+      NA_real_
+    )
+  }
+
+  # Range validation for numeric biomarkers
+  biomarker_ranges <- list(
+    b2m = c(0, 50),           # mg/L
+    albumin = c(1, 6),        # g/dL
+    flc_kappa = c(0, 10000),  # mg/L
+    flc_lambda = c(0, 10000), # mg/L
+    flc_ratio = c(0, 1000),   # ratio
+    ldh = c(0, 5000),         # U/L
+    hemoglobin = c(2, 25),    # g/dL
+    creatinine = c(0, 30),    # mg/dL
+    calcium = c(5, 20),       # mg/dL
+    platelets = c(0, 1500)    # 10^9/L
+  )
+  for (col in names(biomarker_ranges)) {
+    if (col %in% names(clinical)) {
+      clinical[[col]] <- suppressWarnings(as.numeric(clinical[[col]]))
+      rng <- biomarker_ranges[[col]]
+      out <- !is.na(clinical[[col]]) &
+        (clinical[[col]] < rng[1] | clinical[[col]] > rng[2])
+      if (any(out)) {
+        clinical[[col]][out] <- NA_real_
+      }
+    }
+  }
+
   # Add data quality flags
   clinical$n_missing <- rowSums(is.na(clinical))
   clinical$percent_missing <- round(100 * clinical$n_missing / ncol(clinical), 1)

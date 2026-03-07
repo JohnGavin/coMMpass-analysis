@@ -20,8 +20,10 @@ Generate a nicely formatted summary statistics table for numeric variables
 \seealso{
 Other utilities: 
 \code{\link{example_data}()},
+\code{\link{export_h5ad}()},
 \code{\link{format_file_size}()},
 \code{\link{format_with_commas}()},
+\code{\link{gene_report}()},
 \code{\link{strip_plotly}()}
 }
 \concept{utilities}
