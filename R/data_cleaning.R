@@ -39,6 +39,37 @@ clean_clinical_data <- function(clinical_raw) {
     clinical$vital_status <- tolower(clinical$vital_status)
   }
 
+  # Standardize heavy chain isotype
+  if ("heavy_chain" %in% names(clinical)) {
+    hc <- tolower(clinical$heavy_chain)
+    hc[hc %in% c("igg", "ig g")] <- "IgG"
+    hc[hc %in% c("iga", "ig a")] <- "IgA"
+    hc[hc %in% c("igd", "ig d")] <- "IgD"
+    hc[hc %in% c("ige", "ig e")] <- "IgE"
+    hc[hc %in% c("igm", "ig m")] <- "IgM"
+    hc[hc %in% c("light chain only", "light chain", "lco")] <- "Light chain only"
+    clinical$heavy_chain <- hc
+  }
+
+  # Standardize light chain type
+  if ("light_chain" %in% names(clinical)) {
+    lc <- tolower(clinical$light_chain)
+    lc[lc %in% c("kappa", "k")] <- "Kappa"
+    lc[lc %in% c("lambda", "l")] <- "Lambda"
+    clinical$light_chain <- lc
+  }
+
+  # Validate ECOG performance status
+  if ("ecog_status" %in% names(clinical)) {
+    clinical$ecog_status <- suppressWarnings(as.integer(clinical$ecog_status))
+    out_of_range <- !is.na(clinical$ecog_status) &
+      (clinical$ecog_status < 0L | clinical$ecog_status > 4L)
+    if (any(out_of_range)) {
+      warning(sum(out_of_range), " ECOG values outside 0-4 range, setting to NA")
+      clinical$ecog_status[out_of_range] <- NA_integer_
+    }
+  }
+
   # Add data quality flags
   clinical$n_missing <- rowSums(is.na(clinical))
   clinical$percent_missing <- round(100 * clinical$n_missing / ncol(clinical), 1)

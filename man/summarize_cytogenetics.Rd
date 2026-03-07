@@ -24,6 +24,7 @@ summarize_cytogenetics(cyto)
 \seealso{
 Other cytogenetics: 
 \code{\link{calculate_cooccurrence}()},
+\code{\link{compute_riss}()},
 \code{\link{extract_cytogenetic_data}()},
 \code{\link{plot_cooccurrence_heatmap}()},
 \code{\link{plot_cytogenetic_oncoprint}()}

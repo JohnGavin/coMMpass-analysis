@@ -158,3 +158,56 @@ classify_cytogenetic_risk <- function(cyto) {
 
   result
 }
+
+#' Compute Revised International Staging System (R-ISS)
+#'
+#' Classifies patients into R-ISS stages based on ISS stage, cytogenetic
+#' risk group, and LDH level (Palumbo et al., JCO 2015).
+#'
+#' @param iss_stage Character vector: "Stage I", "Stage II", "Stage III"
+#' @param risk_group Character vector: "High", "Standard", "high", "standard"
+#' @param ldh Numeric vector: LDH value (U/L), or NA
+#' @param ldh_uln Numeric scalar: upper limit of normal for LDH (default 250)
+#' @return Character vector: "R-ISS I", "R-ISS II", "R-ISS III", or NA
+#' @family cytogenetics
+#' @export
+#' @examples
+#' compute_riss("Stage I", "Standard", ldh = 200)
+#' compute_riss("Stage III", "High", ldh = 300)
+#' compute_riss(
+#'   c("Stage I", "Stage III", "Stage II"),
+#'   c("Standard", "High", "Standard"),
+#'   ldh = c(200, 300, NA)
+#' )
+compute_riss <- function(iss_stage, risk_group, ldh = NA_real_, ldh_uln = 250) {
+  n <- length(iss_stage)
+  if (length(risk_group) != n) {
+    cli::cli_abort("{.arg risk_group} must have the same length as {.arg iss_stage}")
+  }
+  ldh <- rep_len(ldh, n)
+
+  iss <- tolower(as.character(iss_stage))
+  risk <- tolower(as.character(risk_group))
+  ldh_elevated <- !is.na(ldh) & ldh > ldh_uln
+
+  result <- rep(NA_character_, n)
+  has_iss <- !is.na(iss) & iss %in% c("stage i", "stage ii", "stage iii")
+
+  # R-ISS I: ISS I AND standard-risk AND LDH normal (or unknown)
+  is_riss1 <- has_iss &
+    iss == "stage i" &
+    (risk == "standard" | is.na(risk)) &
+    !ldh_elevated
+
+  # R-ISS III: ISS III AND (high-risk OR elevated LDH)
+  is_riss3 <- has_iss &
+    iss == "stage iii" &
+    (risk == "high" | ldh_elevated)
+
+  result[is_riss1] <- "R-ISS I"
+  result[is_riss3] <- "R-ISS III"
+  # R-ISS II: everything else with ISS data
+  result[has_iss & is.na(result)] <- "R-ISS II"
+
+  result
+}

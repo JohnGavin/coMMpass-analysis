@@ -72,6 +72,45 @@ test_that("build_paired_coldata identifies paired patients", {
   expect_equal(levels(result$visit), c("baseline", "relapsed"))
 })
 
+test_that("compute_riss classifies R-ISS stages correctly", {
+  # R-ISS I: ISS I + standard risk + normal LDH
+
+  expect_equal(compute_riss("Stage I", "Standard", ldh = 200), "R-ISS I")
+  # R-ISS I: ISS I + standard risk + LDH unknown
+
+  expect_equal(compute_riss("Stage I", "Standard", ldh = NA), "R-ISS I")
+
+  # R-ISS III: ISS III + high risk
+
+  expect_equal(compute_riss("Stage III", "High", ldh = 200), "R-ISS III")
+  # R-ISS III: ISS III + elevated LDH
+  expect_equal(compute_riss("Stage III", "Standard", ldh = 300), "R-ISS III")
+  # R-ISS III: ISS III + both
+  expect_equal(compute_riss("Stage III", "High", ldh = 300), "R-ISS III")
+
+  # R-ISS II: everything else
+  expect_equal(compute_riss("Stage II", "Standard", ldh = 200), "R-ISS II")
+  expect_equal(compute_riss("Stage I", "High", ldh = 200), "R-ISS II")
+  expect_equal(compute_riss("Stage III", "Standard", ldh = 200), "R-ISS II")
+
+  # NA input
+  expect_true(is.na(compute_riss(NA, "Standard", ldh = 200)))
+})
+
+test_that("compute_riss handles vectorized input", {
+  result <- compute_riss(
+    c("Stage I", "Stage III", "Stage II", NA),
+    c("Standard", "High", "Standard", "Standard"),
+    ldh = c(200, 300, NA, 200)
+  )
+
+  expect_equal(result, c("R-ISS I", "R-ISS III", "R-ISS II", NA))
+})
+
+test_that("compute_riss validates input lengths", {
+  expect_error(compute_riss(c("Stage I", "Stage II"), "Standard"))
+})
+
 test_that("placeholder_results returns correct structure", {
   res <- placeholder_results("test_method")
   expect_type(res, "list")

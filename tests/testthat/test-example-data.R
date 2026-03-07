@@ -52,7 +52,8 @@ test_that("clinical data has expected structure", {
 
   required_cols <- c(
     "submitter_id", "vital_status", "days_to_death",
-    "days_to_last_follow_up", "age_at_diagnosis", "gender", "iss_stage"
+    "days_to_last_follow_up", "age_at_diagnosis", "gender", "iss_stage",
+    "heavy_chain", "light_chain", "ecog_status", "ldh"
   )
   for (col in required_cols) {
     expect_true(col %in% names(clin), info = paste("Missing column:", col))
@@ -63,6 +64,18 @@ test_that("clinical data has expected structure", {
 
   # age_at_diagnosis is in days (> 120 means days, not years)
   expect_true(max(clin$age_at_diagnosis, na.rm = TRUE) > 120)
+
+  # heavy_chain values
+  expect_true(all(clin$heavy_chain %in% c("IgG", "IgA", "IgD", "Light chain only")))
+
+  # light_chain values
+  expect_true(all(clin$light_chain %in% c("Kappa", "Lambda")))
+
+  # ecog_status in 0-4
+  expect_true(all(clin$ecog_status %in% 0:4))
+
+  # ldh is numeric
+  expect_true(is.numeric(clin$ldh))
 })
 
 test_that("cytogenetic data has expected structure", {
@@ -139,6 +152,10 @@ test_that("example data works with prepare_survival_data()", {
   expect_true("status" %in% names(surv))
   # Cytogenetic merge adds risk_group
   expect_true("risk_group" %in% names(surv))
+  # Clinical passthroughs
+  expect_true("heavy_chain" %in% names(surv))
+  expect_true("light_chain" %in% names(surv))
+  expect_true("ecog_status" %in% names(surv))
   # All time values positive
   expect_true(all(surv$time_days > 0))
 })
