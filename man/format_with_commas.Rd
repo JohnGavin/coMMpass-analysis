@@ -22,6 +22,8 @@ format_with_commas(1234567)
 \seealso{
 Other utilities: 
 \code{\link{create_summary_table}()},
-\code{\link{format_file_size}()}
+\code{\link{example_data}()},
+\code{\link{format_file_size}()},
+\code{\link{strip_plotly}()}
 }
 \concept{utilities}
