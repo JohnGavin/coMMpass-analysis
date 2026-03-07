@@ -40,7 +40,28 @@ system_pkgs <- c(
   "quarto"
 ) |> unique() |> sort()
 
-shell_hook <- "export R_MAKEVARS_USER=/dev/null\nprintf 'CoMMpass environment ready.\n'"
+shell_hook <- paste0(
+  # Get the nix store hash of the current R binary
+  "_R_HASH=$(basename $(dirname $(dirname $(which R))))\n",
+  # Filter R_LIBS_SITE: keep entries that either have no .so files,
+  # or have .so files that link against OUR R build
+  "_FILTERED_LIBS=$(echo \"$R_LIBS_SITE\" | tr \":\" \"\\n\" | while read _L; do\n",
+  "  if [ -d \"$_L\" ]; then\n",
+  "    _SO=$(find \"$_L\" -name \"*.so\" -maxdepth 4 2>/dev/null | head -1)\n",
+  "    if [ -n \"$_SO\" ]; then\n",
+  "      if otool -L \"$_SO\" 2>/dev/null | grep -q \"$_R_HASH\"; then\n",
+  "        echo \"$_L\"\n",
+  "      fi\n",
+  "    else\n",
+  "      echo \"$_L\"\n",
+  "    fi\n",
+  "  fi\n",
+  "done | tr \"\\n\" \":\" | sed 's/:$//')\n",
+  "export R_LIBS_SITE=\"$_FILTERED_LIBS\"\n",
+  "unset R_LIBS\n",
+  "export R_MAKEVARS_USER=/dev/null\n",
+  "printf 'CoMMpass environment ready.\\n'"
+)
 
 message("Generating default.nix...")
 message("  DESCRIPTION deps: ", paste(desc_deps, collapse = ", "))
