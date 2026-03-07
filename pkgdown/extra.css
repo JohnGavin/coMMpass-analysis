@@ -1,0 +1,21 @@
+/* Override Bootstrap container max-width at ALL breakpoints */
+body > .container,
+.container {
+  max-width: 95% !important;
+  width: 95%;
+}
+
+/* Expand content column, shrink TOC */
+.col-md-9 { flex: 0 0 80%; max-width: 80%; }
+.col-md-3 { flex: 0 0 20%; max-width: 20%; }
+
+/* Ensure .contents area uses full available width */
+.contents { max-width: none; width: 100%; }
+
+/* Plotly charts: full width */
+.js-plotly-plot { width: 100% !important; }
+
+@media (max-width: 991.98px) {
+  #toc { display: none; }
+  .col-md-9 { flex: 0 0 100%; max-width: 100%; }
+}
