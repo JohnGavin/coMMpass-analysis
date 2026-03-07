@@ -8,7 +8,7 @@ test_that("example_data() returns expected structure", {
   d <- example_data()
 
   expect_type(d, "list")
-  expect_named(d, c("rnaseq_se", "clinical", "cytogenetic"))
+  expect_named(d, c("rnaseq_se", "clinical", "cytogenetic", "treatment"))
 })
 
 test_that("rnaseq_se is a valid SummarizedExperiment", {

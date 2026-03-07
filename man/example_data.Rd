@@ -17,9 +17,17 @@ A named list with three elements:
     `vital_status`, `days_to_death`, `days_to_last_follow_up`,
     `age_at_diagnosis` (in days), `gender`, `iss_stage`,
     `heavy_chain` (myeloma isotype), `light_chain` (Kappa/Lambda),
-    `ecog_status` (0-4), `ldh` (U/L).}
+    `ecog_status` (0-4), `ldh` (U/L), `b2m` (beta-2 microglobulin, mg/L),
+    `albumin` (g/dL), `flc_kappa` (free kappa light chain, mg/L),
+    `flc_lambda` (free lambda light chain, mg/L), `hemoglobin` (g/dL),
+    `creatinine` (mg/dL), `calcium` (corrected, mg/dL),
+    `platelets` (10^9/L).}
   \item{cytogenetic}{A data.frame (20 patients) with columns `patient_id`,
     `t_4_14`, `t_11_14`, `t_14_16`, `del_17p`, `gain_1q`, `risk_group`.}
+  \item{treatment}{A data.frame of treatment lines (1-3 per patient) with
+    columns `patient_id`, `treatment_line`, `regimen_name`, `regimen_class`,
+    `best_response` (ordered factor), `stem_cell_transplant` (logical),
+    `treatment_start_days` (integer).}
 }
 }
 \description{
@@ -47,8 +55,10 @@ surv <- prepare_survival_data(d$clinical, cyto_file = d$cytogenetic)
 \seealso{
 Other utilities: 
 \code{\link{create_summary_table}()},
+\code{\link{export_h5ad}()},
 \code{\link{format_file_size}()},
 \code{\link{format_with_commas}()},
+\code{\link{gene_report}()},
 \code{\link{strip_plotly}()}
 }
 \concept{utilities}

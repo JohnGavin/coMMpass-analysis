@@ -18,9 +18,17 @@
 #'     `vital_status`, `days_to_death`, `days_to_last_follow_up`,
 #'     `age_at_diagnosis` (in days), `gender`, `iss_stage`,
 #'     `heavy_chain` (myeloma isotype), `light_chain` (Kappa/Lambda),
-#'     `ecog_status` (0-4), `ldh` (U/L).}
+#'     `ecog_status` (0-4), `ldh` (U/L), `b2m` (beta-2 microglobulin, mg/L),
+#'     `albumin` (g/dL), `flc_kappa` (free kappa light chain, mg/L),
+#'     `flc_lambda` (free lambda light chain, mg/L), `hemoglobin` (g/dL),
+#'     `creatinine` (mg/dL), `calcium` (corrected, mg/dL),
+#'     `platelets` (10^9/L).}
 #'   \item{cytogenetic}{A data.frame (20 patients) with columns `patient_id`,
 #'     `t_4_14`, `t_11_14`, `t_14_16`, `del_17p`, `gain_1q`, `risk_group`.}
+#'   \item{treatment}{A data.frame of treatment lines (1-3 per patient) with
+#'     columns `patient_id`, `treatment_line`, `regimen_name`, `regimen_class`,
+#'     `best_response` (ordered factor), `stem_cell_transplant` (logical),
+#'     `treatment_start_days` (integer).}
 #' }
 #'
 #' @family utilities
@@ -56,9 +64,14 @@ example_data <- function() {
     colData = S4Vectors::DataFrame(se_parts$colData)
   )
 
+  # Treatment data (cleaned from raw example)
+  trt_raw <- load_example("treatment.rds")
+  treatment <- clean_treatment_data(trt_raw)
+
   list(
     rnaseq_se = rnaseq_se,
     clinical = load_example("clinical.rds"),
-    cytogenetic = load_example("cytogenetic.rds")
+    cytogenetic = load_example("cytogenetic.rds"),
+    treatment = treatment
   )
 }

@@ -42,10 +42,12 @@ create_all_example_data <- function(
   cytogenetic <- create_example_cytogenetic(patient_ids)
   saveRDS(cytogenetic, file.path(outdir, "cytogenetic.rds"))
 
-  sizes <- vapply(
-    file.path(outdir, c("rnaseq_se.rds", "clinical.rds", "cytogenetic.rds")),
-    file.size, numeric(1)
-  )
+  # --- 4. Treatment data ---
+  treatment <- create_example_treatment(patient_ids)
+  saveRDS(treatment, file.path(outdir, "treatment.rds"))
+
+  files <- c("rnaseq_se.rds", "clinical.rds", "cytogenetic.rds", "treatment.rds")
+  sizes <- vapply(file.path(outdir, files), file.size, numeric(1))
   cat(sprintf(
     "Created %d files in %s (%s bytes total)\n",
     length(sizes), outdir, sum(sizes)
@@ -54,7 +56,8 @@ create_all_example_data <- function(
   invisible(list(
     rnaseq_se_parts = se_parts,
     clinical = clinical,
-    cytogenetic = cytogenetic
+    cytogenetic = cytogenetic,
+    treatment = treatment
   ))
 }
 
@@ -118,6 +121,21 @@ create_example_clinical <- function(patient_ids) {
   n <- length(patient_ids)
   is_dead <- sample(c(TRUE, FALSE), n, replace = TRUE, prob = c(0.4, 0.6))
 
+  # ISS stage (needed to correlate b2m/albumin)
+  iss <- sample(
+    c("Stage I", "Stage II", "Stage III", NA),
+    n, replace = TRUE, prob = c(0.3, 0.35, 0.25, 0.1)
+  )
+
+  # B2M and albumin correlated with ISS stage
+  # ISS I: b2m < 3.5 & albumin >= 3.5
+
+  # ISS III: b2m >= 5.5
+  b2m_base <- ifelse(iss == "Stage I", 2.5, ifelse(iss == "Stage III", 7, 4))
+  b2m_base[is.na(b2m_base)] <- 4
+  albumin_base <- ifelse(iss == "Stage I", 4.0, ifelse(iss == "Stage III", 3.0, 3.5))
+  albumin_base[is.na(albumin_base)] <- 3.5
+
   data.frame(
     submitter_id = patient_ids,
     vital_status = ifelse(is_dead, "Dead", "Alive"),
@@ -129,26 +147,25 @@ create_example_clinical <- function(patient_ids) {
     ),
     age_at_diagnosis = as.integer(rnorm(n, 65, 10) * 365.25),
     gender = sample(c("male", "female"), n, replace = TRUE),
-    iss_stage = sample(
-      c("Stage I", "Stage II", "Stage III", NA),
-      n,
-      replace = TRUE,
-      prob = c(0.3, 0.35, 0.25, 0.1)
-    ),
+    iss_stage = iss,
     heavy_chain = sample(
       c("IgG", "IgA", "IgD", "Light chain only"),
-      n,
-      replace = TRUE,
-      prob = c(0.57, 0.20, 0.02, 0.21)
+      n, replace = TRUE, prob = c(0.57, 0.20, 0.02, 0.21)
     ),
     light_chain = sample(
-      c("Kappa", "Lambda"),
-      n,
-      replace = TRUE,
-      prob = c(0.65, 0.35)
+      c("Kappa", "Lambda"), n, replace = TRUE, prob = c(0.65, 0.35)
     ),
-    ecog_status = sample(0:4, n, replace = TRUE, prob = c(0.25, 0.40, 0.20, 0.10, 0.05)),
+    ecog_status = sample(0:4, n, replace = TRUE,
+                          prob = c(0.25, 0.40, 0.20, 0.10, 0.05)),
     ldh = round(rnorm(n, 200, 60)),
+    b2m = round(pmax(0.5, b2m_base + rnorm(n, 0, 1)), 1),
+    albumin = round(pmax(1.5, albumin_base + rnorm(n, 0, 0.4)), 1),
+    flc_kappa = round(pmax(1, rlnorm(n, 2.5, 0.8)), 1),
+    flc_lambda = round(pmax(1, rlnorm(n, 2.0, 0.6)), 1),
+    hemoglobin = round(pmax(5, rnorm(n, 11, 1.5)), 1),
+    creatinine = round(pmax(0.3, rnorm(n, 1.0, 0.4)), 2),
+    calcium = round(pmax(7, rnorm(n, 9.5, 0.8)), 1),
+    platelets = as.integer(pmax(20, rnorm(n, 200, 60))),
     stringsAsFactors = FALSE
   )
 }
@@ -178,4 +195,32 @@ create_example_cytogenetic <- function(patient_ids) {
   cyto$risk_group <- ifelse(high_risk, "High", "Standard")
 
   cyto
+}
+
+
+# --- Helper: Treatment data ---
+create_example_treatment <- function(patient_ids) {
+  n <- length(patient_ids)
+
+  # Each patient gets 1-3 treatment lines
+  rows <- lapply(patient_ids, function(pid) {
+    n_lines <- sample(1:3, 1, prob = c(0.4, 0.35, 0.25))
+    regimens <- c("VRd", "Rd", "Kd", "DaraVd", "Pd", "Mel", "KRd", "Vd")
+    responses <- c("sCR", "CR", "VGPR", "PR", "MR", "SD", "PD")
+
+    lapply(seq_len(n_lines), function(line) {
+      data.frame(
+        public_id = pid,
+        line = line,
+        trtshnm = sample(regimens, 1),
+        bestrespassess = sample(responses, 1,
+          prob = c(0.05, 0.15, 0.25, 0.25, 0.10, 0.10, 0.10)),
+        sct_flag = if (line == 1) sample(c("Yes", "No"), 1, prob = c(0.3, 0.7)) else "No",
+        trtstdy = as.integer(cumsum(c(0, rep(180, line - 1)))[line]),
+        stringsAsFactors = FALSE
+      )
+    })
+  })
+
+  do.call(rbind, unlist(rows, recursive = FALSE))
 }

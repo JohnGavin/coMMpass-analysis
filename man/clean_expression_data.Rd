@@ -18,6 +18,8 @@ Standardizes expression data format and adds metadata
 \seealso{
 Other data-cleaning: 
 \code{\link{clean_clinical_data}()},
-\code{\link{integrate_clinical_expression}()}
+\code{\link{clean_treatment_data}()},
+\code{\link{integrate_clinical_expression}()},
+\code{\link{summarize_treatment}()}
 }
 \concept{data-cleaning}

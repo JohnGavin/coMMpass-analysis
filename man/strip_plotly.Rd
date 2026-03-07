@@ -30,7 +30,9 @@ object.size(p2)      # small
 Other utilities: 
 \code{\link{create_summary_table}()},
 \code{\link{example_data}()},
+\code{\link{export_h5ad}()},
 \code{\link{format_file_size}()},
-\code{\link{format_with_commas}()}
+\code{\link{format_with_commas}()},
+\code{\link{gene_report}()}
 }
 \concept{utilities}
