@@ -12,6 +12,7 @@ RoxygenNote: 7.3.3
 VignetteBuilder: quarto, knitr
 Imports:
     TCGAbiolinks,
+    S4Vectors,
     SummarizedExperiment,
     edgeR,
     logger,
