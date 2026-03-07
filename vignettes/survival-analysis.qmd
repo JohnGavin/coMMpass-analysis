@@ -117,10 +117,31 @@ safe_tar_read("vig_ph_test_table")
 safe_tar_read("vig_cox_comparison")
 ```
 
+## Survival by Gene Expression
+
+Patients are split at the median VST expression of each top DE gene into
+"High" and "Low" groups. This connects differential expression results to
+clinical outcomes.
+
+> **Note on multiple testing:** With 5 genes tested, a Bonferroni-corrected
+> significance threshold is p < 0.01.
+
+```{r km-expression, fig.height = 5, fig.cap = "Kaplan-Meier curves stratified by median-split gene expression. High = above median VST, Low = below median. Log-rank p-value shown. Top DE genes from consensus analysis."}
+safe_tar_read("vig_km_by_expression")
+```
+
+## Expression by Cytogenetic Subtype
+
+Violin/box plots showing gene expression (VST) stratified by cytogenetic
+marker status. This reveals whether specific alterations drive expression
+changes in top DE genes.
+
+```{r expr-by-subtype, fig.height = 6, fig.cap = "Gene expression by cytogenetic subtype for top DE genes. Violin + box plots, positive vs negative marker status. Wilcoxon p-value annotated."}
+safe_tar_read("vig_expr_by_subtype")
+```
+
 ## Next Steps
 
-- **Gene expression stratification**: Median-split KM by top DE gene
-  expression (requires DE and VST targets).
 - **Time-varying coefficients**: For covariates violating the PH assumption.
 - **Cure models**: If a plateau is observed in KM curves, consider
   mixture cure models.

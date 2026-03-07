@@ -4,7 +4,8 @@
 # Suppress R CMD check NOTEs for ggplot2 aes() variables
 utils::globalVariables(c(
   "time", "surv", "lower", "upper", "group",
-  "variable", "HR", "HR_lower", "HR_upper", "label"
+  "variable", "HR", "HR_lower", "HR_upper", "label",
+  "expr_group"
 ))
 
 #' Plot Kaplan-Meier curve
@@ -242,4 +243,97 @@ run_km_by_markers <- function(surv_data,
   }
 
   results
+}
+
+
+#' Run KM analysis stratified by gene expression level
+#'
+#' Splits patients into groups based on expression of a single gene (e.g.,
+#' median split) and runs Kaplan-Meier analysis with log-rank test. Connects
+#' differential expression results to clinical outcomes.
+#'
+#' @param surv_data Data frame from [prepare_survival_data()] with columns
+#'   `patient_id`, `time_days`, `status`
+#' @param expr_matrix Numeric matrix (genes x samples) of transformed
+#'   expression values (e.g., VST). Column names must match `surv_data$patient_id`.
+#' @param gene Gene name (must be a rowname of `expr_matrix`)
+#' @param split Split method: "median" (default), "tertile", "quartile",
+#'   or "top_bottom_20"
+#' @param min_per_group Minimum patients per group (default 5)
+#' @return List compatible with [plot_km()]: fit, logrank_p,
+#'   median_survival, n_per_group, strata, gene, split_method.
+#'   Returns a list with `fit = NULL` and a `note` if requirements not met.
+#' @family survival
+#' @export
+run_km_by_expression <- function(surv_data,
+                                  expr_matrix,
+                                  gene,
+                                  split = c("median", "tertile", "quartile",
+                                            "top_bottom_20"),
+                                  min_per_group = 5L) {
+  split <- match.arg(split)
+
+  if (is.null(surv_data) || nrow(surv_data) == 0 ||
+      is.null(expr_matrix) || !is.matrix(expr_matrix)) {
+    return(list(fit = NULL, logrank_p = NA_real_,
+                note = "Missing survival or expression data"))
+  }
+
+  if (!gene %in% rownames(expr_matrix)) {
+    return(list(fit = NULL, logrank_p = NA_real_,
+                note = paste0("Gene '", gene, "' not found in expression matrix")))
+  }
+
+  # Match patients between survival data and expression matrix
+  common <- intersect(surv_data$patient_id, colnames(expr_matrix))
+  if (length(common) < min_per_group * 2) {
+    return(list(fit = NULL, logrank_p = NA_real_,
+                note = paste0("Only ", length(common), " matched patients")))
+  }
+
+  sd <- surv_data[surv_data$patient_id %in% common, ]
+  expr_vals <- as.numeric(expr_matrix[gene, sd$patient_id])
+
+  # Split into groups
+  if (split == "median") {
+    med <- stats::median(expr_vals, na.rm = TRUE)
+    sd$expr_group <- ifelse(expr_vals >= med, "High", "Low")
+  } else if (split == "tertile") {
+    qs <- stats::quantile(expr_vals, probs = c(1 / 3, 2 / 3), na.rm = TRUE)
+    sd$expr_group <- ifelse(expr_vals <= qs[1], "Low",
+                            ifelse(expr_vals >= qs[2], "High", "Mid"))
+  } else if (split == "quartile") {
+    qs <- stats::quantile(expr_vals, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)
+    sd$expr_group <- ifelse(expr_vals <= qs[1], "Q1",
+                            ifelse(expr_vals <= qs[2], "Q2",
+                                   ifelse(expr_vals <= qs[3], "Q3", "Q4")))
+  } else if (split == "top_bottom_20") {
+    qs <- stats::quantile(expr_vals, probs = c(0.2, 0.8), na.rm = TRUE)
+    sd$expr_group <- ifelse(expr_vals <= qs[1], "Bottom 20%",
+                            ifelse(expr_vals >= qs[2], "Top 20%", NA_character_))
+    sd <- sd[!is.na(sd$expr_group), ]
+  }
+
+  # Check group sizes
+  grp_sizes <- table(sd$expr_group)
+  if (any(grp_sizes < min_per_group)) {
+    return(list(fit = NULL, logrank_p = NA_real_,
+                note = paste0("Group too small: ",
+                              paste(names(grp_sizes), "=", grp_sizes,
+                                    collapse = ", "))))
+  }
+
+  # Run KM via existing function
+  km <- tryCatch(
+    run_kaplan_meier(sd, strata = "expr_group"),
+    error = function(e) {
+      list(fit = NULL, logrank_p = NA_real_,
+           note = paste("KM failed:", conditionMessage(e)))
+    }
+  )
+
+  km$gene <- gene
+  km$split_method <- split
+
+  km
 }

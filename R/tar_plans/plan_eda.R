@@ -307,6 +307,17 @@ plan_eda <- list(
     }
   ),
 
+  # --- PCA summary for EDA vignette (#25) ---
+  tar_target(
+    eda_pca_summary,
+    {
+      if (is.null(vst_counts)) return(NULL)
+      vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
+      meta <- as.data.frame(SummarizedExperiment::colData(vst_counts))
+      compute_pca(vst_mat, n_top = 500L, metadata = meta)
+    }
+  ),
+
   # --- Cross-dataset integration summary ---
   tar_target(
     eda_integration_summary,

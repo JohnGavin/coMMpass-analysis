@@ -87,5 +87,62 @@ plan_survival_analysis <- list(
     km_by_markers,
     run_km_by_markers(survival_data, min_positive = 3L),
     packages = c("survival")
+  ),
+
+  # KM by gene expression: top 5 DE genes, median split (#53)
+  tar_target(
+    km_by_expression,
+    {
+      if (is.null(vst_counts) || is.null(consensus_de_genes)) return(NULL)
+      vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
+
+      top_genes <- if (is.data.frame(consensus_de_genes)) {
+        head(consensus_de_genes$gene, 5)
+      } else if (is.character(consensus_de_genes)) {
+        head(consensus_de_genes, 5)
+      } else {
+        return(NULL)
+      }
+
+      available <- intersect(top_genes, rownames(vst_mat))
+      if (length(available) == 0) return(NULL)
+
+      lapply(stats::setNames(available, available), function(g) {
+        run_km_by_expression(survival_data, vst_mat, gene = g,
+                             split = "median")
+      })
+    },
+    packages = c("survival")
+  ),
+
+  # Expression by cytogenetic subtype: top 5 DE genes (#54)
+  tar_target(
+    expr_by_subtype,
+    {
+      if (is.null(vst_counts) || is.null(consensus_de_genes)) return(NULL)
+      vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
+
+      cyto_path <- NULL
+      if (is.character(cytogenetic_data) && file.exists(cytogenetic_data)) {
+        cyto_path <- cytogenetic_data
+      }
+      if (is.null(cyto_path)) return(NULL)
+      cyto <- arrow::read_parquet(cyto_path)
+
+      top_genes <- if (is.data.frame(consensus_de_genes)) {
+        head(consensus_de_genes$gene, 5)
+      } else if (is.character(consensus_de_genes)) {
+        head(consensus_de_genes, 5)
+      } else {
+        return(NULL)
+      }
+
+      available <- intersect(top_genes, rownames(vst_mat))
+      if (length(available) == 0) return(NULL)
+
+      lapply(stats::setNames(available, available), function(g) {
+        plot_expression_by_subtype(vst_mat, cyto, gene = g)
+      })
+    }
   )
 )

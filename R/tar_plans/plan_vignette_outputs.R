@@ -939,6 +939,30 @@ plan_vignette_outputs <- list(
     }
   ),
 
+  # --- PCA biplot: colored by gender (#25) ---
+  tar_target(
+    vig_pca_biplot,
+    {
+      if (is.null(eda_pca_summary) || nrow(eda_pca_summary$coords) == 0) {
+        return(NULL)
+      }
+      plot_pca(eda_pca_summary, color_by = "gender",
+               title = "PCA: Sample Clustering (by Gender)")
+    }
+  ),
+
+  # --- PCA biplot: colored by vital status (#25) ---
+  tar_target(
+    vig_pca_biplot_vital,
+    {
+      if (is.null(eda_pca_summary) || nrow(eda_pca_summary$coords) == 0) {
+        return(NULL)
+      }
+      plot_pca(eda_pca_summary, color_by = "vital_status",
+               title = "PCA: Sample Clustering (by Vital Status)")
+    }
+  ),
+
   # ================================================================
   # differential-expression.Rmd targets
   # ================================================================
@@ -1374,6 +1398,39 @@ plan_vignette_outputs <- list(
       )
     },
     packages = c("knitr")
+  ),
+
+  # --- KM by gene expression (#53) ---
+  tar_target(
+    vig_km_by_expression,
+    {
+      if (is.null(km_by_expression)) return(NULL)
+      if (length(km_by_expression) == 0) return(NULL)
+
+      plots <- list()
+      for (g in names(km_by_expression)) {
+        km <- km_by_expression[[g]]
+        if (!is.null(km$fit)) {
+          plots[[g]] <- plot_km(km,
+            title = paste0("Survival by ", g, " Expression (Median Split)"))
+        }
+      }
+      if (length(plots) == 0) return(NULL)
+      plots
+    }
+  ),
+
+  # --- Expression by cytogenetic subtype (#54) ---
+  tar_target(
+    vig_expr_by_subtype,
+    {
+      if (is.null(expr_by_subtype)) return(NULL)
+      if (length(expr_by_subtype) == 0) return(NULL)
+      # Return list of plots (first non-NULL)
+      valid <- Filter(Negate(is.null), expr_by_subtype)
+      if (length(valid) == 0) return(NULL)
+      valid
+    }
   ),
 
   # ================================================================

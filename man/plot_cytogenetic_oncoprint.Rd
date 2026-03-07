@@ -42,6 +42,7 @@ Other cytogenetics:
 \code{\link{compute_riss}()},
 \code{\link{extract_cytogenetic_data}()},
 \code{\link{plot_cooccurrence_heatmap}()},
+\code{\link{plot_expression_by_subtype}()},
 \code{\link{summarize_cytogenetics}()}
 }
 \concept{cytogenetics}

@@ -33,6 +33,7 @@ Other survival:
 \code{\link{plot_km}()},
 \code{\link{prepare_survival_data}()},
 \code{\link{run_cox_regression}()},
+\code{\link{run_km_by_expression}()},
 \code{\link{run_km_by_markers}()}
 }
 \concept{survival}

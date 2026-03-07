@@ -4,7 +4,8 @@
 # Suppress R CMD check NOTEs for ggplot2 aes() variables
 utils::globalVariables(c(
   "patient", "marker_label", "alt_type", "freq",
-  "label1", "label2", "signed_logp"
+  "label1", "label2", "signed_logp",
+  "expression", "marker_status"
 ))
 
 #' Plot cytogenetic oncoprint
@@ -394,4 +395,151 @@ summarize_cytogenetics <- function(cyto_data) {
   }
 
   result
+}
+
+
+#' Plot gene expression by cytogenetic subtype
+#'
+#' Creates violin + box plots showing gene expression stratified by cytogenetic
+#' marker status (positive vs negative). Adds Wilcoxon or t-test p-value
+#' annotation.
+#'
+#' @param expr_matrix Numeric matrix (genes x samples) of transformed
+#'   expression values (e.g., VST). Column names should match
+#'   `cyto_data$patient_id`.
+#' @param cyto_data Data frame with `patient_id` and marker columns
+#'   (values: "positive"/"negative"/NA)
+#' @param gene Gene name (rowname of `expr_matrix`)
+#' @param markers Character vector of marker columns. Default auto-detects.
+#' @param test Statistical test: "wilcox" (default) or "t.test"
+#' @return A ggplot object with faceted violin/box plots, one panel per marker
+#' @family cytogenetics
+#' @export
+plot_expression_by_subtype <- function(expr_matrix,
+                                        cyto_data,
+                                        gene,
+                                        markers = NULL,
+                                        test = c("wilcox", "t.test")) {
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    cli::cli_abort("Package {.pkg ggplot2} is required.")
+  }
+  test <- match.arg(test)
+
+  if (is.null(expr_matrix) || !is.matrix(expr_matrix) ||
+      is.null(cyto_data) || nrow(cyto_data) == 0) {
+    return(ggplot2::ggplot() +
+             ggplot2::annotate("text", x = 0.5, y = 0.5,
+                               label = "No expression or cytogenetic data") +
+             ggplot2::theme_void())
+  }
+
+  if (!gene %in% rownames(expr_matrix)) {
+    return(ggplot2::ggplot() +
+             ggplot2::annotate("text", x = 0.5, y = 0.5,
+                               label = paste0("Gene '", gene, "' not found")) +
+             ggplot2::theme_void())
+  }
+
+  # Auto-detect markers
+  all_markers <- c("t_4_14", "t_11_14", "t_14_16", "t_14_20",
+                    "del_17p", "del_1p", "gain_1q")
+  if (is.null(markers)) {
+    markers <- intersect(all_markers, names(cyto_data))
+  }
+  if (length(markers) == 0) {
+    return(ggplot2::ggplot() +
+             ggplot2::annotate("text", x = 0.5, y = 0.5,
+                               label = "No marker columns found") +
+             ggplot2::theme_void())
+  }
+
+  marker_labels <- c(
+    t_4_14 = "t(4;14)", t_11_14 = "t(11;14)", t_14_16 = "t(14;16)",
+    t_14_20 = "t(14;20)", del_17p = "del(17p)", del_1p = "del(1p)",
+    gain_1q = "gain(1q)"
+  )
+
+  # Match patients
+  common <- intersect(cyto_data$patient_id, colnames(expr_matrix))
+  if (length(common) < 3) {
+    return(ggplot2::ggplot() +
+             ggplot2::annotate("text", x = 0.5, y = 0.5,
+                               label = "Too few matched patients") +
+             ggplot2::theme_void())
+  }
+
+  expr_vals <- as.numeric(expr_matrix[gene, common])
+
+  # Build long data frame across markers
+  long_list <- lapply(markers, function(m) {
+    status <- cyto_data[[m]][match(common, cyto_data$patient_id)]
+    valid <- status %in% c("positive", "negative")
+    if (sum(valid) < 3) return(NULL)
+
+    data.frame(
+      expression = expr_vals[valid],
+      marker_status = status[valid],
+      marker_label = if (m %in% names(marker_labels)) marker_labels[m] else m,
+      stringsAsFactors = FALSE
+    )
+  })
+  long <- do.call(rbind, Filter(Negate(is.null), long_list))
+
+  if (is.null(long) || nrow(long) == 0) {
+    return(ggplot2::ggplot() +
+             ggplot2::annotate("text", x = 0.5, y = 0.5,
+                               label = "No valid marker data") +
+             ggplot2::theme_void())
+  }
+
+  # Compute p-values per marker
+  p_labels <- tapply(seq_len(nrow(long)), long$marker_label, function(idx) {
+    sub <- long[idx, ]
+    pos <- sub$expression[sub$marker_status == "positive"]
+    neg <- sub$expression[sub$marker_status == "negative"]
+    if (length(pos) < 3 || length(neg) < 3) return("n.s.")
+    pval <- tryCatch({
+      if (test == "wilcox") {
+        stats::wilcox.test(pos, neg)$p.value
+      } else {
+        stats::t.test(pos, neg)$p.value
+      }
+    }, error = function(e) NA_real_)
+    if (is.na(pval)) return("n.s.")
+    if (pval < 0.001) return("p < 0.001")
+    sprintf("p = %.3f", pval)
+  })
+  p_df <- data.frame(
+    marker_label = names(p_labels),
+    p_label = as.character(p_labels),
+    y_pos = max(long$expression, na.rm = TRUE) * 1.05,
+    stringsAsFactors = FALSE
+  )
+
+  long$marker_status <- factor(long$marker_status,
+                                levels = c("negative", "positive"))
+
+  ggplot2::ggplot(long, ggplot2::aes(x = marker_status, y = expression,
+                                      fill = marker_status)) +
+    ggplot2::geom_violin(alpha = 0.4, scale = "width") +
+    ggplot2::geom_boxplot(width = 0.2, outlier.size = 0.8, alpha = 0.8) +
+    ggplot2::geom_text(
+      data = p_df,
+      ggplot2::aes(x = 1.5, y = y_pos, label = p_label),
+      inherit.aes = FALSE, size = 3, color = "grey30"
+    ) +
+    ggplot2::facet_wrap(~marker_label, scales = "free_y") +
+    ggplot2::scale_fill_manual(
+      values = c("negative" = "#4DAF4A", "positive" = "#B2182B"),
+      name = "Status"
+    ) +
+    ggplot2::labs(
+      title = paste0(gene, " Expression by Cytogenetic Subtype"),
+      subtitle = paste0("n = ", length(common), " patients | ",
+                         test, " test"),
+      x = "Marker Status",
+      y = paste0(gene, " expression (VST)")
+    ) +
+    ggplot2::theme_minimal(base_size = 12) +
+    ggplot2::theme(legend.position = "none")
 }
