@@ -80,6 +80,8 @@ meta <- targets::tar_meta(store = Sys.getenv("TAR_STORE", "_targets"))
 n_total <- nrow(meta)
 n_error <- sum(!is.na(meta$error))
 n_warn <- sum(!is.na(meta$warnings))
+meta$seconds <- as.numeric(meta$seconds)
+meta$bytes <- as.numeric(meta$bytes)
 n_timed <- sum(!is.na(meta$seconds))
 total_secs <- sum(meta$seconds, na.rm = TRUE)
 total_bytes <- sum(meta$bytes, na.rm = TRUE)
@@ -165,6 +167,7 @@ tryCatch({
 ```{r size-plot, fig.cap="Target serialized sizes (log10 bytes). Comparison: most targets are under 1 MB; a few data objects (expression matrices, DE results) exceed 1 MB. Dashed line = 1 MB threshold. Source: targets::tar_meta()."}
 #| fig.height: 5
 meta <- targets::tar_meta(store = Sys.getenv("TAR_STORE", "_targets"))
+meta$bytes <- as.numeric(meta$bytes)
 meta_sized <- meta[!is.na(meta$bytes) & meta$bytes > 0, ]
 if (nrow(meta_sized) > 0 && requireNamespace("ggplot2", quietly = TRUE)) {
   ggplot2::ggplot(
