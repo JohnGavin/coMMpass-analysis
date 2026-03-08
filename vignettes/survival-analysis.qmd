@@ -32,7 +32,12 @@ if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
 
 safe_tar_read <- function(name) {
   if (is.null(tar_store)) return(NULL)
-  tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
+  val <- tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
+  # Suppress stale italic fallback text from old pipeline runs
+  if (is.character(val) && length(val) == 1 && grepl("not available", val, ignore.case = TRUE)) {
+    return(NULL)
+  }
+  val
 }
 ```
 

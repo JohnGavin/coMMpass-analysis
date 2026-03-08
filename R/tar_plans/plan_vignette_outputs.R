@@ -528,9 +528,7 @@ plan_vignette_outputs <- list(
     {
       if (is.null(eda_iss_summary)) return(NULL)
       iss <- eda_iss_summary
-      if (!isTRUE(iss$available)) {
-        return(paste0("*", iss$note, "*"))
-      }
+      if (!isTRUE(iss$available)) return(NULL)
       paste0(
         "- **Patients with ISS data:** ",
         format(iss$n_with_iss, big.mark = ","), "\n",

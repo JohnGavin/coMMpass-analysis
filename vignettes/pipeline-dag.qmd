@@ -31,10 +31,14 @@ for (store in store_candidates) {
 }
 
 safe_tar_read <- function(name, store = Sys.getenv("TAR_STORE", "_targets")) {
-  tryCatch(
+  val <- tryCatch(
     targets::tar_read_raw(name, store = store),
     error = function(e) NULL
   )
+  if (is.character(val) && length(val) == 1 && grepl("not available", val, ignore.case = TRUE)) {
+    return(NULL)
+  }
+  val
 }
 ```
 
