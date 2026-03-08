@@ -50,7 +50,9 @@ export_h5ad <- function(se, output_path, assay_name = NULL) {
 
   logger::log_info("Exporting assay '{assay_name}' to {output_path}")
 
-  adata <- anndataR::from_SummarizedExperiment(se, assay_name = assay_name)
+  # Convert SE to SingleCellExperiment (required by anndataR::as_AnnData)
+  sce <- as(se, "SingleCellExperiment")
+  adata <- anndataR::as_AnnData(sce, x = assay_name)
   anndataR::write_h5ad(adata, output_path)
 
   logger::log_info(

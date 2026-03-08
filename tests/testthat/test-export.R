@@ -26,6 +26,7 @@ test_that("export_h5ad errors on non-SE input", {
 test_that("export_h5ad errors on missing assay", {
   skip_if_not_installed("SummarizedExperiment")
   skip_if_not_installed("S4Vectors")
+  skip_if_not_installed("SingleCellExperiment")
   skip_if_not_installed("anndataR")
 
   d <- example_data()
@@ -38,6 +39,7 @@ test_that("export_h5ad errors on missing assay", {
 test_that("export_h5ad writes file successfully", {
   skip_if_not_installed("SummarizedExperiment")
   skip_if_not_installed("S4Vectors")
+  skip_if_not_installed("SingleCellExperiment")
   skip_if_not_installed("anndataR")
 
   d <- example_data()
