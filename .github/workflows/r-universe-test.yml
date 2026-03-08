@@ -4,11 +4,7 @@
 name: Test R-universe
 
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:  # Disabled auto-triggers until export_h5ad/anndataR compatibility is resolved
 
 jobs:
   build:
