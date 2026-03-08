@@ -1,16 +1,12 @@
 name: 06 Push to Cachix
 
 on:
-  workflow_run:
-    workflows: ["05 R Package Check"]
-    branches: [main]
-    types: [completed]
   workflow_dispatch:
 
 jobs:
   push-cachix:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4

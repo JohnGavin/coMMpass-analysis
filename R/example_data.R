@@ -1,6 +1,7 @@
 #' Load example coMMpass datasets
 #'
-#' Returns small synthetic datasets for interactive exploration and testing.
+#' Returns small **synthetic** datasets (no real patient data) for interactive
+#' exploration and testing.
 #' The data exercises the full pipeline: QC, cleaning, survival analysis, and
 #' cytogenetic classification.
 #'

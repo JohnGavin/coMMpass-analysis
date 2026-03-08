@@ -110,6 +110,18 @@ The plumber endpoint functions already exist in `R/10_api.R` and
 `inst/plumber/plumber.R`. Phase 2 will add authentication, rate limiting,
 and OpenAPI documentation.
 
+## Data Sources
+
+Results in this vignette are derived from the
+[MMRF CoMMpass study](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)
+(MMRF-COMMPASS, ~1,143 patients), downloaded via
+[TCGAbiolinks](https://bioconductor.org/packages/TCGAbiolinks/).
+The pipeline runs with a configurable `sample_limit` (default 100; CI uses 10).
+
+For full citations, data access tiers, and the distinction between
+pipeline data and synthetic test data, see the
+[Data Sources](data-sources.html) vignette.
+
 ## Reproducibility
 
 ```{r git-info}
