@@ -27,10 +27,18 @@ export_h5ad <- function(se, output_path, assay_name = NULL) {
     ))
   }
 
+
   if (!requireNamespace("anndataR", quietly = TRUE)) {
     cli::cli_abort(c(
       "x" = "Package {.pkg anndataR} is required for H5AD export",
       "i" = "Add {.pkg anndataR} to your Nix environment or install from Bioconductor"
+    ))
+  }
+
+  if (!requireNamespace("SingleCellExperiment", quietly = TRUE)) {
+    cli::cli_abort(c(
+      "x" = "Package {.pkg SingleCellExperiment} is required for H5AD export",
+      "i" = "Add {.pkg SingleCellExperiment} to your Nix environment"
     ))
   }
 
@@ -51,7 +59,11 @@ export_h5ad <- function(se, output_path, assay_name = NULL) {
   logger::log_info("Exporting assay '{assay_name}' to {output_path}")
 
   # Convert SE to SingleCellExperiment (required by anndataR::as_AnnData)
-  sce <- as(se, "SingleCellExperiment")
+  sce <- SingleCellExperiment::SingleCellExperiment(
+    assays = SummarizedExperiment::assays(se),
+    rowData = SummarizedExperiment::rowData(se),
+    colData = SummarizedExperiment::colData(se)
+  )
   adata <- anndataR::as_AnnData(sce, x = assay_name)
   anndataR::write_h5ad(adata, output_path)
 
