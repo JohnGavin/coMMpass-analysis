@@ -1,9 +1,6 @@
 name: 02 Data Acquisition
 
 on:
-  push:
-    branches: [main]
-    paths-ignore: ['docs/**', 'README.md']
   workflow_dispatch:
 
 jobs:

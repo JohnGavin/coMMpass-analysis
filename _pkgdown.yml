@@ -61,6 +61,7 @@ reference:
 articles:
 - title: "Vignettes"
   contents:
+  - data-sources
   - data-acquisition
   - data-dictionary
   - exploratory-analysis

@@ -1,17 +1,13 @@
 name: 03 Compute Analysis
 
 on:
-  workflow_run:
-    workflows: ["02 Data Acquisition"]
-    types:
-      - completed
   workflow_dispatch:
 
 jobs:
   analyze:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: write
     steps:
