@@ -33,4 +33,5 @@ Other gene-correlation:
 \code{\link{correlate_genes}()},
 \code{\link{plot_gene_correlation}()}
 }
+\concept{differential-expression}
 \concept{gene-correlation}

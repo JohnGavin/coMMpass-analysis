@@ -58,6 +58,23 @@ reference:
   contents:
   - has_concept("utilities")
 
+- title: "Internal"
+  desc: "Internal helper functions (not exported)"
+  contents:
+  - check_dependencies
+  - create_project_dirs
+  - download_aws_data
+  - filter_low_quality
+  - find_consensus_genes
+  - generate_summary_report
+  - normalize_rnaseq
+  - render_de_report
+  - run_edger
+  - run_limma
+  - save_timestamped
+  - setup_logging
+  - summarize_data
+
 articles:
 - title: "Vignettes"
   contents:

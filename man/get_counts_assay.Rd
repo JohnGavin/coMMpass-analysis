@@ -15,3 +15,4 @@ Counts matrix
 \description{
 GDC STAR-Counts uses 'unstranded', but fallback to 'counts' if present
 }
+\concept{utilities}

@@ -29,4 +29,5 @@ Other gene-correlation:
 \code{\link{correlate_genes_batch}()},
 \code{\link{plot_gene_correlation}()}
 }
+\concept{differential-expression}
 \concept{gene-correlation}

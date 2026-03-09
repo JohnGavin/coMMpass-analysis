@@ -23,4 +23,5 @@ Other gene-correlation:
 \code{\link{correlate_genes}()},
 \code{\link{correlate_genes_batch}()}
 }
+\concept{differential-expression}
 \concept{gene-correlation}

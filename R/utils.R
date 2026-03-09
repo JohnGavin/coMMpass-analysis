@@ -6,6 +6,7 @@
 #' GDC STAR-Counts uses 'unstranded', but fallback to 'counts' if present
 #' @param se SummarizedExperiment object
 #' @return Counts matrix
+#' @concept utilities
 #' @export
 get_counts_assay <- function(se) {
   assay_names <- SummarizedExperiment::assayNames(se)

@@ -17,6 +17,7 @@ utils::globalVariables(c("expr_x", "expr_y"))
 #' @return List with components: gene_x, gene_y, method, estimate, p_value,
 #'   n_samples, expr_x (numeric vector), expr_y (numeric vector)
 #' @family gene-correlation
+#' @concept differential-expression
 #' @export
 correlate_genes <- function(expr_matrix,
                             gene_x,
@@ -83,6 +84,7 @@ correlate_genes <- function(expr_matrix,
 #' @return Data frame with columns: gene, estimate, p_value, padj, n_samples,
 #'   method
 #' @family gene-correlation
+#' @concept differential-expression
 #' @export
 correlate_genes_batch <- function(expr_matrix,
                                   target_gene,
@@ -137,6 +139,7 @@ correlate_genes_batch <- function(expr_matrix,
 #' @param title Plot title (default auto-generated)
 #' @return A ggplot object
 #' @family gene-correlation
+#' @concept differential-expression
 #' @export
 plot_gene_correlation <- function(cor_result, title = NULL) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
