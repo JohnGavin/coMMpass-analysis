@@ -46,9 +46,20 @@ jobs:
             any::quarto
             any::knitr
             any::rmarkdown
+            any::targets
+            any::DT
+            any::ggplot2
+            any::htmltools
+            any::here
 
       - name: Build pkgdown site
-        run: Rscript -e "pkgdown::build_site(new_process = FALSE)"
+        run: |
+          Rscript -e "pkgdown::build_site(new_process = FALSE)" || {
+            echo "::group::Detailed quarto diagnostics"
+            Rscript -e "tryCatch(pkgdown::build_articles(lazy = FALSE), error = function(e) message(conditionMessage(e)))" 2>&1 || true
+            echo "::endgroup::"
+            exit 1
+          }
         env:
           IN_PKGDOWN: true
 
