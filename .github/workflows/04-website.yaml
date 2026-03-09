@@ -26,7 +26,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -40,10 +40,13 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: pkgdown
+          dependencies: '"hard"'
+          extra-packages: any::pkgdown
 
       - name: Build pkgdown site
         run: Rscript -e "pkgdown::build_site(new_process = FALSE)"
+        env:
+          IN_PKGDOWN: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
