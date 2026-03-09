@@ -84,6 +84,7 @@ articles:
   - exploratory-analysis
   - differential-expression
   - survival-analysis
+  - gene-report
   - pipeline-dag
   - telemetry
   - api-usage
