@@ -41,7 +41,11 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"hard"'
-          extra-packages: any::pkgdown
+          extra-packages: |
+            any::pkgdown
+            any::quarto
+            any::knitr
+            any::rmarkdown
 
       - name: Build pkgdown site
         run: Rscript -e "pkgdown::build_site(new_process = FALSE)"
