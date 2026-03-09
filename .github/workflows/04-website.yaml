@@ -53,15 +53,26 @@ jobs:
             any::here
 
       - name: Build pkgdown site
-        run: |
-          Rscript -e "pkgdown::build_site(new_process = FALSE)" || {
-            echo "::group::Detailed quarto diagnostics"
-            Rscript -e "tryCatch(pkgdown::build_articles(lazy = FALSE), error = function(e) message(conditionMessage(e)))" 2>&1 || true
-            echo "::endgroup::"
-            exit 1
-          }
+        run: Rscript -e "pkgdown::build_site(new_process = FALSE)"
         env:
           IN_PKGDOWN: true
+
+      - name: Verify no rendering errors in HTML output
+        run: |
+          errors=0
+          for f in docs/articles/*.html; do
+            # Check for R error output patterns
+            if grep -qP '#&gt; Error|#&gt; NULL|not available|could not find file' "$f" 2>/dev/null; then
+              echo "::error file=$f::Rendering errors found in $(basename $f)"
+              grep -nP '#&gt; Error|#&gt; NULL|not available|could not find file' "$f" | head -5
+              errors=$((errors + 1))
+            fi
+          done
+          if [ $errors -gt 0 ]; then
+            echo "::error::$errors vignette(s) contain rendering errors"
+            exit 1
+          fi
+          echo "All vignettes clean"
 
       - uses: actions/upload-pages-artifact@v3
         with:

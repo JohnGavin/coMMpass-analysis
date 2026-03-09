@@ -8,27 +8,33 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
+in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   echo = FALSE,
+  eval = !in_pkgdown,
   message = FALSE,
   warning = FALSE,
   collapse = TRUE,
   comment = "#>"
 )
-library(targets)
-
-# Discover target store
-store_candidates <- c(
-  here::here("_targets"),
-  file.path(Sys.getenv("TARGETS_STORE", unset = "_targets")),
-  "_targets"
-)
-for (store in store_candidates) {
-  if (dir.exists(store)) {
-    Sys.setenv(TAR_STORE = store)
-    break
+if (!in_pkgdown) {
+  library(targets)
+  store_candidates <- c(
+    here::here("_targets"),
+    file.path(Sys.getenv("TARGETS_STORE", unset = "_targets")),
+    "_targets"
+  )
+  for (store in store_candidates) {
+    if (dir.exists(store)) {
+      Sys.setenv(TAR_STORE = store)
+      break
+    }
   }
 }
+```
+
+```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
+cat("::: {.callout-note}\n## Online documentation\nPlots and tables in this vignette are generated from the `targets` pipeline. Run `targets::tar_make()` locally to see full output.\n:::\n")
 ```
 
 Pipeline build telemetry from `targets::tar_meta()`. These are metadata

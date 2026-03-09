@@ -8,14 +8,16 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
+in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   echo = FALSE,
+  eval = !in_pkgdown,
   message = FALSE,
   warning = FALSE
 )
-library(targets)
+if (!in_pkgdown) library(targets)
 
 # Discover targets store
 proj_dir <- Sys.getenv("TAR_PROJECT")
@@ -39,6 +41,10 @@ safe_tar_read <- function(name, store = tar_store) {
   }
   val
 }
+```
+
+```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
+cat("::: {.callout-note}\n## Online documentation\nPlots and tables in this vignette are generated from the `targets` pipeline. Run `targets::tar_make()` locally to see full output.\n:::\n")
 ```
 
 ## Overview
