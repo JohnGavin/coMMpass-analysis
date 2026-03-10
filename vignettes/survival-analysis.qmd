@@ -44,7 +44,7 @@ safe_tar_read <- function(name) {
 ```
 
 ```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
-cat("::: {.callout-note}\n## Online documentation\nPlots and tables in this vignette are generated from the `targets` pipeline. Run `targets::tar_make()` locally to see full output.\n:::\n")
+cat("::: {.callout-note}\n## Online documentation\nThis vignette shows pre-computed results from the targets pipeline. Some outputs may appear as placeholders in the online version.\n:::\n")
 ```
 
 ## Overview
@@ -112,17 +112,23 @@ safe_tar_read("vig_cox_full_table")
 
 ### Forest Plot
 
+Forest plot showing hazard ratios from the full multivariate Cox regression. Each row represents a covariate; the point estimate is the HR with 95% CI bars. HR > 1 indicates increased risk; HR < 1 indicates a protective effect. The dashed vertical line marks HR = 1 (no effect).
+
 ```{r forest-plot, fig.cap = "Forest plot of hazard ratios from multivariate Cox regression. Points: HR estimates. Horizontal bars: 95% CI. Dashed line: HR = 1 (no effect). Log scale x-axis. Stars: significance level."}
 safe_tar_read("vig_forest_plot")
 ```
 
 ### Proportional Hazards Assumption
 
+Schoenfeld residuals test for the proportional hazards assumption. A significant p-value (< 0.05) suggests the covariate's effect changes over time, violating the PH assumption. Covariates that fail this test may need time-varying coefficients or stratification.
+
 ```{r ph-test}
 safe_tar_read("vig_ph_test_table")
 ```
 
 ## Model Comparison
+
+Comparison of nested Cox models using likelihood ratio test, AIC, and concordance index. The full model includes ISS stage and cytogenetic risk in addition to age and gender. A significant likelihood ratio test indicates the additional covariates improve model fit.
 
 ```{r model-comparison}
 safe_tar_read("vig_cox_comparison")

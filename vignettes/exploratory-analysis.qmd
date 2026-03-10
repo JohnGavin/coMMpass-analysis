@@ -43,7 +43,7 @@ safe_tar_read <- function(name) {
 ```
 
 ```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
-cat("::: {.callout-note}\n## Online documentation\nPlots and tables in this vignette are generated from the `targets` pipeline. Run `targets::tar_make()` locally to see full output.\n:::\n")
+cat("::: {.callout-note}\n## Online documentation\nThis vignette shows pre-computed results from the targets pipeline. Some outputs may appear as placeholders in the online version.\n:::\n")
 ```
 
 ## Overview
@@ -54,9 +54,8 @@ cat("::: {.callout-note}\n## Online documentation\nPlots and tables in this vign
 - DuckDB queries against underlying parquet files
 - Cytogenetic alteration frequencies and co-occurrence patterns
 
-All summaries are **pre-computed** as targets (`vig_*`). If you have not
-yet run the pipeline, placeholder messages appear instead of plots.
-Run `targets::tar_make()` to populate the data.
+All summaries are **pre-computed** as targets (`vig_*`). Placeholder messages
+appear in place of plots when pre-computed outputs are not yet available.
 
 ## Clinical Demographics
 
@@ -251,7 +250,8 @@ pipeline data and synthetic test data, see the
 <summary>Git Commit Info (click to expand)</summary>
 
 ```{r git-info}
-safe_tar_read("vig_git_info")
+git_info <- safe_tar_read("vig_git_info")
+if (!is.null(git_info)) git_info else cat("*Git info available after pipeline run.*\n")
 ```
 
 </details>
@@ -259,7 +259,7 @@ safe_tar_read("vig_git_info")
 <details>
 <summary>Session Info (click to expand)</summary>
 
-```{r session-info}
+```{r session-info, eval=TRUE}
 sessionInfo()
 ```
 

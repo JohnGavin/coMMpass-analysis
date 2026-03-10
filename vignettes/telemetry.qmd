@@ -34,7 +34,7 @@ if (!in_pkgdown) {
 ```
 
 ```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
-cat("::: {.callout-note}\n## Online documentation\nPlots and tables in this vignette are generated from the `targets` pipeline. Run `targets::tar_make()` locally to see full output.\n:::\n")
+cat("::: {.callout-note}\n## Online documentation\nThis vignette shows pre-computed results from the targets pipeline. Some outputs may appear as placeholders in the online version.\n:::\n")
 ```
 
 Pipeline build telemetry from `targets::tar_meta()`. These are metadata

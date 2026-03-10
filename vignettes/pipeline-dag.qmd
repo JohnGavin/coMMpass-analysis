@@ -45,7 +45,7 @@ safe_tar_read <- function(name, store = Sys.getenv("TAR_STORE", "_targets")) {
 ```
 
 ```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
-cat("::: {.callout-note}\n## Online documentation\nPlots and tables in this vignette are generated from the `targets` pipeline. Run `targets::tar_make()` locally to see full output.\n:::\n")
+cat("::: {.callout-note}\n## Online documentation\nThis vignette shows pre-computed results from the targets pipeline. Some outputs may appear as placeholders in the online version.\n:::\n")
 ```
 
 ## Pipeline Overview
@@ -71,11 +71,15 @@ explicit allowed dependencies between layers.
 
 ## DAG Validation
 
+Validation checks on the targets pipeline DAG: no orphaned targets, no circular dependencies, and all vignette targets are reachable from raw data inputs. A passing validation confirms the pipeline is structurally sound.
+
 ```{r dag-validation}
 safe_tar_read("dag_layer_validation")
 ```
 
 ## Target Network
+
+Static summary of the targets pipeline network showing target counts by status (up-to-date, outdated, errored) and dependency depth. This provides an overview of pipeline health without the interactive overhead of `tar_visnetwork()`.
 
 ```{r pipeline-visnetwork}
 safe_tar_read("vig_pipeline_dag")

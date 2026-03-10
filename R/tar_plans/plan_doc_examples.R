@@ -102,50 +102,212 @@ plan_doc_examples <- list(
     }
   ),
 
-  # --- Glossary vignette: Glossary table ---
+  # --- Glossary vignette: Glossary table (~47 terms, 8 categories) ---
   targets::tar_target(
     glossary_table,
     data.frame(
       Term = c(
-        "CoMMpass", "Cox PH", "DE", "FISH", "Gene detection",
-        "GSEA", "HR", "IMWG", "ISS", "KM", "Library size", "MAD",
-        "Outlier (QC)", "Read count", "scRNA-seq", "VST"
+        # Disease & Study (5)
+        "Multiple Myeloma", "CoMMpass", "GDC", "MMRF", "TCGAbiolinks",
+        # Cytogenetics & Markers (6)
+        "FISH", "Cytogenetic Risk", "t(4;14)", "t(14;16)", "del(17p)",
+        "High-Risk / Standard-Risk",
+        # Staging & Risk (3)
+        "ISS", "IMWG", "B2M / Serum Albumin",
+        # RNA-seq & QC (8)
+        "RNA-seq", "Read count", "Library size", "TPM", "Gene detection",
+        "MAD", "Outlier (QC)", "VST",
+        # Differential Expression (7)
+        "DE", "DESeq2", "edgeR", "limma-voom", "Log2 Fold Change",
+        "FDR / Adjusted p-value", "Volcano Plot",
+        # Survival Analysis (8)
+        "Overall Survival (OS)", "Progression-Free Survival (PFS)", "KM",
+        "Log-Rank Test", "Cox PH", "HR", "Forest Plot", "Confidence Interval",
+        # Pathway & Enrichment (6)
+        "GSEA", "ORA", "MSigDB", "Hallmark Gene Sets", "Pathway", "Gene Set",
+        # Data Infrastructure (4)
+        "Targets", "sample_limit", "Nix", "pkgdown"
+      ),
+      Category = c(
+        rep("Disease & Study", 5),
+        rep("Cytogenetics & Markers", 6),
+        rep("Staging & Risk", 3),
+        rep("RNA-seq & QC", 8),
+        rep("Differential Expression", 7),
+        rep("Survival Analysis", 8),
+        rep("Pathway & Enrichment", 6),
+        rep("Data Infrastructure", 4)
       ),
       Definition = c(
-        "Clinical Outcomes in Multiple Myeloma to Personal Assessment of Genetic Profile",
-        "Cox proportional hazards -- semi-parametric regression for survival data",
-        "Differential expression -- genes with significantly different expression between conditions",
+        # Disease & Study
+        "Cancer of plasma cells in the bone marrow. The most common indication for stem cell transplant in adults",
+        "Clinical Outcomes in Multiple Myeloma to Personal Assessment of Genetic Profile -- MMRF longitudinal study of ~1,143 newly diagnosed MM patients",
+        "Genomic Data Commons -- NCI repository hosting CoMMpass RNA-seq and clinical data",
+        "Multiple Myeloma Research Foundation -- sponsor of the CoMMpass trial",
+        "Bioconductor R package for querying and downloading GDC data programmatically",
+        # Cytogenetics & Markers
         "Fluorescence in situ hybridization -- detects cytogenetic abnormalities like t(4;14), t(14;16), del(17p)",
-        "A gene is 'detected' in a sample if it has at least 1 mapped read (count > 0). The number of detected genes per sample is a QC metric; low detection suggests poor sequencing depth or sample degradation",
-        "Gene Set Enrichment Analysis -- tests enrichment of gene sets in ranked lists",
-        "Hazard ratio -- relative risk of event occurrence (HR > 1 = worse survival)",
-        "International Myeloma Working Group -- defines cytogenetic risk criteria (Sonneveld et al. 2016, doi:10.1200/JCO.2014.55.1519)",
+        "Classification of patients into high-risk or standard-risk based on FISH-detected chromosomal abnormalities per IMWG criteria",
+        "Translocation between chromosomes 4 and 14 -- associated with poor prognosis in MM. Detected by FISH",
+        "Translocation between chromosomes 14 and 16 -- high-risk marker associated with aggressive disease",
+        "Deletion of the short arm of chromosome 17 -- loss of TP53 tumor suppressor, high-risk marker",
+        "High-risk: presence of t(4;14), t(14;16), or del(17p). Standard-risk: absence of all three. Per IMWG 2014 criteria",
+        # Staging & Risk
         "International Staging System -- classifies myeloma severity (I-III) by serum albumin and beta-2 microglobulin (Greipp et al. 2005, doi:10.1200/JCO.2005.04.242)",
-        "Kaplan-Meier -- non-parametric survival curve estimator",
-        "Total number of sequencing reads mapped to genes in one sample (= sum of all gene counts). A proxy for sequencing depth. Synonym: 'Total Counts'",
-        "Median absolute deviation -- robust measure of spread. In QC context, MAD of gene counts within a single sample measures how variable gene expression is for that sample",
-        "A sample flagged as outlier if it falls in the bottom 5th percentile of library size OR genes detected, computed across all samples in the pipeline run. The flag is binary (Yes/No) because it answers: 'Is this sample in the tail?' The continuous metrics inform the threshold",
-        "The number of sequencing reads aligned to a gene in one sample. Raw integer counts are the input for DE methods (DESeq2, edgeR). See RNA-seq quantification",
-        "Single-cell RNA sequencing -- measures gene expression in individual cells",
-        "Variance-stabilizing transformation -- normalizes count data for visualization"
+        "International Myeloma Working Group -- defines cytogenetic risk criteria (Sonneveld et al. 2016, doi:10.1200/JCO.2014.55.1519)",
+        "Beta-2 microglobulin and serum albumin -- the two biomarkers used to determine ISS stage. B2M >= 5.5 mg/L = Stage III",
+        # RNA-seq & QC
+        "RNA sequencing -- high-throughput method to quantify gene expression. CoMMpass uses bulk RNA-seq from bone marrow aspirates",
+        "The number of sequencing reads aligned to a gene in one sample. Raw integer counts are the input for DE methods (DESeq2, edgeR)",
+        "Total number of sequencing reads mapped to genes in one sample (= sum of all gene counts). A proxy for sequencing depth. Synonym: Total Counts",
+        "Transcripts per million -- normalized expression measure for cross-sample comparison. Accounts for gene length and sequencing depth",
+        "A gene is 'detected' in a sample if it has >= 1 mapped read (count > 0). The number of detected genes per sample is a QC metric; low detection suggests poor depth or degradation",
+        "Median absolute deviation -- robust measure of spread. In QC context, MAD of gene counts within a single sample measures expression variability",
+        "A sample flagged as outlier if it falls in the bottom 5th percentile of library size OR genes detected. The flag is binary (Yes/No)",
+        "Variance-stabilizing transformation -- normalizes count data for visualization and clustering, reducing mean-variance dependence",
+        # Differential Expression
+        "Differential expression -- genes with significantly different expression between conditions (e.g. high-risk vs standard-risk)",
+        "Bioconductor package for DE analysis using negative binomial GLMs with shrinkage estimation. The primary DE method in this pipeline",
+        "Bioconductor package for DE analysis using empirical Bayes moderation of tagwise dispersions. Used as consensus method alongside DESeq2",
+        "Linear modelling framework (limma) with voom precision weights for RNA-seq. Third consensus DE method in pipeline",
+        "Log-base-2 ratio of expression between conditions. LFC > 0 = upregulated; LFC < 0 = downregulated. Shrinkage-corrected LFC used for ranking",
+        "False discovery rate -- p-values adjusted for multiple testing (Benjamini-Hochberg). FDR < 0.05 is the standard significance threshold for DE",
+        "Scatter plot of log2 fold change (x) vs -log10 adjusted p-value (y). Highlights significantly DE genes in the upper-left and upper-right quadrants",
+        # Survival Analysis
+        "Time from diagnosis to death from any cause. The primary survival endpoint in CoMMpass",
+        "Time from diagnosis to disease progression or death. A secondary endpoint capturing earlier clinical events",
+        "Kaplan-Meier -- non-parametric survival curve estimator. Handles right-censored data (patients still alive at last follow-up)",
+        "Non-parametric test comparing survival distributions between groups. Tests whether KM curves differ significantly (p < 0.05)",
+        "Cox proportional hazards -- semi-parametric regression for survival data. Estimates hazard ratios adjusting for covariates",
+        "Hazard ratio -- relative risk of event occurrence. HR > 1 = increased risk (worse survival); HR < 1 = protective effect",
+        "Visual display of hazard ratios with confidence intervals for multiple covariates from a Cox model. Each row is a covariate; dashed line at HR = 1",
+        "Range of plausible values for an estimate (typically 95%). For HRs, a CI crossing 1.0 indicates non-significance",
+        # Pathway & Enrichment
+        "Gene Set Enrichment Analysis -- tests whether predefined gene sets are enriched at the top or bottom of a ranked gene list. Uses all genes, not just significant ones",
+        "Over-Representation Analysis -- tests whether a set of DE genes contains more members of a pathway than expected by chance (Fisher's exact test)",
+        "Molecular Signatures Database -- curated collection of gene sets for GSEA/ORA. Categories include Hallmark, GO, KEGG, Reactome",
+        "MSigDB Hallmark collection -- 50 curated gene sets representing well-defined biological states and processes (e.g. EMT, p53 pathway, hypoxia)",
+        "A set of genes involved in a common biological process (e.g. cell cycle, apoptosis). Annotated in databases like KEGG, Reactome, GO",
+        "Any defined collection of genes tested together in enrichment analysis (broader than 'pathway' -- includes GO terms, TF targets, etc.)",
+        # Data Infrastructure
+        "R-based pipeline tool (targets package) for reproducible, cached computation. Each analysis step is a 'target' with dependency tracking",
+        "Pipeline parameter controlling the number of patient samples included. Default: local=100, CI=10. Lower values speed up development; higher values improve statistical power",
+        "Reproducible build system providing isolated, version-pinned R environments via nixpkgs. Ensures all collaborators use identical package versions",
+        "R package for building package documentation websites. Renders vignettes, function reference, and news into a static site hosted on GitHub Pages"
+      ),
+      Appears_In = c(
+        # Disease & Study
+        "survival (3), exploratory (2), data-sources (2)",
+        "data-sources (5), exploratory (3), survival (2), gene-report (2)",
+        "data-acquisition (8), data-sources (3), data-dictionary (2)",
+        "data-sources (3), data-acquisition (2)",
+        "data-acquisition (4), data-sources (2)",
+        # Cytogenetics & Markers
+        "exploratory (6), survival (4), gene-report (3)",
+        "survival (5), exploratory (4), gene-report (3)",
+        "survival (3), exploratory (2)",
+        "survival (3), exploratory (2)",
+        "survival (3), exploratory (2)",
+        "survival (4), exploratory (3)",
+        # Staging & Risk
+        "survival (6), exploratory (5), data-dictionary (2)",
+        "survival (3), exploratory (2)",
+        "exploratory (2), data-dictionary (2)",
+        # RNA-seq & QC
+        "data-acquisition (6), exploratory (3), differential-expression (2)",
+        "data-acquisition (4), differential-expression (3)",
+        "data-acquisition (5), exploratory (3)",
+        "data-acquisition (3), data-dictionary (2)",
+        "data-acquisition (4), exploratory (2)",
+        "data-acquisition (3), exploratory (2)",
+        "data-acquisition (3), exploratory (2)",
+        "differential-expression (4), exploratory (3), survival (2)",
+        # Differential Expression
+        "differential-expression (8), gene-report (5), survival (2)",
+        "differential-expression (6), gene-report (3)",
+        "differential-expression (4), gene-report (2)",
+        "differential-expression (4), gene-report (2)",
+        "differential-expression (5), gene-report (3)",
+        "differential-expression (4), gene-report (2)",
+        "differential-expression (3), gene-report (2)",
+        # Survival Analysis
+        "survival (8), exploratory (2)",
+        "survival (4)",
+        "survival (6), exploratory (2)",
+        "survival (4)",
+        "survival (5), exploratory (1)",
+        "survival (6), gene-report (2)",
+        "survival (3)",
+        "survival (4)",
+        # Pathway & Enrichment
+        "gene-report (6), differential-expression (3)",
+        "gene-report (4), differential-expression (2)",
+        "gene-report (5), differential-expression (2)",
+        "gene-report (4)",
+        "gene-report (5), differential-expression (3)",
+        "gene-report (4), differential-expression (2)",
+        # Data Infrastructure
+        "pipeline-dag (6), telemetry (4), data-sources (2)",
+        "data-sources (3), survival (2), exploratory (2)",
+        "data-sources (2)",
+        "data-sources (2)"
       ),
       See_Also = c(
-        "[MMRF](https://themmrf.org/finding-a-cure/personalized-treatment-approaches/)",
+        # Disease & Study
+        "[Wikipedia](https://en.wikipedia.org/wiki/Multiple_myeloma), [NCI](https://www.cancer.gov/types/myeloma)",
+        "[MMRF](https://themmrf.org/finding-a-cure/personalized-treatment-approaches/), [GDC Portal](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)",
+        "[GDC Portal](https://portal.gdc.cancer.gov/), [GDC Docs](https://docs.gdc.cancer.gov/)",
+        "[MMRF](https://themmrf.org/), [Data Sources](data-sources.html)",
+        "[Bioconductor](https://bioconductor.org/packages/TCGAbiolinks/), [Data Acquisition](data-acquisition.html)",
+        # Cytogenetics & Markers
+        "[Wikipedia](https://en.wikipedia.org/wiki/Fluorescence_in_situ_hybridization), [EDA vignette](exploratory-analysis.html)",
+        "[Survival vignette](survival-analysis.html), [IMWG](https://doi.org/10.1200/JCO.2014.55.1519)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Chromosomal_translocation), [Survival vignette](survival-analysis.html)",
         "[Survival vignette](survival-analysis.html)",
-        "[DE vignette](differential-expression.html)",
-        "[EDA vignette](exploratory-analysis.html)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Chromosome_17_(human)#Deletions), [Survival vignette](survival-analysis.html)",
+        "[IMWG criteria](https://doi.org/10.1200/JCO.2014.55.1519), [Survival vignette](survival-analysis.html)",
+        # Staging & Risk
+        "[Greipp et al. 2005](https://doi.org/10.1200/JCO.2005.04.242), [EDA vignette](exploratory-analysis.html)",
+        "[IMWG](https://doi.org/10.1200/JCO.2014.55.1519), [Survival vignette](survival-analysis.html)",
+        "[ISS definition](https://doi.org/10.1200/JCO.2005.04.242), [Data Dictionary](data-dictionary.html)",
+        # RNA-seq & QC
+        "[Wikipedia](https://en.wikipedia.org/wiki/RNA-Seq), [Data Acquisition](data-acquisition.html)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/RNA-Seq), [Data Acquisition](data-acquisition.html#rnaseq-data)",
+        "[Data Acquisition](data-acquisition.html#rnaseq-data), [Wikipedia](https://en.wikipedia.org/wiki/RNA-Seq#Analysis)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Transcripts_per_million), [Data Dictionary](data-dictionary.html)",
         "[Data Acquisition QC](data-acquisition.html#quality-control)",
-        "[DE vignette](differential-expression.html)",
-        "[Survival vignette](survival-analysis.html)",
-        "[Survival vignette](survival-analysis.html)",
-        "[EDA vignette](exploratory-analysis.html)",
-        "[Survival vignette](survival-analysis.html)",
-        "[Data Acquisition](data-acquisition.html#rnaseq-data)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Median_absolute_deviation), [Data Acquisition QC](data-acquisition.html#quality-control)",
         "[Data Acquisition QC](data-acquisition.html#quality-control)",
-        "[Data Acquisition QC](data-acquisition.html#quality-control)",
-        "[Data Acquisition](data-acquisition.html#rnaseq-data)",
-        "[Data Dictionary](data-dictionary.html)",
-        "[DE vignette](differential-expression.html)"
+        "[DESeq2 docs](https://bioconductor.org/packages/DESeq2/), [DE vignette](differential-expression.html)",
+        # Differential Expression
+        "[DE vignette](differential-expression.html), [Wikipedia](https://en.wikipedia.org/wiki/Differential_gene_expression)",
+        "[Bioconductor](https://bioconductor.org/packages/DESeq2/), [PMID:25516281](https://pubmed.ncbi.nlm.nih.gov/25516281/)",
+        "[Bioconductor](https://bioconductor.org/packages/edgeR/), [PMID:19910308](https://pubmed.ncbi.nlm.nih.gov/19910308/)",
+        "[Bioconductor](https://bioconductor.org/packages/limma/), [PMID:25605792](https://pubmed.ncbi.nlm.nih.gov/25605792/)",
+        "[DE vignette](differential-expression.html), [Wikipedia](https://en.wikipedia.org/wiki/Fold_change)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/False_discovery_rate), [DE vignette](differential-expression.html)",
+        "[DE vignette](differential-expression.html), [Wikipedia](https://en.wikipedia.org/wiki/Volcano_plot_(statistics))",
+        # Survival Analysis
+        "[Wikipedia](https://en.wikipedia.org/wiki/Overall_survival), [Survival vignette](survival-analysis.html)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Progression-free_survival), [Survival vignette](survival-analysis.html)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator), [Survival vignette](survival-analysis.html)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Logrank_test), [Survival vignette](survival-analysis.html)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Proportional_hazards_model), [Survival vignette](survival-analysis.html)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Hazard_ratio), [Survival vignette](survival-analysis.html)",
+        "[Survival vignette](survival-analysis.html#forest-plot)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Confidence_interval), [Survival vignette](survival-analysis.html)",
+        # Pathway & Enrichment
+        "[GSEA](https://www.gsea-msigdb.org/gsea/), [PMID:16199517](https://pubmed.ncbi.nlm.nih.gov/16199517/), [Gene Report](gene-report.html)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Gene_set_enrichment_analysis#Over-representation_analysis), [Gene Report](gene-report.html)",
+        "[MSigDB](https://www.gsea-msigdb.org/gsea/msigdb/), [Gene Report](gene-report.html)",
+        "[MSigDB Hallmarks](https://www.gsea-msigdb.org/gsea/msigdb/human/collections.jsp#H), [Gene Report](gene-report.html)",
+        "[KEGG](https://www.genome.jp/kegg/pathway.html), [Reactome](https://reactome.org/), [Gene Report](gene-report.html)",
+        "[Gene Report](gene-report.html), [MSigDB](https://www.gsea-msigdb.org/gsea/msigdb/)",
+        # Data Infrastructure
+        "[targets package](https://docs.ropensci.org/targets/), [Pipeline DAG](pipeline-dag.html)",
+        "[Data Sources](data-sources.html), [Survival vignette](survival-analysis.html)",
+        "[Nix](https://nixos.org/), [rix package](https://docs.ropensci.org/rix/)",
+        "[pkgdown](https://pkgdown.r-lib.org/), [Data Sources](data-sources.html)"
       ),
       stringsAsFactors = FALSE
     )

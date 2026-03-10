@@ -102,7 +102,7 @@ pathway enrichment analysis.
 <details>
 <summary>Session Info (click to expand)</summary>
 
-```{r session-info}
+```{r session-info, eval=TRUE}
 sessionInfo()
 ```
 
