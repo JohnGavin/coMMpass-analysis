@@ -78,18 +78,18 @@ explicit allowed dependencies between layers.
 
 Validation checks on the targets pipeline DAG: no orphaned targets, no circular dependencies, and all vignette targets are reachable from raw data inputs. A passing validation confirms the pipeline is structurally sound.
 
-```{r dag-validation, results='asis'}
+```{r dag-validation}
 res <- safe_tar_read("dag_layer_validation")
-if (!is.null(res)) res
+if (!is.null(res)) res else invisible(NULL)
 ```
 
 ## Target Network
 
 Interactive DAG showing the targets pipeline network with layer-based coloring. Nodes are colored by functional layer. Hover for target details, use the dropdown to search by name.
 
-```{r pipeline-visnetwork, results='asis'}
+```{r pipeline-visnetwork}
 res <- safe_tar_read("vig_pipeline_dag")
-if (!is.null(res)) res
+if (!is.null(res)) res else invisible(NULL)
 ```
 
 ## Interactive DAG (live)
@@ -112,9 +112,9 @@ selection, see `inst/shinylive/pipeline_dag.qmd`.
 
 Recent project commits with lines added, files changed, and change categories.
 
-```{r changelog, results='asis'}
+```{r changelog}
 res <- safe_tar_read("vig_git_changelog")
-if (!is.null(res)) res
+if (!is.null(res)) res else invisible(NULL)
 ```
 
 ## Reproducibility

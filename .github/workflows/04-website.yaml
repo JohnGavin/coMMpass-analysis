@@ -50,6 +50,7 @@ jobs:
             any::DT
             any::ggplot2
             any::htmltools
+            any::visNetwork
             any::here
 
       - name: Build pkgdown site
