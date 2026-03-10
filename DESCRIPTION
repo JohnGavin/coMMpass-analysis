@@ -51,6 +51,7 @@ Suggests:
     pkgdown,
     testthat (>= 3.0.0),
     gert,
+    gh,
     nanoparquet,
     DT,
     htmltools,

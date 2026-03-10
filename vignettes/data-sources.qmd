@@ -7,6 +7,42 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r setup, include = FALSE}
+in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  echo = FALSE,
+  eval = !in_pkgdown,
+  message = FALSE,
+  warning = FALSE
+)
+if (!in_pkgdown) library(targets)
+
+proj_dir <- Sys.getenv("TAR_PROJECT")
+tar_store <- NULL
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_store <- file.path(proj_dir, "_targets")
+} else if (dir.exists("_targets")) {
+  tar_store <- "_targets"
+} else if (dir.exists("../_targets")) {
+  tar_store <- "../_targets"
+}
+
+safe_tar_read <- function(name) {
+  if (is.null(tar_store)) return(NULL)
+  val <- tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
+  if (is.character(val) && length(val) == 1 && grepl("not available", val, ignore.case = TRUE)) {
+    return(NULL)
+  }
+  val
+}
+```
+
+```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
+cat("::: {.callout-note}\n## Online documentation\nThis vignette shows pre-computed results from the targets pipeline. Some outputs may appear as placeholders in the online version.\n:::\n")
+```
+
 ## Overview
 
 This vignette documents all data sources used in the coMMpass analysis
@@ -96,6 +132,14 @@ pathway enrichment analysis.
 
 - **MSigDB:** <https://www.gsea-msigdb.org/gsea/msigdb/>
 - **R package:** [msigdbr](https://cran.r-project.org/package=msigdbr)
+
+## Recent Changes
+
+Recent project commits with lines added, files changed, and change categories.
+
+```{r changelog}
+safe_tar_read("vig_git_changelog")
+```
 
 ## Reproducibility
 

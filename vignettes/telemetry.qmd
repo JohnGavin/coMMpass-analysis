@@ -31,6 +31,12 @@ if (!in_pkgdown) {
     }
   }
 }
+
+safe_tar_read <- function(name) {
+  store <- Sys.getenv("TAR_STORE", "_targets")
+  if (!dir.exists(store)) return(NULL)
+  tryCatch(targets::tar_read_raw(name, store = store), error = function(e) NULL)
+}
 ```
 
 ```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
@@ -196,3 +202,114 @@ if (nrow(meta_sized) > 0 && requireNamespace("ggplot2", quietly = TRUE)) {
   cat("*No size data available or ggplot2 not installed.*\n")
 }
 ```
+
+## Git Activity
+
+### Commit Velocity
+
+Weekly commit counts colored by conventional-commit type (feat, fix, docs, etc.)
+across the last 200 commits.
+
+```{r commit-velocity, fig.cap="Weekly commit velocity colored by change type. Each bar segment represents commits of a given type (feat, fix, docs, ci, etc.) in that ISO week. Source: git log.", fig.height=5}
+safe_tar_read("vig_commit_velocity")
+```
+
+### Changes by Type
+
+Commits grouped by conventional-commit prefix, with total lines added and removed.
+
+```{r changes-by-type}
+summary_data <- safe_tar_read("vig_git_changelog_summary")
+if (!is.null(summary_data) && !is.null(summary_data$by_type)) {
+  DT::datatable(
+    summary_data$by_type,
+    caption = htmltools::tags$caption(
+      style = "caption-side: bottom; text-align: left;",
+      "Commits by conventional-commit type with aggregate line counts. ",
+      "Source: git log --numstat (last 200 commits)."
+    ),
+    rownames = FALSE,
+    options = list(dom = "t", paging = FALSE)
+  )
+} else {
+  cat("*Changelog summary not available.*\n")
+}
+```
+
+### Changes by File Category
+
+How often each file category (R Source, Tests, Vignettes, CI/CD, etc.) was
+touched across the last 200 commits.
+
+```{r changes-by-file-category}
+if (!is.null(summary_data) && !is.null(summary_data$by_file_category)) {
+  DT::datatable(
+    summary_data$by_file_category,
+    caption = htmltools::tags$caption(
+      style = "caption-side: bottom; text-align: left;",
+      "Commits touching each file category. A single commit may touch ",
+      "multiple categories. Source: git log --numstat (last 200 commits)."
+    ),
+    rownames = FALSE,
+    options = list(dom = "t", paging = FALSE)
+  )
+} else {
+  cat("*File category data not available.*\n")
+}
+```
+
+### Recent Commits
+
+Full 20-commit changelog with lines added, files changed, and change categories.
+
+```{r recent-commits}
+safe_tar_read("vig_git_changelog")
+```
+
+## GitHub Activity
+
+### Issues & Pull Requests
+
+Open/closed issue and merged PR counts from the GitHub API.
+
+```{r github-activity}
+gh_data <- safe_tar_read("vig_github_activity")
+if (!is.null(gh_data) && is.null(gh_data$error)) {
+  DT::datatable(
+    data.frame(
+      Metric = c("Open Issues", "Closed Issues", "Merged PRs"),
+      Count = c(gh_data$issues_open, gh_data$issues_closed, gh_data$prs_merged),
+      stringsAsFactors = FALSE
+    ),
+    caption = htmltools::tags$caption(
+      style = "caption-side: bottom; text-align: left;",
+      "GitHub issue and PR counts. Source: GitHub API via gh::gh()."
+    ),
+    rownames = FALSE,
+    options = list(dom = "t", paging = FALSE)
+  )
+} else if (!is.null(gh_data$error)) {
+  cat(paste0("*GitHub API error: ", gh_data$error, "*\n"))
+} else {
+  cat("*GitHub activity data not available.*\n")
+}
+```
+
+### Codebase Metrics
+
+R files, test files, exports, lines of code, and package version.
+
+```{r codebase-metrics}
+safe_tar_read("vig_codebase_metrics")
+```
+
+## Reproducibility
+
+<details>
+<summary>Session Info (click to expand)</summary>
+
+```{r session-info, eval=TRUE}
+sessionInfo()
+```
+
+</details>

@@ -374,6 +374,14 @@ if (has_DT) {
 }
 ```
 
+## Recent Changes
+
+Recent project commits with lines added, files changed, and change categories.
+
+```{r changelog}
+safe_tar_read("vig_git_changelog")
+```
+
 ## Reproducibility
 
 <details>
