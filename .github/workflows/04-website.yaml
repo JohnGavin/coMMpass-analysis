@@ -63,9 +63,9 @@ jobs:
           errors=0
           for f in docs/articles/*.html; do
             # Check for R error output patterns
-            if grep -qP '#&gt; Error|#&gt; NULL|not available|could not find file' "$f" 2>/dev/null; then
+            if grep -qP '#&gt; Error|#&gt; NULL|#&gt;.*not available|#&gt;.*could not find' "$f" 2>/dev/null; then
               echo "::error file=$f::Rendering errors found in $(basename $f)"
-              grep -nP '#&gt; Error|#&gt; NULL|not available|could not find file' "$f" | head -5
+              grep -nP '#&gt; Error|#&gt; NULL|#&gt;.*not available|#&gt;.*could not find' "$f" | head -5
               errors=$((errors + 1))
             fi
           done
