@@ -1796,20 +1796,85 @@ plan_vignette_outputs <- list(
     vig_pipeline_dag,
     {
       # tar_visnetwork()/tar_network() cannot run inside a target
-      # (targets >= 1.10). Use tar_manifest() which only reads the
-      # pipeline definition, not the data store.
+      # (targets >= 1.10). Build visNetwork widget from tar_manifest()
+      # with layer-based coloring matching inst/shinylive/pipeline_dag.qmd.
       manifest <- targets::tar_manifest()
-      list(
-        n_targets = nrow(manifest),
-        targets = manifest$name,
-        commands = manifest$command,
-        note = paste(
-          "Pipeline DAG has", nrow(manifest), "targets.",
-          "Run targets::tar_visnetwork() interactively to view the graph."
-        )
+
+      # --- Layer assignment (same patterns as Shinylive DAG) ---
+      layer_patterns <- c(
+        "^(raw_rnaseq|clinical_data$|fetch_)" = "data-acquisition",
+        "^(clinical_data_clean|expression_data_clean|integrated|filtered|normalized)" = "data-cleaning",
+        "^(cyto|fish_)" = "cytogenetics",
+        "^(qc_|data_quality)" = "quality-control",
+        "^(deseq2|edger|limma|consensus_de)" = "differential-expression",
+        "^(survival|cox_|km_)" = "survival",
+        "^(gsea|pathway|gene_annot)" = "pathway",
+        "^(eda_)" = "eda",
+        "^(save_|parquet|duckdb)" = "storage",
+        "^(api_|shiny_)" = "api",
+        "^(vig_|code_|doc_|readme_|glossary)" = "documentation",
+        "^(config|nix_|dag_|pkgctx)" = "infrastructure"
       )
+      layer_colors <- c(
+        "data-acquisition" = "#4CAF50", "data-cleaning" = "#2196F3",
+        "cytogenetics" = "#9C27B0", "quality-control" = "#FF9800",
+        "differential-expression" = "#F44336", "survival" = "#00BCD4",
+        "pathway" = "#E91E63", "eda" = "#8BC34A",
+        "storage" = "#795548", "api" = "#607D8B",
+        "documentation" = "#CDDC39", "infrastructure" = "#9E9E9E",
+        "other" = "#BDBDBD"
+      )
+      assign_layer <- function(nm) {
+        for (pat in names(layer_patterns)) {
+          if (grepl(pat, nm)) return(layer_patterns[[pat]])
+        }
+        "other"
+      }
+
+      # --- Build nodes ---
+      layers <- vapply(manifest$name, assign_layer, character(1),
+                        USE.NAMES = FALSE)
+      colors <- unname(layer_colors[layers])
+      nodes <- data.frame(
+        id = manifest$name,
+        label = manifest$name,
+        group = layers,
+        color = colors,
+        title = paste0("<b>", manifest$name, "</b><br>Layer: ", layers),
+        stringsAsFactors = FALSE
+      )
+
+      # --- Infer edges from command text references ---
+      edges_list <- lapply(seq_len(nrow(manifest)), function(i) {
+        cmd <- manifest$command[i]
+        refs <- manifest$name[manifest$name != manifest$name[i] &
+                                vapply(manifest$name, function(nm) {
+                                  grepl(paste0("\\b", nm, "\\b"), cmd)
+                                }, logical(1))]
+        if (length(refs) > 0) {
+          data.frame(from = refs, to = manifest$name[i],
+                      stringsAsFactors = FALSE)
+        }
+      })
+      edges <- do.call(rbind, edges_list)
+      if (is.null(edges)) edges <- data.frame(from = character(0),
+                                                to = character(0))
+
+      # --- Build visNetwork widget ---
+      visNetwork::visNetwork(
+        nodes, edges,
+        main = paste("Pipeline DAG:", nrow(manifest), "targets"),
+        height = "600px", width = "100%"
+      ) |>
+        visNetwork::visEdges(arrows = "to", color = list(opacity = 0.4)) |>
+        visNetwork::visOptions(
+          highlightNearest = list(enabled = TRUE, degree = 1),
+          nodesIdSelection = TRUE
+        ) |>
+        visNetwork::visLegend(useGroups = TRUE, position = "right") |>
+        visNetwork::visPhysics(stabilization = list(iterations = 200))
     },
-    packages = c("targets")
+    packages = c("targets", "visNetwork")
   ),
 
   # --- Git info table (shared by all vignettes) ---

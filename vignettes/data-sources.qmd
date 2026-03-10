@@ -30,12 +30,15 @@ if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
 }
 
 safe_tar_read <- function(name) {
-  if (is.null(tar_store)) return(NULL)
-  val <- tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
-  if (is.character(val) && length(val) == 1 && grepl("not available", val, ignore.case = TRUE)) {
-    return(NULL)
+  if (!is.null(tar_store)) {
+    val <- tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
+    if (!is.null(val) && !(is.character(val) && length(val) == 1 && grepl("not available", val, ignore.case = TRUE))) {
+      return(val)
+    }
   }
-  val
+  rds <- system.file(paste0("extdata/vignettes/", name, ".rds"), package = "coMMpass")
+  if (nzchar(rds) && file.exists(rds)) return(readRDS(rds))
+  NULL
 }
 ```
 

@@ -11,41 +11,39 @@ vignette: >
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   echo = FALSE,
-  eval = !in_pkgdown,
+  eval = TRUE,
   message = FALSE,
   warning = FALSE,
   collapse = TRUE,
   comment = "#>"
 )
-if (!in_pkgdown) {
-  library(targets)
-  store_candidates <- c(
-    here::here("_targets"),
-    file.path(Sys.getenv("TARGETS_STORE", unset = "_targets")),
-    "_targets"
-  )
-  for (store in store_candidates) {
-    if (dir.exists(store)) {
-      Sys.setenv(TAR_STORE = store)
-      break
-    }
-  }
+if (!in_pkgdown) library(targets)
+
+proj_dir <- Sys.getenv("TAR_PROJECT")
+tar_store <- NULL
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_store <- file.path(proj_dir, "_targets")
+} else if (dir.exists("_targets")) {
+  tar_store <- "_targets"
+} else if (dir.exists("../_targets")) {
+  tar_store <- "../_targets"
 }
 
-safe_tar_read <- function(name, store = Sys.getenv("TAR_STORE", "_targets")) {
-  val <- tryCatch(
-    targets::tar_read_raw(name, store = store),
-    error = function(e) NULL
-  )
-  if (is.character(val) && length(val) == 1 && grepl("not available", val, ignore.case = TRUE)) {
-    return(NULL)
+safe_tar_read <- function(name) {
+  if (!is.null(tar_store)) {
+    val <- tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
+    if (!is.null(val) && !(is.character(val) && length(val) == 1 && grepl("not available", val, ignore.case = TRUE))) {
+      return(val)
+    }
   }
-  val
+  rds <- system.file(paste0("extdata/vignettes/", name, ".rds"), package = "coMMpass")
+  if (nzchar(rds) && file.exists(rds)) return(readRDS(rds))
+  NULL
 }
 ```
 
 ```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
-cat("::: {.callout-note}\n## Online documentation\nThis vignette shows pre-computed results from the targets pipeline. Some outputs may appear as placeholders in the online version.\n:::\n")
+cat("::: {.callout-note}\n## Online documentation\nThis vignette shows pre-computed results from the targets pipeline.\n:::\n")
 ```
 
 ## Pipeline Overview
@@ -79,7 +77,7 @@ safe_tar_read("dag_layer_validation")
 
 ## Target Network
 
-Static summary of the targets pipeline network showing target counts by status (up-to-date, outdated, errored) and dependency depth. This provides an overview of pipeline health without the interactive overhead of `tar_visnetwork()`.
+Interactive DAG showing the targets pipeline network with layer-based coloring. Nodes are colored by functional layer. Hover for target details, use the dropdown to search by name.
 
 ```{r pipeline-visnetwork}
 safe_tar_read("vig_pipeline_dag")
@@ -88,11 +86,10 @@ safe_tar_read("vig_pipeline_dag")
 ## Interactive DAG (live)
 
 The interactive DAG below is rendered directly from the pipeline metadata
-via `tar_visnetwork()`. This is the ONE exception to the zero-computation
-rule: it produces an htmlwidget that cannot be serialized as a target.
+via `tar_visnetwork()`. This requires a local targets store.
 
 ```{r visnetwork-live, fig.height=8}
-#| eval: !expr 'dir.exists(Sys.getenv("TAR_STORE", "_targets"))'
+#| eval: !expr '!is.null(tar_store) && dir.exists(tar_store)'
 tryCatch(
   targets::tar_visnetwork(targets_only = TRUE, label = "time"),
   error = function(e) cat("*Pipeline store not available for live DAG.*\n")
