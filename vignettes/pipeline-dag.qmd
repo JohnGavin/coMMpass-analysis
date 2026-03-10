@@ -36,7 +36,6 @@ safe_tar_read <- function(name) {
       return(val)
     }
   }
-  # RDS fallback: try system.file, then relative paths from package root / vignettes/
   rds_candidates <- c(
     system.file(paste0("extdata/vignettes/", name, ".rds"), package = "coMMpass"),
     file.path("inst/extdata/vignettes", paste0(name, ".rds")),
@@ -46,6 +45,13 @@ safe_tar_read <- function(name) {
     if (nzchar(rds) && file.exists(rds)) return(readRDS(rds))
   }
   NULL
+}
+
+# Wrap a DT data frame or return existing widget
+as_dt <- function(x, ...) {
+  if (inherits(x, "datatables")) return(x)
+  if (is.data.frame(x)) return(DT::datatable(x, rownames = FALSE, ...))
+  invisible(NULL)
 }
 ```
 
@@ -80,7 +86,7 @@ Validation checks on the targets pipeline DAG: no orphaned targets, no circular 
 
 ```{r dag-validation}
 res <- safe_tar_read("dag_layer_validation")
-if (!is.null(res)) res else invisible(NULL)
+as_dt(res, options = list(pageLength = 15, dom = "t", order = list(list(1, "desc"))))
 ```
 
 ## Target Network
@@ -89,7 +95,22 @@ Interactive DAG showing the targets pipeline network with layer-based coloring. 
 
 ```{r pipeline-visnetwork}
 res <- safe_tar_read("vig_pipeline_dag")
-if (!is.null(res)) res else invisible(NULL)
+if (inherits(res, "visNetwork")) {
+  res
+} else if (is.list(res) && "nodes" %in% names(res)) {
+  visNetwork::visNetwork(
+    res$nodes, res$edges, main = res$main, height = "600px", width = "100%"
+  ) |>
+    visNetwork::visEdges(arrows = "to", color = list(opacity = 0.4)) |>
+    visNetwork::visOptions(
+      highlightNearest = list(enabled = TRUE, degree = 1),
+      nodesIdSelection = TRUE
+    ) |>
+    visNetwork::visLegend(useGroups = TRUE, position = "right") |>
+    visNetwork::visPhysics(stabilization = list(iterations = 200))
+} else {
+  invisible(NULL)
+}
 ```
 
 ## Interactive DAG (live)
@@ -114,7 +135,7 @@ Recent project commits with lines added, files changed, and change categories.
 
 ```{r changelog}
 res <- safe_tar_read("vig_git_changelog")
-if (!is.null(res)) res else invisible(NULL)
+as_dt(res, options = list(pageLength = 10, dom = "tip", order = list(list(0, "desc"))))
 ```
 
 ## Reproducibility
