@@ -44,8 +44,14 @@ safe_tar_read <- function(name) {
       return(val)
     }
   }
-  rds <- system.file(paste0("extdata/vignettes/", name, ".rds"), package = "coMMpass")
-  if (nzchar(rds) && file.exists(rds)) return(readRDS(rds))
+  rds_candidates <- c(
+    system.file(paste0("extdata/vignettes/", name, ".rds"), package = "coMMpass"),
+    file.path("inst/extdata/vignettes", paste0(name, ".rds")),
+    file.path("../inst/extdata/vignettes", paste0(name, ".rds"))
+  )
+  for (rds in rds_candidates) {
+    if (nzchar(rds) && file.exists(rds)) return(readRDS(rds))
+  }
   NULL
 }
 ```
