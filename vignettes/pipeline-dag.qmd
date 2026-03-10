@@ -50,7 +50,9 @@ safe_tar_read <- function(name) {
 # Wrap a DT data frame or return existing widget
 as_dt <- function(x, ...) {
   if (inherits(x, "datatables")) return(x)
-  if (is.data.frame(x)) return(DT::datatable(x, rownames = FALSE, ...))
+  if (is.data.frame(x) && requireNamespace("DT", quietly = TRUE)) {
+    return(DT::datatable(x, rownames = FALSE, ...))
+  }
   invisible(NULL)
 }
 ```
@@ -97,7 +99,8 @@ Interactive DAG showing the targets pipeline network with layer-based coloring. 
 res <- safe_tar_read("vig_pipeline_dag")
 if (inherits(res, "visNetwork")) {
   res
-} else if (is.list(res) && "nodes" %in% names(res)) {
+} else if (is.list(res) && "nodes" %in% names(res) &&
+           requireNamespace("visNetwork", quietly = TRUE)) {
   visNetwork::visNetwork(
     res$nodes, res$edges, main = res$main, height = "600px", width = "100%"
   ) |>
