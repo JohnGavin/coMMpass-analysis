@@ -57,5 +57,6 @@ c(
   plan_treatment,          # Treatment/regimen data cleaning
   plan_api,             # Static JSON API generation (Phase 1)
   plan_pkgctx,          # Auto-generate .ctx.yaml API context files
-  plan_dag_validation   # Cross-layer dependency validation
+  plan_dag_validation,  # Cross-layer dependency validation
+  plan_telemetry        # Git changelog, GitHub activity, codebase metrics
 )
