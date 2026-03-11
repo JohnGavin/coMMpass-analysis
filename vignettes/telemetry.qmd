@@ -1,6 +1,9 @@
 ---
 title: "Pipeline Telemetry"
-format: html
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
 vignette: >
   %\VignetteIndexEntry{Pipeline Telemetry}
   %\VignetteEngine{quarto::html}
@@ -10,7 +13,6 @@ vignette: >
 ```{r setup, include=FALSE}
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
-  echo = FALSE,
   eval = !in_pkgdown,
   message = FALSE,
   warning = FALSE,
@@ -96,6 +98,8 @@ DT::datatable(
 
 ## Build Status Summary
 
+High-level pipeline health metrics: target counts, build time, and storage size.
+
 ```{r status-summary}
 meta <- targets::tar_meta(store = Sys.getenv("TAR_STORE", "_targets"))
 n_total <- nrow(meta)
@@ -135,6 +139,8 @@ DT::datatable(
 ```
 
 ## Errors and Warnings
+
+Targets that produced errors or warnings during the most recent pipeline run.
 
 ```{r errors}
 meta <- targets::tar_meta(store = Sys.getenv("TAR_STORE", "_targets"))
@@ -184,6 +190,8 @@ tryCatch({
 ```
 
 ## Size Distribution
+
+Distribution of target serialized sizes, identifying large objects that dominate storage.
 
 ```{r size-plot, fig.cap="Target serialized sizes (log10 bytes). Comparison: most targets are under 1 MB; a few data objects (expression matrices, DE results) exceed 1 MB. Dashed line = 1 MB threshold. Source: targets::tar_meta()."}
 #| fig.height: 5

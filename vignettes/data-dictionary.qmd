@@ -1,6 +1,9 @@
 ---
 title: "02. Data Dictionary"
-format: html
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
 vignette: >
   %\VignetteIndexEntry{02. Data Dictionary}
   %\VignetteEngine{quarto::html}
@@ -12,7 +15,6 @@ in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  echo = FALSE,
   eval = !in_pkgdown,
   message = FALSE,
   warning = FALSE,
@@ -70,6 +72,8 @@ cat("::: {.callout-note}\n## Online documentation\nThis vignette shows pre-compu
 - [MMRF CoMMpass Study](https://themmrf.org/research/commpass-study/)
 
 ## Complete Data Dictionary
+
+Searchable table of all variables available in the CoMMpass dataset with types, categories, and descriptions.
 
 ```{r dictionary-table}
 safe_tar_read("vig_dd_dictionary_table")
@@ -150,11 +154,15 @@ For exploratory analysis using these variables, see the [EDA vignette](explorato
 
 ### Loading Data
 
+How to load CoMMpass data from parquet files and query with DuckDB.
+
 ```{r dd-load-data-code, results='asis'}
 safe_tar_read("code_dd_load_data")
 ```
 
 ### Exploring the Dictionary
+
+Programmatic access to variable documentation and metadata.
 
 ```{r dd-explore-dict-code, results='asis'}
 safe_tar_read("code_dd_explore_dict")

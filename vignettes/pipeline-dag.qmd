@@ -1,6 +1,9 @@
 ---
 title: "Pipeline DAG"
-format: html
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
 vignette: >
   %\VignetteIndexEntry{Pipeline DAG}
   %\VignetteEngine{quarto::html}
@@ -10,7 +13,6 @@ vignette: >
 ```{r setup, include=FALSE}
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
-  echo = FALSE,
   eval = TRUE,
   message = FALSE,
   warning = FALSE,

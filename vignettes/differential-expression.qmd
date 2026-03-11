@@ -1,6 +1,9 @@
 ---
 title: "04. Differential Expression Analysis"
-format: html
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
 vignette: >
   %\VignetteIndexEntry{04. Differential Expression Analysis}
   %\VignetteEngine{quarto::html}
@@ -12,7 +15,6 @@ in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  echo = FALSE,
   eval = !in_pkgdown,
   message = FALSE,
   warning = FALSE,
@@ -68,6 +70,8 @@ cat("::: {.callout-note}\n## Online documentation\nThis vignette shows pre-compu
 > default to 100 samples. Numbers below reflect the CI subset.
 
 ## Method Comparison
+
+Summary of DE genes detected by each method (DESeq2, edgeR, limma-voom) and their consensus overlap.
 
 ```{r method-summary}
 safe_tar_read("vig_de_method_table")
@@ -152,11 +156,15 @@ safe_tar_read("vig_annotated_de_table")
 
 ### GSEA Enrichment Dot Plot
 
+Gene Set Enrichment Analysis using the full ranked gene list against MSigDB Hallmark pathways.
+
 ```{r gsea-dotplot, fig.cap = "GSEA enrichment dot plot of MSigDB Hallmark pathways. Dot color: -log10(adjusted p-value). Dot size: number of genes in the pathway. Pathways sorted by significance. See MSigDB Hallmark for pathway definitions."}
 safe_tar_read("vig_gsea_dotplot")
 ```
 
 ### ORA Enrichment Bar Plot
+
+Over-representation analysis testing whether consensus DE genes are enriched in specific pathways.
 
 ```{r ora-barplot, fig.cap = "Over-representation analysis (ORA) of consensus DE genes in MSigDB Hallmark pathways. Bar length: -log10(adjusted p-value). Fisher's exact test (hypergeometric). Only consensus genes (significant in DESeq2, edgeR, and limma) are tested."}
 safe_tar_read("vig_ora_barplot")

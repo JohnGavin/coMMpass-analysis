@@ -1,6 +1,9 @@
 ---
 title: "00. Project Overview"
-format: html
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
 vignette: >
   %\VignetteIndexEntry{00. Project Overview}
   %\VignetteEngine{quarto::html}
@@ -12,12 +15,46 @@ its data flow, layer architecture, and a reading guide for navigating the
 vignettes. All diagrams use clickable nodes linking to the relevant vignette
 or external resource.
 
+```{=html}
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: 'loose',
+    theme: 'dark',
+    themeVariables: {
+      darkMode: true,
+      background: '#1a1a2e',
+      primaryColor: '#1a3a5c',
+      primaryTextColor: '#ffffff',
+      primaryBorderColor: '#3498db',
+      lineColor: '#aaaaaa',
+      textColor: '#ffffff',
+      mainBkg: '#1a3a5c',
+      nodeBorder: '#3498db'
+    }
+  });
+  // Render all mermaid diagrams
+  document.querySelectorAll('pre.mermaid').forEach(async (el) => {
+    const id = el.id || 'mermaid-' + Math.random().toString(36).slice(2);
+    const source = el.querySelector('script[type="text/plain"]');
+    const graphDef = source ? source.textContent : el.textContent;
+    const { svg } = await mermaid.render(id + '-svg', graphDef);
+    el.innerHTML = svg;
+  });
+</script>
+<style>
+  pre.mermaid { background: transparent; border: none; text-align: center; }
+  .mermaid-diagram { margin: 1em 0; }
+</style>
+```
+
 ## Data Flow Pipeline
 
 ::: {#fig-dataflow}
 
-```{mermaid}
-%%| fig-width: 9
+<pre class="mermaid" id="dataflow">
+<script type="text/plain">
 graph LR
   subgraph Acquisition
     GDC["GDC Portal"]
@@ -31,10 +68,10 @@ graph LR
   end
 
   subgraph Analysis
-    DE["Differential\nExpression"]
-    Surv["Survival\nAnalysis"]
-    Path["Pathway\nAnalysis"]
-    EDA["Exploratory\nAnalysis"]
+    DE["Differential&lt;br/&gt;Expression"]
+    Surv["Survival&lt;br/&gt;Analysis"]
+    Path["Pathway&lt;br/&gt;Analysis"]
+    EDA["Exploratory&lt;br/&gt;Analysis"]
     Cyto["Cytogenetics"]
   end
 
@@ -69,34 +106,36 @@ graph LR
   click QC "data-sources.html" _blank
   click DE "differential-expression.html" _blank
   click Surv "survival-analysis.html" _blank
-  click Path "glossary.html" _blank
+  click Path "differential-expression.html#pathway-enrichment-visualizations" _blank
   click EDA "exploratory-analysis.html" _blank
-  click Cyto "glossary.html" _blank
+  click Cyto "exploratory-analysis.html#cytogenetic-landscape" _blank
   click Report "gene-report.html" _blank
   click API "api-usage.html" _blank
   click Site "https://JohnGavin.github.io/coMMpass-analysis/" _blank
 
-  style GDC fill:#e8f4fd,stroke:#2980b9
-  style RNA fill:#e8f4fd,stroke:#2980b9
-  style Clin fill:#e8f4fd,stroke:#2980b9
-  style Clean fill:#fef9e7,stroke:#f39c12
-  style QC fill:#fef9e7,stroke:#f39c12
-  style DE fill:#fdedec,stroke:#e74c3c
-  style Surv fill:#fdedec,stroke:#e74c3c
-  style Path fill:#fdedec,stroke:#e74c3c
-  style EDA fill:#fdedec,stroke:#e74c3c
-  style Cyto fill:#fdedec,stroke:#e74c3c
-  style Report fill:#eafaf1,stroke:#27ae60
-  style API fill:#eafaf1,stroke:#27ae60
-  style Site fill:#eafaf1,stroke:#27ae60
-```
+  style GDC fill:#1a3a5c,stroke:#3498db,color:#fff
+  style RNA fill:#1a3a5c,stroke:#3498db,color:#fff
+  style Clin fill:#1a3a5c,stroke:#3498db,color:#fff
+  style Clean fill:#4a3800,stroke:#f39c12,color:#fff
+  style QC fill:#4a3800,stroke:#f39c12,color:#fff
+  style DE fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style Surv fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style Path fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style EDA fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style Cyto fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style Report fill:#1a4a2e,stroke:#27ae60,color:#fff
+  style API fill:#1a4a2e,stroke:#27ae60,color:#fff
+  style Site fill:#1a4a2e,stroke:#27ae60,color:#fff
+</script>
+</pre>
 
 **Data flow pipeline for coMMpass-analysis.**
 Data flows left-to-right from the [GDC Portal](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)
 through acquisition, cleaning, and QC stages into five parallel analysis tracks
 ([DE](differential-expression.html), [survival](survival-analysis.html),
-[pathway](glossary.html), [EDA](exploratory-analysis.html),
-[cytogenetics](glossary.html)), converging on
+[pathway](differential-expression.html#pathway-enrichment-visualizations),
+[EDA](exploratory-analysis.html),
+[cytogenetics](exploratory-analysis.html#cytogenetic-landscape)), converging on
 [gene reports](gene-report.html), [API endpoints](api-usage.html),
 and the [pkgdown website](https://JohnGavin.github.io/coMMpass-analysis/).
 The pipeline comprises 12 layers and ~183 [targets](glossary.html#targets-pipeline).
@@ -109,14 +148,14 @@ Source: layer definitions in `R/tar_plans/plan_dag_validation.R`.
 
 ::: {#fig-layers}
 
-```{mermaid}
-%%| fig-width: 8
+<pre class="mermaid" id="layers">
+<script type="text/plain">
 graph TD
   DA["data-acquisition"]
   DC["data-cleaning"]
   CY["cytogenetics"]
   QC["quality-control"]
-  DEX["differential-\nexpression"]
+  DEX["differential-&lt;br/&gt;expression"]
   SU["survival"]
   PW["pathway"]
   ED["eda"]
@@ -149,28 +188,29 @@ graph TD
   click DA "data-acquisition.html" _blank
   click DC "data-sources.html" _blank
   click QC "data-sources.html" _blank
-  click CY "glossary.html" _blank
+  click CY "exploratory-analysis.html#cytogenetic-landscape" _blank
   click DEX "differential-expression.html" _blank
   click SU "survival-analysis.html" _blank
-  click PW "glossary.html" _blank
+  click PW "differential-expression.html#pathway-enrichment-visualizations" _blank
   click ED "exploratory-analysis.html" _blank
   click AP "api-usage.html" _blank
   click DOC "pipeline-dag.html" _blank
   click INF "telemetry.html" _blank
 
-  style DA fill:#e8f4fd,stroke:#2980b9
-  style DC fill:#fef9e7,stroke:#f39c12
-  style CY fill:#fdedec,stroke:#e74c3c
-  style QC fill:#fef9e7,stroke:#f39c12
-  style DEX fill:#fdedec,stroke:#e74c3c
-  style SU fill:#fdedec,stroke:#e74c3c
-  style PW fill:#fdedec,stroke:#e74c3c
-  style ED fill:#fdedec,stroke:#e74c3c
-  style ST fill:#eafaf1,stroke:#27ae60
-  style AP fill:#eafaf1,stroke:#27ae60
-  style DOC fill:#f5eef8,stroke:#8e44ad
-  style INF fill:#f2f3f4,stroke:#7f8c8d
-```
+  style DA fill:#1a3a5c,stroke:#3498db,color:#fff
+  style DC fill:#4a3800,stroke:#f39c12,color:#fff
+  style CY fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style QC fill:#4a3800,stroke:#f39c12,color:#fff
+  style DEX fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style SU fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style PW fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style ED fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style ST fill:#1a4a2e,stroke:#27ae60,color:#fff
+  style AP fill:#1a4a2e,stroke:#27ae60,color:#fff
+  style DOC fill:#3a1a4a,stroke:#8e44ad,color:#fff
+  style INF fill:#333333,stroke:#7f8c8d,color:#fff
+</script>
+</pre>
 
 **Layer dependency graph showing the 12 pipeline layers.**
 Each node represents a pipeline layer from
@@ -191,22 +231,22 @@ Source: `R/tar_plans/plan_dag_validation.R`, lines 13-48.
 
 ::: {#fig-readingguide}
 
-```{mermaid}
-%%| fig-width: 9
+<pre class="mermaid" id="readingguide">
+<script type="text/plain">
 graph LR
   subgraph Clinical["Clinical Path"]
     direction LR
     C1["Data Sources"]
-    C2["Exploratory\nAnalysis"]
-    C3["Survival\nAnalysis"]
+    C2["Exploratory&lt;br/&gt;Analysis"]
+    C3["Survival&lt;br/&gt;Analysis"]
     C1 --> C2 --> C3
   end
 
   subgraph Genomics["Genomics Path"]
     direction LR
     G1["Data Sources"]
-    G2["Data\nAcquisition"]
-    G3["Differential\nExpression"]
+    G2["Data&lt;br/&gt;Acquisition"]
+    G3["Differential&lt;br/&gt;Expression"]
     G4["Gene Report"]
     G1 --> G2 --> G3 --> G4
   end
@@ -232,18 +272,19 @@ graph LR
   click D3 "telemetry.html" _blank
   click D4 "api-usage.html" _blank
 
-  style C1 fill:#e8f4fd,stroke:#2980b9
-  style C2 fill:#e8f4fd,stroke:#2980b9
-  style C3 fill:#e8f4fd,stroke:#2980b9
-  style G1 fill:#fdedec,stroke:#e74c3c
-  style G2 fill:#fdedec,stroke:#e74c3c
-  style G3 fill:#fdedec,stroke:#e74c3c
-  style G4 fill:#fdedec,stroke:#e74c3c
-  style D1 fill:#eafaf1,stroke:#27ae60
-  style D2 fill:#eafaf1,stroke:#27ae60
-  style D3 fill:#eafaf1,stroke:#27ae60
-  style D4 fill:#eafaf1,stroke:#27ae60
-```
+  style C1 fill:#1a3a5c,stroke:#3498db,color:#fff
+  style C2 fill:#1a3a5c,stroke:#3498db,color:#fff
+  style C3 fill:#1a3a5c,stroke:#3498db,color:#fff
+  style G1 fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style G2 fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style G3 fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style G4 fill:#5c1a1a,stroke:#e74c3c,color:#fff
+  style D1 fill:#1a4a2e,stroke:#27ae60,color:#fff
+  style D2 fill:#1a4a2e,stroke:#27ae60,color:#fff
+  style D3 fill:#1a4a2e,stroke:#27ae60,color:#fff
+  style D4 fill:#1a4a2e,stroke:#27ae60,color:#fff
+</script>
+</pre>
 
 **Recommended reading paths through the 11 vignettes.**
 Three paths serve different audiences: **Clinical** (blue) covers
@@ -255,7 +296,7 @@ patient-level [exploratory analysis](exploratory-analysis.html) and
 **Developer/Pipeline** (green) covers the [targets DAG](pipeline-dag.html),
 [pipeline telemetry](telemetry.html), and [API endpoints](api-usage.html).
 All paths begin at [Data Sources](data-sources.html).
-Cross-cutting references: [glossary](glossary.html) (47 terms),
+Cross-cutting references: [glossary](glossary.html) (65 terms),
 [data dictionary](data-dictionary.html).
 
 :::

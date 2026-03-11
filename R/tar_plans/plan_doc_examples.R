@@ -102,7 +102,7 @@ plan_doc_examples <- list(
     }
   ),
 
-  # --- Glossary vignette: Glossary table (~47 terms, 8 categories) ---
+  # --- Glossary vignette: Glossary table (~64 terms, 8 categories) ---
   targets::tar_target(
     glossary_table,
     data.frame(
@@ -113,30 +113,34 @@ plan_doc_examples <- list(
         "FISH", "Cytogenetic Risk", "t(4;14)", "t(14;16)", "del(17p)",
         "High-Risk / Standard-Risk",
         # Staging & Risk (3)
-        "ISS", "IMWG", "B2M / Serum Albumin",
-        # RNA-seq & QC (8)
+        "ISS", "IMWG", "B2M / Serum Albumin", "B2M",
+        # RNA-seq & QC (13)
         "RNA-seq", "Read count", "Library size", "TPM", "Gene detection",
         "MAD", "Outlier (QC)", "VST",
-        # Differential Expression (7)
+        "STAR", "GENCODE", "Ensembl", "HGNC", "Entrez",
+        # Differential Expression (9)
         "DE", "DESeq2", "edgeR", "limma-voom", "Log2 Fold Change",
         "FDR / Adjusted p-value", "Volcano Plot",
+        "PCA", "LFC",
         # Survival Analysis (8)
         "Overall Survival (OS)", "Progression-Free Survival (PFS)", "KM",
         "Log-Rank Test", "Cox PH", "HR", "Forest Plot", "Confidence Interval",
         # Pathway & Enrichment (6)
         "GSEA", "ORA", "MSigDB", "Hallmark Gene Sets", "Pathway", "Gene Set",
-        # Data Infrastructure (4)
-        "Targets", "sample_limit", "Nix", "pkgdown"
+        "GO", "KEGG", "Reactome",
+        # Data Infrastructure (11)
+        "Targets", "sample_limit", "Nix", "pkgdown",
+        "API", "DAG", "DuckDB", "Parquet", "CI", "CRAN", "Bioconductor"
       ),
       Category = c(
         rep("Disease & Study", 5),
         rep("Cytogenetics & Markers", 6),
-        rep("Staging & Risk", 3),
-        rep("RNA-seq & QC", 8),
-        rep("Differential Expression", 7),
+        rep("Staging & Risk", 4),
+        rep("RNA-seq & QC", 13),
+        rep("Differential Expression", 9),
         rep("Survival Analysis", 8),
-        rep("Pathway & Enrichment", 6),
-        rep("Data Infrastructure", 4)
+        rep("Pathway & Enrichment", 9),
+        rep("Data Infrastructure", 11)
       ),
       Definition = c(
         # Disease & Study
@@ -156,6 +160,7 @@ plan_doc_examples <- list(
         "International Staging System -- classifies myeloma severity (I-III) by serum albumin and beta-2 microglobulin (Greipp et al. 2005, doi:10.1200/JCO.2005.04.242)",
         "International Myeloma Working Group -- defines cytogenetic risk criteria (Sonneveld et al. 2016, doi:10.1200/JCO.2014.55.1519)",
         "Beta-2 microglobulin and serum albumin -- the two biomarkers used to determine ISS stage. B2M >= 5.5 mg/L = Stage III",
+        "Beta-2 microglobulin -- serum protein used in ISS staging. B2M >= 5.5 mg/L indicates Stage III myeloma",
         # RNA-seq & QC
         "RNA sequencing -- high-throughput method to quantify gene expression. CoMMpass uses bulk RNA-seq from bone marrow aspirates",
         "The number of sequencing reads aligned to a gene in one sample. Raw integer counts are the input for DE methods (DESeq2, edgeR)",
@@ -165,6 +170,11 @@ plan_doc_examples <- list(
         "Median absolute deviation -- robust measure of spread. In QC context, MAD of gene counts within a single sample measures expression variability",
         "A sample flagged as outlier if it falls in the bottom 5th percentile of library size OR genes detected. The flag is binary (Yes/No)",
         "Variance-stabilizing transformation -- normalizes count data for visualization and clustering, reducing mean-variance dependence",
+        "Spliced Transcripts Alignment to a Reference -- RNA-seq aligner used in GDC pipeline",
+        "Comprehensive gene annotation project providing reference gene models for genome analysis",
+        "Genome database providing gene IDs (ENSG*) used in RNA-seq quantification",
+        "HUGO Gene Nomenclature Committee -- authority for standardized human gene symbols",
+        "NCBI gene identifier system used for cross-database gene referencing",
         # Differential Expression
         "Differential expression -- genes with significantly different expression between conditions (e.g. high-risk vs standard-risk)",
         "Bioconductor package for DE analysis using negative binomial GLMs with shrinkage estimation. The primary DE method in this pipeline",
@@ -173,6 +183,8 @@ plan_doc_examples <- list(
         "Log-base-2 ratio of expression between conditions. LFC > 0 = upregulated; LFC < 0 = downregulated. Shrinkage-corrected LFC used for ranking",
         "False discovery rate -- p-values adjusted for multiple testing (Benjamini-Hochberg). FDR < 0.05 is the standard significance threshold for DE",
         "Scatter plot of log2 fold change (x) vs -log10 adjusted p-value (y). Highlights significantly DE genes in the upper-left and upper-right quadrants",
+        "Principal component analysis -- dimensionality reduction technique for visualizing sample clustering and batch effects",
+        "Log2 fold change -- effect size measure for differential expression. Positive = upregulated; negative = downregulated",
         # Survival Analysis
         "Time from diagnosis to death from any cause. The primary survival endpoint in CoMMpass",
         "Time from diagnosis to disease progression or death. A secondary endpoint capturing earlier clinical events",
@@ -189,11 +201,21 @@ plan_doc_examples <- list(
         "MSigDB Hallmark collection -- 50 curated gene sets representing well-defined biological states and processes (e.g. EMT, p53 pathway, hypoxia)",
         "A set of genes involved in a common biological process (e.g. cell cycle, apoptosis). Annotated in databases like KEGG, Reactome, GO",
         "Any defined collection of genes tested together in enrichment analysis (broader than 'pathway' -- includes GO terms, TF targets, etc.)",
+        "Gene Ontology -- structured vocabulary of gene/protein functions (Biological Process, Molecular Function, Cellular Component)",
+        "Kyoto Encyclopedia of Genes and Genomes -- pathway and molecular interaction database",
+        "Open-source curated pathway database of biological reactions and processes",
         # Data Infrastructure
         "R-based pipeline tool (targets package) for reproducible, cached computation. Each analysis step is a 'target' with dependency tracking",
         "Pipeline parameter controlling the number of patient samples included. Default: local=100, CI=10. Lower values speed up development; higher values improve statistical power",
         "Reproducible build system providing isolated, version-pinned R environments via nixpkgs. Ensures all collaborators use identical package versions",
-        "R package for building package documentation websites. Renders vignettes, function reference, and news into a static site hosted on GitHub Pages"
+        "R package for building package documentation websites. Renders vignettes, function reference, and news into a static site hosted on GitHub Pages",
+        "Application Programming Interface -- structured endpoints for programmatic data access",
+        "Directed acyclic graph -- dependency structure used by targets pipeline for reproducible execution",
+        "In-process analytical database used for efficient parquet querying in the pipeline",
+        "Columnar storage format used for efficient data storage and querying in the pipeline",
+        "Continuous integration -- automated testing and deployment via GitHub Actions",
+        "Comprehensive R Archive Network -- primary repository for R packages",
+        "Open-source software project for genomics and bioinformatics R packages"
       ),
       Appears_In = c(
         # Disease & Study
@@ -213,6 +235,7 @@ plan_doc_examples <- list(
         "survival (6), exploratory (5), data-dictionary (2)",
         "survival (3), exploratory (2)",
         "exploratory (2), data-dictionary (2)",
+        "survival (3), exploratory (2)",
         # RNA-seq & QC
         "data-acquisition (6), exploratory (3), differential-expression (2)",
         "data-acquisition (4), differential-expression (3)",
@@ -222,6 +245,11 @@ plan_doc_examples <- list(
         "data-acquisition (3), exploratory (2)",
         "data-acquisition (3), exploratory (2)",
         "differential-expression (4), exploratory (3), survival (2)",
+        "data-acquisition (3), data-sources (2)",
+        "data-acquisition (2), data-sources (1)",
+        "data-acquisition (3), gene-report (2)",
+        "gene-report (3), differential-expression (2)",
+        "gene-report (2), data-acquisition (1)",
         # Differential Expression
         "differential-expression (8), gene-report (5), survival (2)",
         "differential-expression (6), gene-report (3)",
@@ -230,6 +258,8 @@ plan_doc_examples <- list(
         "differential-expression (5), gene-report (3)",
         "differential-expression (4), gene-report (2)",
         "differential-expression (3), gene-report (2)",
+        "exploratory (4), differential-expression (2)",
+        "differential-expression (5), gene-report (3)",
         # Survival Analysis
         "survival (8), exploratory (2)",
         "survival (4)",
@@ -246,11 +276,21 @@ plan_doc_examples <- list(
         "gene-report (4)",
         "gene-report (5), differential-expression (3)",
         "gene-report (4), differential-expression (2)",
+        "gene-report (3), differential-expression (2)",
+        "gene-report (3), differential-expression (2)",
+        "gene-report (2), differential-expression (1)",
         # Data Infrastructure
         "pipeline-dag (6), telemetry (4), data-sources (2)",
         "data-sources (3), survival (2), exploratory (2)",
         "data-sources (2)",
-        "data-sources (2)"
+        "data-sources (2)",
+        "api-usage (6), data-sources (2)",
+        "pipeline-dag (5), telemetry (2)",
+        "data-sources (3), data-dictionary (2)",
+        "data-sources (3), api-usage (2)",
+        "telemetry (3), pipeline-dag (2)",
+        "data-sources (1)",
+        "data-acquisition (4), differential-expression (3)"
       ),
       See_Also = c(
         # Disease & Study
@@ -270,6 +310,7 @@ plan_doc_examples <- list(
         "[Greipp et al. 2005](https://doi.org/10.1200/JCO.2005.04.242), [EDA vignette](exploratory-analysis.html)",
         "[IMWG](https://doi.org/10.1200/JCO.2014.55.1519), [Survival vignette](survival-analysis.html)",
         "[ISS definition](https://doi.org/10.1200/JCO.2005.04.242), [Data Dictionary](data-dictionary.html)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Beta-2_microglobulin), [ISS staging](https://doi.org/10.1200/JCO.2005.04.242)",
         # RNA-seq & QC
         "[Wikipedia](https://en.wikipedia.org/wiki/RNA-Seq), [Data Acquisition](data-acquisition.html)",
         "[Wikipedia](https://en.wikipedia.org/wiki/RNA-Seq), [Data Acquisition](data-acquisition.html#rnaseq-data)",
@@ -279,6 +320,11 @@ plan_doc_examples <- list(
         "[Wikipedia](https://en.wikipedia.org/wiki/Median_absolute_deviation), [Data Acquisition QC](data-acquisition.html#quality-control)",
         "[Data Acquisition QC](data-acquisition.html#quality-control)",
         "[DESeq2 docs](https://bioconductor.org/packages/DESeq2/), [DE vignette](differential-expression.html)",
+        "[GitHub](https://github.com/alexdobin/STAR), [GDC Pipeline](https://docs.gdc.cancer.gov/Data/Bioinformatics_Pipelines/Expression_mRNA_Pipeline/)",
+        "[gencodegenes.org](https://www.gencodegenes.org/), [Data Acquisition](data-acquisition.html)",
+        "[ensembl.org](https://www.ensembl.org/), [Data Acquisition](data-acquisition.html)",
+        "[genenames.org](https://www.genenames.org/), [Gene Report](gene-report.html)",
+        "[NCBI Gene](https://www.ncbi.nlm.nih.gov/gene/), [Gene Report](gene-report.html)",
         # Differential Expression
         "[DE vignette](differential-expression.html), [Wikipedia](https://en.wikipedia.org/wiki/Differential_gene_expression)",
         "[Bioconductor](https://bioconductor.org/packages/DESeq2/), [PMID:25516281](https://pubmed.ncbi.nlm.nih.gov/25516281/)",
@@ -287,6 +333,8 @@ plan_doc_examples <- list(
         "[DE vignette](differential-expression.html), [Wikipedia](https://en.wikipedia.org/wiki/Fold_change)",
         "[Wikipedia](https://en.wikipedia.org/wiki/False_discovery_rate), [DE vignette](differential-expression.html)",
         "[DE vignette](differential-expression.html), [Wikipedia](https://en.wikipedia.org/wiki/Volcano_plot_(statistics))",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Principal_component_analysis), [EDA vignette](exploratory-analysis.html)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Fold_change), [DE vignette](differential-expression.html)",
         # Survival Analysis
         "[Wikipedia](https://en.wikipedia.org/wiki/Overall_survival), [Survival vignette](survival-analysis.html)",
         "[Wikipedia](https://en.wikipedia.org/wiki/Progression-free_survival), [Survival vignette](survival-analysis.html)",
@@ -303,11 +351,21 @@ plan_doc_examples <- list(
         "[MSigDB Hallmarks](https://www.gsea-msigdb.org/gsea/msigdb/human/collections.jsp#H), [Gene Report](gene-report.html)",
         "[KEGG](https://www.genome.jp/kegg/pathway.html), [Reactome](https://reactome.org/), [Gene Report](gene-report.html)",
         "[Gene Report](gene-report.html), [MSigDB](https://www.gsea-msigdb.org/gsea/msigdb/)",
+        "[geneontology.org](http://geneontology.org/), [Gene Report](gene-report.html)",
+        "[genome.jp/kegg](https://www.genome.jp/kegg/), [Gene Report](gene-report.html)",
+        "[reactome.org](https://reactome.org/), [Gene Report](gene-report.html)",
         # Data Infrastructure
         "[targets package](https://docs.ropensci.org/targets/), [Pipeline DAG](pipeline-dag.html)",
         "[Data Sources](data-sources.html), [Survival vignette](survival-analysis.html)",
         "[Nix](https://nixos.org/), [rix package](https://docs.ropensci.org/rix/)",
-        "[pkgdown](https://pkgdown.r-lib.org/), [Data Sources](data-sources.html)"
+        "[pkgdown](https://pkgdown.r-lib.org/), [Data Sources](data-sources.html)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/API), [API Usage](api-usage.html)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Directed_acyclic_graph), [Pipeline DAG](pipeline-dag.html)",
+        "[duckdb.org](https://duckdb.org/), [Data Sources](data-sources.html)",
+        "[parquet.apache.org](https://parquet.apache.org/), [Data Sources](data-sources.html)",
+        "[Wikipedia](https://en.wikipedia.org/wiki/Continuous_integration), [Telemetry](telemetry.html)",
+        "[cran.r-project.org](https://cran.r-project.org/), [Data Sources](data-sources.html)",
+        "[bioconductor.org](https://www.bioconductor.org/), [Data Acquisition](data-acquisition.html)"
       ),
       stringsAsFactors = FALSE
     )

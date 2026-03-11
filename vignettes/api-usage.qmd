@@ -1,6 +1,9 @@
 ---
 title: "07. API Usage"
-format: html
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
 vignette: >
   %\VignetteIndexEntry{07. API Usage}
   %\VignetteEngine{quarto::html}
@@ -12,7 +15,6 @@ in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  echo = FALSE,
   eval = !in_pkgdown,
   message = FALSE,
   warning = FALSE
@@ -68,11 +70,15 @@ Data is pre-computed via a `targets` pipeline and serialized to JSON. For raw
 
 ## Available Endpoints
 
+The table below lists all JSON API endpoints with their descriptions and record counts.
+
 ```{r endpoints-table}
 safe_tar_read("vig_api_endpoints_dt")
 ```
 
 ## Example: curl
+
+Fetch endpoint data from the command line using `curl` and `jq`.
 
 ```{r example-curl, results='asis'}
 code <- safe_tar_read("code_api_curl")
@@ -87,6 +93,8 @@ if (!is.null(code)) {
 
 ## Example: R (jsonlite)
 
+Load API data directly into R data frames using `jsonlite::fromJSON()`.
+
 ```{r example-r, results='asis'}
 code <- safe_tar_read("code_api_r")
 if (!is.null(code)) {
@@ -99,6 +107,8 @@ if (!is.null(code)) {
 ```
 
 ## Example: Python (requests)
+
+Access the API from Python using `requests` and `pandas`.
 
 ```{r example-python, results='asis'}
 code <- safe_tar_read("code_api_python")

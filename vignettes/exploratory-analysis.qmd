@@ -1,6 +1,9 @@
 ---
 title: "03. Exploratory Data Analysis"
-format: html
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
 vignette: >
   %\VignetteIndexEntry{03. Exploratory Data Analysis}
   %\VignetteEngine{quarto::html}
@@ -12,7 +15,6 @@ in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  echo = FALSE,
   eval = !in_pkgdown,
   message = FALSE,
   warning = FALSE,

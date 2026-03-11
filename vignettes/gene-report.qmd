@@ -1,6 +1,9 @@
 ---
 title: "Gene Report"
-format: html
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
 params:
   gene: "CD70"
 vignette: >
@@ -14,7 +17,6 @@ in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  echo = FALSE,
   eval = !in_pkgdown,
   message = FALSE,
   warning = FALSE,
@@ -69,6 +71,8 @@ cytogenetic context, and co-expression correlations.
 
 ## Expression Distribution
 
+VST-normalized expression values across all samples, showing the distribution shape and central tendency.
+
 ```{r expression-dist, fig.cap = paste0(gene, " expression distribution across samples (VST-transformed).")}
 vst_counts <- safe_tar_read("vst_counts")
 if (!is.null(vst_counts) && gene %in% rownames(SummarizedExperiment::assay(vst_counts, "vst"))) {
@@ -119,6 +123,8 @@ if (!is.null(vst_counts) && !is.null(survival_data) &&
 
 ## Expression by Cytogenetic Subtype
 
+Boxplots comparing expression levels across FISH-defined cytogenetic marker groups (t(4;14), t(14;16), del(17p)).
+
 ```{r expr-subtype, fig.cap = paste0(gene, " expression by cytogenetic marker status.")}
 cyto_data <- safe_tar_read("cytogenetic_data")
 if (!is.null(vst_counts) && !is.null(cyto_data) &&
@@ -161,13 +167,28 @@ if (!is.null(vst_counts) &&
   )
   if (nrow(cor_batch) > 0) {
     top10 <- head(cor_batch, 10)
-    knitr::kable(
-      top10[, c("gene", "estimate", "p_value", "padj")],
-      digits = c(0, 3, 4, 4),
-      col.names = c("Gene", "Pearson R", "p-value", "Adjusted p"),
-      caption = paste0("Top 10 genes correlated with ", gene,
-                        " (n = ", top10$n_samples[1], " samples)")
-    )
+    top10_display <- top10[, c("gene", "estimate", "p_value", "padj")]
+    if (requireNamespace("DT", quietly = TRUE)) {
+      DT::datatable(
+        top10_display, filter = "top", rownames = FALSE,
+        colnames = c("Gene", "Pearson R", "p-value", "Adjusted p"),
+        options = list(pageLength = 10, scrollX = TRUE),
+        caption = htmltools::tags$caption(
+          style = "caption-side: top; text-align: left;",
+          paste0("Top 10 genes correlated with ", gene,
+                 " (n = ", top10$n_samples[1], " samples)")
+        )
+      ) |> DT::formatRound(columns = c("estimate", "p_value", "padj"),
+                            digits = c(3, 4, 4))
+    } else {
+      knitr::kable(
+        top10_display,
+        digits = c(0, 3, 4, 4),
+        col.names = c("Gene", "Pearson R", "p-value", "Adjusted p"),
+        caption = paste0("Top 10 genes correlated with ", gene,
+                          " (n = ", top10$n_samples[1], " samples)")
+      )
+    }
   } else {
     cat("No correlation results available.")
   }

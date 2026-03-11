@@ -1,6 +1,9 @@
 ---
 title: "Data Sources & Provenance"
-format: html
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
 vignette: >
   %\VignetteIndexEntry{Data Sources & Provenance}
   %\VignetteEngine{quarto::html}
@@ -12,7 +15,6 @@ in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  echo = FALSE,
   eval = !in_pkgdown,
   message = FALSE,
   warning = FALSE
@@ -132,6 +134,49 @@ data only.
 Pre-bundled MSigDB Hallmark gene sets are stored as parquet files in
 `inst/extdata/msigdb/`. These are public reference gene sets used for
 pathway enrichment analysis.
+
+### Bundled Files
+
+```{r msigdb-stats}
+msigdb_dir <- system.file("extdata/msigdb", package = "coMMpass")
+if (!nzchar(msigdb_dir)) {
+  msigdb_dir <- file.path("..", "inst", "extdata", "msigdb")
+}
+
+parquet_files <- list.files(msigdb_dir, pattern = "\\.parquet$", full.names = TRUE)
+
+if (length(parquet_files) > 0 && requireNamespace("arrow", quietly = TRUE)) {
+  stats <- do.call(rbind, lapply(parquet_files, function(f) {
+    tbl <- arrow::read_parquet(f)
+    data.frame(
+      File = basename(f),
+      Size = paste0(round(file.size(f) / 1024, 1), " KB"),
+      Rows = nrow(tbl),
+      Columns = ncol(tbl),
+      Gene_Sets = length(unique(tbl$gs_name)),
+      Unique_Genes = length(unique(tbl$ensembl_gene)),
+      ID_Type = "Ensembl",
+      stringsAsFactors = FALSE
+    )
+  }))
+
+  if (requireNamespace("DT", quietly = TRUE)) {
+    DT::datatable(
+      stats, filter = "top", rownames = FALSE,
+      options = list(pageLength = 10, scrollX = TRUE),
+      caption = htmltools::tags$caption(
+        style = "caption-side: top; text-align: left;",
+        "MSigDB parquet files bundled in inst/extdata/msigdb/."
+      )
+    )
+  } else {
+    knitr::kable(stats, row.names = FALSE,
+      caption = "MSigDB parquet files bundled in inst/extdata/msigdb/.")
+  }
+} else {
+  cat("MSigDB parquet files not available or arrow package not installed.")
+}
+```
 
 ### Citation
 

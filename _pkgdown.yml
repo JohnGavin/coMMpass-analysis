@@ -1,6 +1,9 @@
 url: https://JohnGavin.github.io/coMMpass-analysis/
 template:
   bootstrap: 5
+  light-switch: true
+  bslib:
+    preset: "shiny"
 
 reference:
 - title: "Data Acquisition"

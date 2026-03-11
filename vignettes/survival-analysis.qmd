@@ -1,6 +1,9 @@
 ---
 title: "05. Survival Analysis"
-format: html
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
 vignette: >
   %\VignetteIndexEntry{05. Survival Analysis}
   %\VignetteEngine{quarto::html}
@@ -12,7 +15,6 @@ in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  echo = FALSE,
   eval = !in_pkgdown,
   message = FALSE,
   warning = FALSE,
@@ -69,6 +71,8 @@ cat("::: {.callout-note}\n## Online documentation\nThis vignette shows pre-compu
 
 ## Overall Survival
 
+Kaplan-Meier estimate of the overall survival function for the full patient cohort.
+
 ```{r km-overall, fig.cap = "Overall Kaplan-Meier survival curve for all CoMMpass patients with valid survival data. Shaded region: 95% confidence interval. Time in days from diagnosis."}
 safe_tar_read("vig_km_overall")
 ```
@@ -108,11 +112,15 @@ safe_tar_read("vig_km_markers")
 
 ### Basic Model: Age + Gender
 
+Hazard ratios for age and gender from a minimal Cox PH model.
+
 ```{r cox-basic}
 safe_tar_read("vig_cox_basic_table")
 ```
 
 ### Full Model: Age + Gender + ISS + Cytogenetic Risk
+
+Multivariable Cox model adjusting for ISS stage and IMWG cytogenetic risk classification.
 
 ```{r cox-full}
 safe_tar_read("vig_cox_full_table")
