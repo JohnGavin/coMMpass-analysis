@@ -78,6 +78,7 @@ reference:
 articles:
 - title: "Vignettes"
   contents:
+  - project-overview
   - data-sources
   - data-acquisition
   - data-dictionary

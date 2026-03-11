@@ -1,0 +1,267 @@
+---
+title: "00. Project Overview"
+format: html
+vignette: >
+  %\VignetteIndexEntry{00. Project Overview}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+This vignette provides a visual overview of the coMMpass-analysis pipeline:
+its data flow, layer architecture, and a reading guide for navigating the
+vignettes. All diagrams use clickable nodes linking to the relevant vignette
+or external resource.
+
+## Data Flow Pipeline
+
+::: {#fig-dataflow}
+
+```{mermaid}
+%%| fig-width: 9
+graph LR
+  subgraph Acquisition
+    GDC["GDC Portal"]
+    RNA["RNA-seq Counts"]
+    Clin["Clinical Data"]
+  end
+
+  subgraph Cleaning
+    Clean["Data Cleaning"]
+    QC["Quality Control"]
+  end
+
+  subgraph Analysis
+    DE["Differential\nExpression"]
+    Surv["Survival\nAnalysis"]
+    Path["Pathway\nAnalysis"]
+    EDA["Exploratory\nAnalysis"]
+    Cyto["Cytogenetics"]
+  end
+
+  subgraph Outputs
+    Report["Gene Reports"]
+    API["API Endpoints"]
+    Site["pkgdown Website"]
+  end
+
+  GDC --> RNA
+  GDC --> Clin
+  RNA --> Clean
+  Clin --> Clean
+  Clean --> QC
+  QC --> DE
+  QC --> Surv
+  QC --> Path
+  QC --> EDA
+  QC --> Cyto
+  DE --> Report
+  Surv --> Report
+  Path --> Report
+  EDA --> Site
+  Cyto --> Site
+  Report --> Site
+  API --> Site
+
+  click GDC "https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS" _blank
+  click RNA "data-acquisition.html" _blank
+  click Clin "data-acquisition.html" _blank
+  click Clean "data-sources.html" _blank
+  click QC "data-sources.html" _blank
+  click DE "differential-expression.html" _blank
+  click Surv "survival-analysis.html" _blank
+  click Path "glossary.html" _blank
+  click EDA "exploratory-analysis.html" _blank
+  click Cyto "glossary.html" _blank
+  click Report "gene-report.html" _blank
+  click API "api-usage.html" _blank
+  click Site "https://JohnGavin.github.io/coMMpass-analysis/" _blank
+
+  style GDC fill:#e8f4fd,stroke:#2980b9
+  style RNA fill:#e8f4fd,stroke:#2980b9
+  style Clin fill:#e8f4fd,stroke:#2980b9
+  style Clean fill:#fef9e7,stroke:#f39c12
+  style QC fill:#fef9e7,stroke:#f39c12
+  style DE fill:#fdedec,stroke:#e74c3c
+  style Surv fill:#fdedec,stroke:#e74c3c
+  style Path fill:#fdedec,stroke:#e74c3c
+  style EDA fill:#fdedec,stroke:#e74c3c
+  style Cyto fill:#fdedec,stroke:#e74c3c
+  style Report fill:#eafaf1,stroke:#27ae60
+  style API fill:#eafaf1,stroke:#27ae60
+  style Site fill:#eafaf1,stroke:#27ae60
+```
+
+**Data flow pipeline for coMMpass-analysis.**
+Data flows left-to-right from the [GDC Portal](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)
+through acquisition, cleaning, and QC stages into five parallel analysis tracks
+([DE](differential-expression.html), [survival](survival-analysis.html),
+[pathway](glossary.html), [EDA](exploratory-analysis.html),
+[cytogenetics](glossary.html)), converging on
+[gene reports](gene-report.html), [API endpoints](api-usage.html),
+and the [pkgdown website](https://JohnGavin.github.io/coMMpass-analysis/).
+The pipeline comprises 12 layers and ~183 [targets](glossary.html#targets-pipeline).
+Colour key: blue = acquisition, yellow = cleaning/QC, red = analysis, green = outputs.
+Source: layer definitions in `R/tar_plans/plan_dag_validation.R`.
+
+:::
+
+## Layer Dependency Graph
+
+::: {#fig-layers}
+
+```{mermaid}
+%%| fig-width: 8
+graph TD
+  DA["data-acquisition"]
+  DC["data-cleaning"]
+  CY["cytogenetics"]
+  QC["quality-control"]
+  DEX["differential-\nexpression"]
+  SU["survival"]
+  PW["pathway"]
+  ED["eda"]
+  ST["storage"]
+  AP["api"]
+  DOC["documentation"]
+  INF["infrastructure"]
+
+  DA --> DC
+  DC --> CY
+  DC --> QC
+  QC --> DEX
+  QC --> SU
+  QC --> PW
+  QC --> ED
+  DEX --> ST
+  SU --> ST
+  PW --> ST
+  ED --> ST
+  CY --> ST
+  ST --> AP
+  DEX --> DOC
+  SU --> DOC
+  PW --> DOC
+  ED --> DOC
+  CY --> DOC
+  AP --> DOC
+  INF -.-> DA
+
+  click DA "data-acquisition.html" _blank
+  click DC "data-sources.html" _blank
+  click QC "data-sources.html" _blank
+  click CY "glossary.html" _blank
+  click DEX "differential-expression.html" _blank
+  click SU "survival-analysis.html" _blank
+  click PW "glossary.html" _blank
+  click ED "exploratory-analysis.html" _blank
+  click AP "api-usage.html" _blank
+  click DOC "pipeline-dag.html" _blank
+  click INF "telemetry.html" _blank
+
+  style DA fill:#e8f4fd,stroke:#2980b9
+  style DC fill:#fef9e7,stroke:#f39c12
+  style CY fill:#fdedec,stroke:#e74c3c
+  style QC fill:#fef9e7,stroke:#f39c12
+  style DEX fill:#fdedec,stroke:#e74c3c
+  style SU fill:#fdedec,stroke:#e74c3c
+  style PW fill:#fdedec,stroke:#e74c3c
+  style ED fill:#fdedec,stroke:#e74c3c
+  style ST fill:#eafaf1,stroke:#27ae60
+  style AP fill:#eafaf1,stroke:#27ae60
+  style DOC fill:#f5eef8,stroke:#8e44ad
+  style INF fill:#f2f3f4,stroke:#7f8c8d
+```
+
+**Layer dependency graph showing the 12 pipeline layers.**
+Each node represents a pipeline layer from
+[`plan_dag_validation.R`](https://github.com/JohnGavin/coMMpass-analysis/blob/main/R/tar_plans/plan_dag_validation.R).
+Solid arrows indicate allowed dependencies: data flows top-down from
+acquisition through cleaning/QC into parallel analysis tracks, then into
+storage and documentation. The dashed arrow from infrastructure to
+data-acquisition reflects the Nix/config bootstrap.
+Terminal layers: [documentation](pipeline-dag.html) (aggregates all outputs)
+and [infrastructure](telemetry.html) (standalone).
+Colour key: blue = acquisition, yellow = cleaning/QC, red = analysis,
+green = storage/API, purple = documentation, grey = infrastructure.
+Source: `R/tar_plans/plan_dag_validation.R`, lines 13-48.
+
+:::
+
+## Vignette Reading Guide
+
+::: {#fig-readingguide}
+
+```{mermaid}
+%%| fig-width: 9
+graph LR
+  subgraph Clinical["Clinical Path"]
+    direction LR
+    C1["Data Sources"]
+    C2["Exploratory\nAnalysis"]
+    C3["Survival\nAnalysis"]
+    C1 --> C2 --> C3
+  end
+
+  subgraph Genomics["Genomics Path"]
+    direction LR
+    G1["Data Sources"]
+    G2["Data\nAcquisition"]
+    G3["Differential\nExpression"]
+    G4["Gene Report"]
+    G1 --> G2 --> G3 --> G4
+  end
+
+  subgraph DevOps["Developer / Pipeline Path"]
+    direction LR
+    D1["Data Sources"]
+    D2["Pipeline DAG"]
+    D3["Telemetry"]
+    D4["API Usage"]
+    D1 --> D2 --> D3 --> D4
+  end
+
+  click C1 "data-sources.html" _blank
+  click C2 "exploratory-analysis.html" _blank
+  click C3 "survival-analysis.html" _blank
+  click G1 "data-sources.html" _blank
+  click G2 "data-acquisition.html" _blank
+  click G3 "differential-expression.html" _blank
+  click G4 "gene-report.html" _blank
+  click D1 "data-sources.html" _blank
+  click D2 "pipeline-dag.html" _blank
+  click D3 "telemetry.html" _blank
+  click D4 "api-usage.html" _blank
+
+  style C1 fill:#e8f4fd,stroke:#2980b9
+  style C2 fill:#e8f4fd,stroke:#2980b9
+  style C3 fill:#e8f4fd,stroke:#2980b9
+  style G1 fill:#fdedec,stroke:#e74c3c
+  style G2 fill:#fdedec,stroke:#e74c3c
+  style G3 fill:#fdedec,stroke:#e74c3c
+  style G4 fill:#fdedec,stroke:#e74c3c
+  style D1 fill:#eafaf1,stroke:#27ae60
+  style D2 fill:#eafaf1,stroke:#27ae60
+  style D3 fill:#eafaf1,stroke:#27ae60
+  style D4 fill:#eafaf1,stroke:#27ae60
+```
+
+**Recommended reading paths through the 11 vignettes.**
+Three paths serve different audiences: **Clinical** (blue) covers
+patient-level [exploratory analysis](exploratory-analysis.html) and
+[survival modelling](survival-analysis.html);
+**Genomics** (red) covers [RNA-seq acquisition](data-acquisition.html),
+[differential expression](differential-expression.html), and
+[gene-level reporting](gene-report.html);
+**Developer/Pipeline** (green) covers the [targets DAG](pipeline-dag.html),
+[pipeline telemetry](telemetry.html), and [API endpoints](api-usage.html).
+All paths begin at [Data Sources](data-sources.html).
+Cross-cutting references: [glossary](glossary.html) (47 terms),
+[data dictionary](data-dictionary.html).
+
+:::
+
+## Session Information
+
+```{r sessioninfo, eval = TRUE}
+sessionInfo()
+```
