@@ -206,7 +206,7 @@ plan_doc_examples <- list(
         "Open-source curated pathway database of biological reactions and processes",
         # Data Infrastructure
         "R-based pipeline tool (targets package) for reproducible, cached computation. Each analysis step is a 'target' with dependency tracking",
-        "Pipeline parameter controlling the number of patient samples included. Default: local=100, CI=10. Lower values speed up development; higher values improve statistical power",
+        "Pipeline parameter controlling the number of patient samples included. Default: local=200, CI=20. Lower values speed up development; higher values improve statistical power",
         "Reproducible build system providing isolated, version-pinned R environments via nixpkgs. Ensures all collaborators use identical package versions",
         "R package for building package documentation websites. Renders vignettes, function reference, and news into a static site hosted on GitHub Pages",
         "Application Programming Interface -- structured endpoints for programmatic data access",

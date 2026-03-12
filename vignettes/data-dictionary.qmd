@@ -174,7 +174,7 @@ Results in this vignette are derived from the
 [MMRF CoMMpass study](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)
 (MMRF-COMMPASS, ~1,143 patients), downloaded via
 [TCGAbiolinks](https://bioconductor.org/packages/TCGAbiolinks/).
-The pipeline runs with a configurable `sample_limit` (default 100; CI uses 10).
+The pipeline runs with a configurable `sample_limit` (default 200; CI uses 20).
 
 For full citations, data access tiers, and the distinction between
 pipeline data and synthetic test data, see the

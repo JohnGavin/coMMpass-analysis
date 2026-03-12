@@ -43,7 +43,7 @@ download_gdc_rnaseq <- function(
 
   # In CI, use fewer samples but still real data
   if (Sys.getenv("CI") == "true" || Sys.getenv("GITHUB_ACTIONS") == "true") {
-    sample_limit <- min(sample_limit, 10)
+    sample_limit <- min(sample_limit, 20)
     logger::log_info("CI environment: limiting to {sample_limit} samples")
   }
 

@@ -98,8 +98,8 @@ The `targets` pipeline downloads real patient data from GDC:
 | Clinical metadata | [GDC clinical endpoint](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS) | `download_clinical_data()` via `TCGAbiolinks::GDCquery_clinic()` |
 | MSigDB gene sets | [MSigDB](https://www.gsea-msigdb.org/gsea/msigdb/) | Pre-bundled parquet in `inst/extdata/msigdb/` |
 
-The pipeline runs with a configurable `sample_limit` parameter (default 100
-in local builds; CI uses 10). All vignettes load pre-computed results from
+The pipeline runs with a configurable `sample_limit` parameter (default 200
+in local builds; CI uses 20). All vignettes load pre-computed results from
 the targets store.
 
 ### GDC Documentation

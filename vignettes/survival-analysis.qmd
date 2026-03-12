@@ -66,8 +66,8 @@ cat("::: {.callout-note}\n## Online documentation\nThis vignette shows pre-compu
 - **Cox proportional hazards models** for multivariate analysis
 - **Forest plots** of hazard ratios with 95% confidence intervals
 
-> **Note:** This vignette was built in CI with `sample_limit=10`. Local builds
-> default to 100 samples. Numbers below reflect the CI subset.
+> **Note:** This vignette was built in CI with `sample_limit=20`. Local builds
+> default to 200 samples. Numbers below reflect the CI subset.
 
 ## Overall Survival
 
@@ -189,7 +189,7 @@ Results in this vignette are derived from the
 [MMRF CoMMpass study](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)
 (MMRF-COMMPASS, ~1,143 patients), downloaded via
 [TCGAbiolinks](https://bioconductor.org/packages/TCGAbiolinks/).
-The pipeline runs with a configurable `sample_limit` (default 100; CI uses 10).
+The pipeline runs with a configurable `sample_limit` (default 200; CI uses 20).
 
 For full citations, data access tiers, and the distinction between
 pipeline data and synthetic test data, see the
