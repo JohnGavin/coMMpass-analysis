@@ -56,6 +56,17 @@ safe_tar_read <- function(name) {
   }
   invisible(NULL)
 }
+
+show_target <- function(name, .safe_tar_read = safe_tar_read) {
+  code_name <- paste0("code_", name)
+  code <- .safe_tar_read(code_name)
+  if (!is.null(code) && is.character(code) && nzchar(code)) {
+    cat('<details><summary>Generating code</summary>\n\n```r\n')
+    cat(paste(code, collapse = "\n"))
+    cat('\n```\n</details>\n\n')
+  }
+  .safe_tar_read(name)
+}
 ```
 
 ```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
@@ -78,12 +89,12 @@ cat("::: {.callout-note}\n## Online documentation\nThis vignette displays pre-co
 
 Summary of DE genes detected by each method (DESeq2, edgeR, limma-voom) and their consensus overlap.
 
-```{r method-summary}
-safe_tar_read("vig_de_method_table")
+```{r method-summary, results='asis'}
+show_target("vig_de_method_table")
 ```
 
-```{r method-barplot, fig.cap = "Number of significant DE genes identified by each method (|log2FC| > 1, padj < 0.05). Concordance across methods indicates robust signals. DESeq2 with apeglm shrinkage tends to be more conservative."}
-safe_tar_read("vig_de_method_barplot")
+```{r method-barplot, results='asis', fig.cap = "Number of significant DE genes identified by each method (|log2FC| > 1, padj < 0.05). Concordance across methods indicates robust signals. DESeq2 with apeglm shrinkage tends to be more conservative."}
+show_target("vig_de_method_barplot")
 ```
 
 ## Principal Component Analysis
@@ -153,8 +164,8 @@ Gene symbols make Ensembl IDs interpretable. The `annotate_genes()` function
 maps Ensembl IDs to HGNC symbols using
 [MSigDB gene mappings](https://www.gsea-msigdb.org/gsea/msigdb/).
 
-```{r annotated-de}
-safe_tar_read("vig_annotated_de_table")
+```{r annotated-de, results='asis'}
+show_target("vig_annotated_de_table")
 ```
 
 ## Pathway Enrichment Visualizations

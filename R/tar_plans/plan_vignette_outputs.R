@@ -421,99 +421,29 @@ plan_vignette_outputs <- list(
   # --- Age histogram ---
   tar_target(
     vig_age_histogram,
-    {
-      if (is.null(eda_clinical_summary)) return(NULL)
-      clin <- eda_clinical_summary
-      if (is.null(clin$age_years) || length(clin$age_years) == 0) return(NULL)
-
-      age_df <- data.frame(age = clin$age_years)
-      med_age <- sprintf("%.1f", median(clin$age_years, na.rm = TRUE))
-
-      ggplot2::ggplot(age_df, ggplot2::aes(x = age)) +
-        ggplot2::geom_histogram(bins = 30, fill = "steelblue",
-                                colour = "white") +
-        ggplot2::geom_vline(
-          xintercept = median(clin$age_years, na.rm = TRUE),
-          linetype = "dashed", colour = "red"
-        ) +
-        ggplot2::labs(
-          x = "Age (years)", y = "Number of Patients",
-          title = "Age at Diagnosis",
-          subtitle = paste0("n = ", length(clin$age_years),
-                            " patients, median = ", med_age, " years"),
-          caption = "Data: GDC clinical. Dashed red line = median."
-        ) +
-        ggplot2::theme_minimal()
-    },
+    make_age_histogram(eda_clinical_summary),
     packages = c("ggplot2")
   ),
 
   # --- Gender table ---
   tar_target(
     vig_gender_table,
-    {
-      if (is.null(eda_clinical_summary)) return(NULL)
-      clin <- eda_clinical_summary
-      if (is.null(clin$gender_table)) return(NULL)
-
-      gt <- clin$gender_table
-      gt$Percentage <- sprintf("%.1f%%", 100 * gt$Freq / sum(gt$Freq))
-
-      knitr::kable(
-        gt, row.names = FALSE,
-        caption = paste0(
-          "Gender distribution for ", clin$n_patients,
-          " CoMMpass patients. Data: GDC clinical ",
-          "(https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)."
-        )
-      )
-    },
-    packages = c("knitr")
+    make_gender_table(eda_clinical_summary),
+    packages = c("DT", "htmltools")
   ),
 
   # --- Race table ---
   tar_target(
     vig_race_table,
-    {
-      if (is.null(eda_clinical_summary)) return(NULL)
-      clin <- eda_clinical_summary
-      if (is.null(clin$race_table)) return(NULL)
-
-      rt <- clin$race_table
-      rt$Percentage <- sprintf("%.1f%%", 100 * rt$Freq / sum(rt$Freq))
-
-      knitr::kable(
-        rt, row.names = FALSE,
-        caption = paste0(
-          "Race distribution for ", clin$n_patients,
-          " CoMMpass patients. Categories from GDC clinical data."
-        )
-      )
-    },
-    packages = c("knitr")
+    make_race_table(eda_clinical_summary),
+    packages = c("DT", "htmltools")
   ),
 
   # --- Vital status table ---
   tar_target(
     vig_vital_table,
-    {
-      if (is.null(eda_clinical_summary)) return(NULL)
-      clin <- eda_clinical_summary
-      if (is.null(clin$vital_table)) return(NULL)
-
-      vt <- clin$vital_table
-      vt$Percentage <- sprintf("%.1f%%", 100 * vt$Freq / sum(vt$Freq))
-
-      knitr::kable(
-        vt, row.names = FALSE,
-        caption = paste0(
-          "Vital status for ", clin$n_patients,
-          " CoMMpass patients. Alive = censored at last follow-up. ",
-          "Data: GDC clinical."
-        )
-      )
-    },
-    packages = c("knitr")
+    make_vital_table(eda_clinical_summary),
+    packages = c("DT", "htmltools")
   ),
 
   # --- ISS distribution text ---
@@ -536,79 +466,22 @@ plan_vignette_outputs <- list(
   # --- ISS table ---
   tar_target(
     vig_iss_table,
-    {
-      if (is.null(eda_iss_summary)) return(NULL)
-      iss <- eda_iss_summary
-      if (!isTRUE(iss$available)) return(NULL)
-
-      knitr::kable(
-        iss$iss_table, row.names = FALSE,
-        caption = paste0(
-          "ISS stage distribution for ", iss$n_with_iss,
-          " patients with staging data (",
-          iss$n_missing, " missing). ",
-          "ISS = International Staging System ",
-          "(https://doi.org/10.1200/JCO.2005.04.242) ",
-          "based on serum beta-2 microglobulin and albumin."
-        )
-      )
-    },
-    packages = c("knitr")
+    make_iss_table(eda_iss_summary),
+    packages = c("DT", "htmltools")
   ),
 
   # --- ISS barplot ---
   tar_target(
     vig_iss_barplot,
-    {
-      if (is.null(eda_iss_summary)) return(NULL)
-      iss <- eda_iss_summary
-      if (!isTRUE(iss$available) || nrow(iss$iss_table) == 0) return(NULL)
-
-      iss_plot <- iss$iss_table[!is.na(iss$iss_table$ISS_Stage), ]
-      if (nrow(iss_plot) == 0) return(NULL)
-
-      ggplot2::ggplot(iss_plot, ggplot2::aes(x = ISS_Stage, y = Freq)) +
-        ggplot2::geom_col(fill = "steelblue") +
-        ggplot2::labs(
-          x = "ISS Stage", y = "Number of Patients",
-          title = "ISS Stage Distribution",
-          subtitle = paste0("n = ", sum(iss_plot$Freq),
-                            " patients with staging data"),
-          caption = "ISS: International Staging System (Greipp et al., 2005)"
-        ) +
-        ggplot2::theme_minimal()
-    },
+    make_iss_barplot(eda_iss_summary),
     packages = c("ggplot2")
   ),
 
   # --- Age by ISS table ---
   tar_target(
     vig_iss_age_table,
-    {
-      if (is.null(eda_iss_summary)) return(NULL)
-      iss <- eda_iss_summary
-      if (!isTRUE(iss$available) || is.null(iss$age_by_iss)) return(NULL)
-
-      age_tbl <- do.call(rbind, lapply(names(iss$age_by_iss), function(stage) {
-        x <- iss$age_by_iss[[stage]]
-        data.frame(
-          ISS_Stage = stage, N = x$n,
-          Mean_Age = sprintf("%.1f", x$mean),
-          Median_Age = sprintf("%.1f", x$median),
-          SD = sprintf("%.1f", x$sd)
-        )
-      }))
-
-      knitr::kable(
-        age_tbl, row.names = FALSE,
-        caption = paste0(
-          "Age at diagnosis (years) by ISS stage. ",
-          "GDC stores age in days; converted via age / 365.25. ",
-          "SD = standard deviation."
-        )
-      )
-    },
-    packages = c("knitr")
+    make_iss_age_table(eda_iss_summary),
+    packages = c("DT", "htmltools")
   ),
 
   # --- Survival endpoints text ---
@@ -794,23 +667,8 @@ plan_vignette_outputs <- list(
   # --- Cytogenetic frequency table ---
   tar_target(
     vig_cyto_frequency_table,
-    {
-      if (is.null(cyto_frequency_summary)) return(NULL)
-      if (nrow(cyto_frequency_summary) == 0) return(NULL)
-
-      knitr::kable(
-        cyto_frequency_summary, row.names = FALSE,
-        caption = paste0(
-          "Cytogenetic alteration frequencies from FISH testing. ",
-          "n_tested = patients with FISH data for that marker. ",
-          "High-risk: t(4;14), t(14;16), del(17p), gain(1q) per IMWG 2014. ",
-          "See data dictionary for marker definitions."
-        ),
-        col.names = c("Marker", "Positive", "Tested", "%"),
-        align = "lrrr"
-      )
-    },
-    packages = c("knitr")
+    make_cyto_frequency_table(cyto_frequency_summary),
+    packages = c("DT", "htmltools")
   ),
 
   # --- Cytogenetic oncoprint ---
@@ -827,40 +685,8 @@ plan_vignette_outputs <- list(
   # --- Co-occurrence table ---
   tar_target(
     vig_cyto_cooccurrence_table,
-    {
-      if (is.null(cyto_cooccurrence)) return(NULL)
-      if (nrow(cyto_cooccurrence) == 0) return(NULL)
-
-      marker_labels <- c(
-        t_4_14 = "t(4;14)", t_11_14 = "t(11;14)", t_14_16 = "t(14;16)",
-        t_14_20 = "t(14;20)", del_17p = "del(17p)", del_1p = "del(1p)",
-        gain_1q = "gain(1q)"
-      )
-      display <- cyto_cooccurrence
-      display$marker1 <- ifelse(
-        display$marker1 %in% names(marker_labels),
-        marker_labels[display$marker1], display$marker1
-      )
-      display$marker2 <- ifelse(
-        display$marker2 %in% names(marker_labels),
-        marker_labels[display$marker2], display$marker2
-      )
-
-      knitr::kable(
-        display[, c("marker1", "marker2", "odds_ratio", "pvalue", "padj",
-                     "n_both", "tendency")],
-        row.names = FALSE, digits = c(0, 0, 2, 4, 4, 0, 0),
-        caption = paste0(
-          "Pairwise co-occurrence analysis of cytogenetic markers ",
-          "(Fisher's exact test, BH-adjusted). ",
-          "odds_ratio > 1 indicates co-occurrence; < 1 indicates mutual ",
-          "exclusivity. * = padj < 0.05."
-        ),
-        col.names = c("Marker 1", "Marker 2", "Odds Ratio", "p-value",
-                       "Adjusted p", "Both+", "Tendency")
-      )
-    },
-    packages = c("knitr")
+    make_cyto_cooccurrence_table(cyto_cooccurrence),
+    packages = c("DT", "htmltools")
   ),
 
   # --- Co-occurrence heatmap ---
@@ -876,37 +702,15 @@ plan_vignette_outputs <- list(
   # --- DuckDB demo simple query result ---
   tar_target(
     vig_duckdb_demo_simple,
-    {
-      if (is.null(eda_duckdb_demo)) return(NULL)
-      demo <- eda_duckdb_demo
-
-      knitr::kable(
-        demo$demo_result, row.names = FALSE,
-        caption = paste0(
-          "First 10 patients from clinical data via dplyr/DuckDB query. ",
-          "age_at_diagnosis is in days."
-        )
-      )
-    },
-    packages = c("knitr")
+    make_duckdb_demo_simple(eda_duckdb_demo),
+    packages = c("DT", "htmltools")
   ),
 
   # --- DuckDB demo aggregation result ---
   tar_target(
     vig_duckdb_demo_agg,
-    {
-      if (is.null(eda_duckdb_demo)) return(NULL)
-      demo <- eda_duckdb_demo
-
-      knitr::kable(
-        demo$agg_result, row.names = FALSE,
-        caption = paste0(
-          "Patient count and mean age (years) by gender via ",
-          "dplyr/DuckDB aggregation."
-        )
-      )
-    },
-    packages = c("knitr")
+    make_duckdb_demo_agg(eda_duckdb_demo),
+    packages = c("DT", "htmltools")
   ),
 
   # --- Integration summary text ---
@@ -962,55 +766,14 @@ plan_vignette_outputs <- list(
   # --- DE method comparison table ---
   tar_target(
     vig_de_method_table,
-    {
-      if (is.null(de_method_summary)) return(NULL)
-      if (nrow(de_method_summary) == 0) return(NULL)
-
-      knitr::kable(
-        de_method_summary,
-        caption = paste0(
-          "Differential expression results across methods. ",
-          "Significance thresholds: |log2FC| > 1, adjusted p-value < 0.05. ",
-          "DESeq2 uses Wald test with apeglm shrinkage; edgeR uses ",
-          "quasi-likelihood F-test; limma uses empirical Bayes moderated ",
-          "t-test."
-        ),
-        col.names = c("Method", "Genes Tested", "Significant", "Up", "Down"),
-        row.names = FALSE, align = "lrrrr"
-      )
-    },
-    packages = c("knitr")
+    make_de_method_table(de_method_summary),
+    packages = c("DT", "htmltools")
   ),
 
   # --- DE method barplot ---
   tar_target(
     vig_de_method_barplot,
-    {
-      if (is.null(de_method_summary)) return(NULL)
-      if (nrow(de_method_summary) == 0) return(NULL)
-
-      long <- rbind(
-        data.frame(method = de_method_summary$method, direction = "Up",
-                   count = de_method_summary$n_up),
-        data.frame(method = de_method_summary$method, direction = "Down",
-                   count = -de_method_summary$n_down)
-      )
-
-      ggplot2::ggplot(long, ggplot2::aes(x = method, y = count,
-                                          fill = direction)) +
-        ggplot2::geom_col() +
-        ggplot2::scale_fill_manual(
-          values = c("Up" = "#DC3545", "Down" = "#0066CC"),
-          name = "Direction"
-        ) +
-        ggplot2::geom_hline(yintercept = 0, linewidth = 0.3) +
-        ggplot2::labs(
-          title = "DE Genes by Method",
-          x = NULL,
-          y = "Number of genes (down shown as negative)"
-        ) +
-        ggplot2::theme_minimal(base_size = 12)
-    },
+    make_de_method_barplot(de_method_summary),
     packages = c("ggplot2")
   ),
 
@@ -1133,31 +896,8 @@ plan_vignette_outputs <- list(
   # --- Annotated DE table ---
   tar_target(
     vig_annotated_de_table,
-    {
-      if (is.null(de_results_annotated)) return(NULL)
-      if (nrow(de_results_annotated) == 0) return(NULL)
-
-      top <- utils::head(
-        de_results_annotated[order(de_results_annotated$padj), ], 15
-      )
-      display_cols <- intersect(
-        c("gene_symbol", "log2FoldChange", "baseMean", "padj"),
-        names(top)
-      )
-
-      knitr::kable(
-        top[, display_cols],
-        caption = paste0(
-          "Top 15 DE genes by adjusted p-value (DESeq2). ",
-          "Gene symbols mapped from Ensembl IDs via MSigDB. ",
-          "log2FoldChange: positive = upregulated in tumor/relapse. ",
-          "See data dictionary for gene ID details."
-        ),
-        digits = c(0, 2, 1, 4),
-        row.names = FALSE
-      )
-    },
-    packages = c("knitr")
+    make_annotated_de_table(de_results_annotated),
+    packages = c("DT", "htmltools")
   ),
 
   # --- GSEA dotplot ---
@@ -1261,45 +1001,15 @@ plan_vignette_outputs <- list(
   # --- Cox basic table ---
   tar_target(
     vig_cox_basic_table,
-    {
-      if (is.null(cox_basic)) return(NULL)
-      if (is.null(cox_basic$hazard_ratios)) return(NULL)
-
-      knitr::kable(
-        cox_basic$hazard_ratios, row.names = FALSE,
-        digits = c(0, 3, 3, 3, 4),
-        caption = paste0(
-          "Cox PH model: age + gender. HR > 1 = increased hazard ",
-          "(worse survival). n = ", cox_basic$n, " patients, ",
-          cox_basic$n_events, " events. C-index = ",
-          round(cox_basic$concordance, 3), ". ",
-          "* p < 0.05, ** p < 0.01, *** p < 0.001."
-        )
-      )
-    },
-    packages = c("knitr")
+    make_cox_basic_table(cox_basic),
+    packages = c("DT", "htmltools")
   ),
 
   # --- Cox full table ---
   tar_target(
     vig_cox_full_table,
-    {
-      if (is.null(cox_full)) return(NULL)
-      if (is.null(cox_full$hazard_ratios)) return(NULL)
-
-      knitr::kable(
-        cox_full$hazard_ratios, row.names = FALSE,
-        digits = c(0, 3, 3, 3, 4),
-        caption = paste0(
-          "Cox PH model with clinical and cytogenetic covariates. ",
-          "n = ", cox_full$n, " patients, ", cox_full$n_events, " events. ",
-          "C-index = ", round(cox_full$concordance, 3), ". ",
-          "Covariates: ",
-          paste(cox_full$covariates_used, collapse = ", "), "."
-        )
-      )
-    },
-    packages = c("knitr")
+    make_cox_full_table(cox_full),
+    packages = c("DT", "htmltools")
   ),
 
   # --- Forest plot ---
@@ -1332,64 +1042,15 @@ plan_vignette_outputs <- list(
   # --- PH test table ---
   tar_target(
     vig_ph_test_table,
-    {
-      cox_for_ph <- if (!is.null(cox_full)) cox_full else cox_basic
-      if (is.null(cox_for_ph)) return(NULL)
-      if (is.null(cox_for_ph$ph_test)) return(NULL)
-
-      ph <- cox_for_ph$ph_test
-      ph_table <- as.data.frame(ph$table)
-      ph_table$variable <- rownames(ph_table)
-      ph_table <- ph_table[, c("variable", "chisq", "p")]
-      names(ph_table) <- c("Variable", "Chi-squared", "p-value")
-
-      knitr::kable(
-        ph_table, row.names = FALSE, digits = c(0, 2, 4),
-        caption = paste0(
-          "Proportional hazards assumption test (cox.zph). ",
-          "p < 0.05 indicates the PH assumption may be violated. ",
-          "If violated, time-varying coefficients or stratification ",
-          "should be considered."
-        )
-      )
-    },
-    packages = c("knitr")
+    make_ph_test_table(cox_full, cox_basic),
+    packages = c("DT", "htmltools")
   ),
 
   # --- Cox model comparison table ---
   tar_target(
     vig_cox_comparison,
-    {
-      if (is.null(cox_basic) || is.null(cox_full)) return(NULL)
-      if (is.null(cox_basic$concordance) ||
-          is.null(cox_full$concordance)) {
-        return(NULL)
-      }
-
-      comp <- data.frame(
-        Model = c(
-          "Basic (age + gender)",
-          paste0("Full (",
-                 paste(cox_full$covariates_used, collapse = " + "), ")")
-        ),
-        N = c(cox_basic$n, cox_full$n),
-        Events = c(cox_basic$n_events, cox_full$n_events),
-        C_index = c(round(cox_basic$concordance, 3),
-                    round(cox_full$concordance, 3)),
-        stringsAsFactors = FALSE
-      )
-
-      knitr::kable(
-        comp, row.names = FALSE,
-        caption = paste0(
-          "Cox model comparison. C-index: concordance statistic ",
-          "(0.5 = random, 1.0 = perfect discrimination). ",
-          "Higher C-index indicates better prognostic discrimination."
-        ),
-        col.names = c("Model", "N", "Events", "C-index")
-      )
-    },
-    packages = c("knitr")
+    make_cox_comparison(cox_basic, cox_full),
+    packages = c("DT", "htmltools")
   ),
 
   # --- KM by gene expression (#53) ---
@@ -1874,18 +1535,74 @@ plan_vignette_outputs <- list(
   # --- Git info table (shared by all vignettes) ---
   tar_target(
     vig_git_info,
-    {
-      if (!requireNamespace("gert", quietly = TRUE)) return(NULL)
-      tryCatch({
-        info <- gert::git_info()
-        log1 <- gert::git_log(max = 1)
-        knitr::kable(data.frame(
-          Item = c("Commit Hash", "Author", "Time", "Branch"),
-          Value = c(info$commit, log1$author,
-                    as.character(log1$time), info$shorthand)
-        ), row.names = FALSE)
-      }, error = function(e) NULL)
-    },
-    packages = c("gert", "knitr")
-  )
+    make_git_info(),
+    packages = c("gert", "DT", "htmltools")
+  ),
+
+  # ================================================================
+  # Code provenance targets (code_vig_*)
+  # Each extracts the body of a named visualization function as text,
+  # so vignettes can show the generating code instead of safe_tar_read().
+  # ================================================================
+
+  tar_target(code_vig_de_method_barplot, {
+    paste(deparse(body(make_de_method_barplot)), collapse = "\n")
+  }),
+  tar_target(code_vig_de_method_table, {
+    paste(deparse(body(make_de_method_table)), collapse = "\n")
+  }),
+  tar_target(code_vig_annotated_de_table, {
+    paste(deparse(body(make_annotated_de_table)), collapse = "\n")
+  }),
+  tar_target(code_vig_age_histogram, {
+    paste(deparse(body(make_age_histogram)), collapse = "\n")
+  }),
+  tar_target(code_vig_count_distribution_plot, {
+    paste(deparse(body(make_count_distribution_plot)), collapse = "\n")
+  }),
+  tar_target(code_vig_gender_table, {
+    paste(deparse(body(make_gender_table)), collapse = "\n")
+  }),
+  tar_target(code_vig_race_table, {
+    paste(deparse(body(make_race_table)), collapse = "\n")
+  }),
+  tar_target(code_vig_vital_table, {
+    paste(deparse(body(make_vital_table)), collapse = "\n")
+  }),
+  tar_target(code_vig_iss_table, {
+    paste(deparse(body(make_iss_table)), collapse = "\n")
+  }),
+  tar_target(code_vig_iss_barplot, {
+    paste(deparse(body(make_iss_barplot)), collapse = "\n")
+  }),
+  tar_target(code_vig_iss_age_table, {
+    paste(deparse(body(make_iss_age_table)), collapse = "\n")
+  }),
+  tar_target(code_vig_cox_basic_table, {
+    paste(deparse(body(make_cox_basic_table)), collapse = "\n")
+  }),
+  tar_target(code_vig_cox_full_table, {
+    paste(deparse(body(make_cox_full_table)), collapse = "\n")
+  }),
+  tar_target(code_vig_ph_test_table, {
+    paste(deparse(body(make_ph_test_table)), collapse = "\n")
+  }),
+  tar_target(code_vig_cox_comparison, {
+    paste(deparse(body(make_cox_comparison)), collapse = "\n")
+  }),
+  tar_target(code_vig_cyto_frequency_table, {
+    paste(deparse(body(make_cyto_frequency_table)), collapse = "\n")
+  }),
+  tar_target(code_vig_cyto_cooccurrence_table, {
+    paste(deparse(body(make_cyto_cooccurrence_table)), collapse = "\n")
+  }),
+  tar_target(code_vig_duckdb_demo_simple, {
+    paste(deparse(body(make_duckdb_demo_simple)), collapse = "\n")
+  }),
+  tar_target(code_vig_duckdb_demo_agg, {
+    paste(deparse(body(make_duckdb_demo_agg)), collapse = "\n")
+  }),
+  tar_target(code_vig_git_info, {
+    paste(deparse(body(make_git_info)), collapse = "\n")
+  })
 )

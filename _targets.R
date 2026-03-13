@@ -29,6 +29,11 @@ for (file in list.files("R", pattern = "\\.(R|r)$", full.names = TRUE)) {
   }
 }
 
+# Source visualization helper functions from R/viz/
+for (file in list.files("R/viz", pattern = "\\.(R|r)$", full.names = TRUE)) {
+  source(file)
+}
+
 # Source modular target plans from R/tar_plans/
 plan_files <- list.files("R/tar_plans", pattern = "^plan_.*\\.R$", full.names = TRUE)
 for (plan_file in plan_files) {

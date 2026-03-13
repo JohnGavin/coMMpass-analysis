@@ -56,6 +56,17 @@ safe_tar_read <- function(name) {
   }
   invisible(NULL)
 }
+
+show_target <- function(name, .safe_tar_read = safe_tar_read) {
+  code_name <- paste0("code_", name)
+  code <- .safe_tar_read(code_name)
+  if (!is.null(code) && is.character(code) && nzchar(code)) {
+    cat('<details><summary>Generating code</summary>\n\n```r\n')
+    cat(paste(code, collapse = "\n"))
+    cat('\n```\n</details>\n\n')
+  }
+  .safe_tar_read(name)
+}
 ```
 
 ```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
@@ -81,26 +92,26 @@ safe_tar_read("vig_clinical_demographics_text")
 
 ### Age at Diagnosis
 
-```{r age-histogram, fig.cap = "Age at diagnosis distribution for CoMMpass patients. GDC stores age in days; values are converted to years (age / 365.25). Data: GDC clinical endpoint."}
-safe_tar_read("vig_age_histogram")
+```{r age-histogram, results='asis', fig.cap = "Age at diagnosis distribution for CoMMpass patients. GDC stores age in days; values are converted to years (age / 365.25). Data: GDC clinical endpoint."}
+show_target("vig_age_histogram")
 ```
 
 ### Gender Distribution
 
-```{r gender-table}
-safe_tar_read("vig_gender_table")
+```{r gender-table, results='asis'}
+show_target("vig_gender_table")
 ```
 
 ### Race Distribution
 
-```{r race-table}
-safe_tar_read("vig_race_table")
+```{r race-table, results='asis'}
+show_target("vig_race_table")
 ```
 
 ### Vital Status
 
-```{r vital-status}
-safe_tar_read("vig_vital_table")
+```{r vital-status, results='asis'}
+show_target("vig_vital_table")
 ```
 
 ## ISS Staging
@@ -115,18 +126,18 @@ safe_tar_read("vig_iss_distribution_text")
 
 ### ISS Stage Distribution
 
-```{r iss-table}
-safe_tar_read("vig_iss_table")
+```{r iss-table, results='asis'}
+show_target("vig_iss_table")
 ```
 
-```{r iss-barplot, fig.cap = "ISS stage distribution across CoMMpass patients. Higher stages indicate more advanced disease. ISS = International Staging System."}
-safe_tar_read("vig_iss_barplot")
+```{r iss-barplot, results='asis', fig.cap = "ISS stage distribution across CoMMpass patients. Higher stages indicate more advanced disease. ISS = International Staging System."}
+show_target("vig_iss_barplot")
 ```
 
 ### Age by ISS Stage
 
-```{r iss-age}
-safe_tar_read("vig_iss_age_table")
+```{r iss-age, results='asis'}
+show_target("vig_iss_age_table")
 ```
 
 ## Survival Endpoints
@@ -193,8 +204,8 @@ High-risk alterations include t(4;14), t(14;16), del(17p), and gain(1q).
 
 ### Alteration Frequencies
 
-```{r cyto-frequency}
-safe_tar_read("vig_cyto_frequency_table")
+```{r cyto-frequency, results='asis'}
+show_target("vig_cyto_frequency_table")
 ```
 
 ### Oncoprint
@@ -205,8 +216,8 @@ safe_tar_read("vig_cyto_oncoprint")
 
 ### Co-occurrence Analysis
 
-```{r cyto-cooccurrence}
-safe_tar_read("vig_cyto_cooccurrence_table")
+```{r cyto-cooccurrence, results='asis'}
+show_target("vig_cyto_cooccurrence_table")
 ```
 
 ```{r cyto-cooccurrence-heatmap, fig.cap = "Pairwise co-occurrence heatmap. Red: co-occurrence (positive association). Blue: mutual exclusivity (negative association). Color intensity: -log10(adjusted p-value). * = significant at padj < 0.05."}
@@ -228,8 +239,8 @@ The package provides two functions for querying the parquet files:
 safe_tar_read("code_eda_simple_query")
 ```
 
-```{r duckdb-demo-simple}
-safe_tar_read("vig_duckdb_demo_simple")
+```{r duckdb-demo-simple, results='asis'}
+show_target("vig_duckdb_demo_simple")
 ```
 
 ### Example: Aggregation with DuckDB
@@ -238,8 +249,8 @@ safe_tar_read("vig_duckdb_demo_simple")
 safe_tar_read("code_eda_aggregation")
 ```
 
-```{r duckdb-demo-agg}
-safe_tar_read("vig_duckdb_demo_agg")
+```{r duckdb-demo-agg, results='asis'}
+show_target("vig_duckdb_demo_agg")
 ```
 
 ## Cross-dataset Integration

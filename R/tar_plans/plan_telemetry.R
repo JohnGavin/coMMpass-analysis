@@ -360,10 +360,12 @@ plan_telemetry <- list(
   ),
 
   # Pipeline summary (plans, targets, top size/time)
+  # NOTE: tar_meta() cannot run inside a pipeline, so we read the
+
+  # metadata CSV directly from the _targets/meta/meta file.
   targets::tar_target(
     vig_pipeline_summary,
     {
-      meta <- targets::tar_meta()
       plan_files <- list.files(
         "R/tar_plans", pattern = "^plan_.*\\.R$", full.names = TRUE
       )
@@ -375,18 +377,34 @@ plan_telemetry <- list(
       plan_tbl <- dplyr::bind_rows(plan_counts) |>
         dplyr::arrange(dplyr::desc(targets))
 
-      meta$seconds <- as.numeric(meta$seconds)
-      meta$bytes <- as.numeric(meta$bytes)
+      # Read metadata directly from store instead of tar_meta()
+      meta_path <- file.path("_targets", "meta", "meta")
+      if (file.exists(meta_path)) {
+        meta <- tryCatch(
+          utils::read.csv(meta_path, stringsAsFactors = FALSE),
+          error = function(e) NULL
+        )
+      } else {
+        meta <- NULL
+      }
 
-      top_size <- meta |>
-        dplyr::filter(!is.na(bytes), bytes > 0) |>
-        dplyr::arrange(dplyr::desc(bytes)) |>
-        dplyr::slice_head(n = 5)
+      top_size <- NULL
+      top_time <- NULL
+      if (!is.null(meta) && "bytes" %in% names(meta) &&
+          "seconds" %in% names(meta)) {
+        meta$seconds <- as.numeric(meta$seconds)
+        meta$bytes <- as.numeric(meta$bytes)
 
-      top_time <- meta |>
-        dplyr::filter(!is.na(seconds), seconds > 0) |>
-        dplyr::arrange(dplyr::desc(seconds)) |>
-        dplyr::slice_head(n = 5)
+        top_size <- meta |>
+          dplyr::filter(!is.na(bytes), bytes > 0) |>
+          dplyr::arrange(dplyr::desc(bytes)) |>
+          dplyr::slice_head(n = 5)
+
+        top_time <- meta |>
+          dplyr::filter(!is.na(seconds), seconds > 0) |>
+          dplyr::arrange(dplyr::desc(seconds)) |>
+          dplyr::slice_head(n = 5)
+      }
 
       list(
         plan_tbl = plan_tbl,
@@ -396,7 +414,7 @@ plan_telemetry <- list(
         top_time = top_time
       )
     },
-    packages = c("targets", "dplyr", "tibble"),
+    packages = c("dplyr", "tibble"),
     cue = targets::tar_cue(mode = "always")
   )
 )

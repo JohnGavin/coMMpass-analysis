@@ -56,6 +56,17 @@ safe_tar_read <- function(name) {
   }
   invisible(NULL)
 }
+
+show_target <- function(name, .safe_tar_read = safe_tar_read) {
+  code_name <- paste0("code_", name)
+  code <- .safe_tar_read(code_name)
+  if (!is.null(code) && is.character(code) && nzchar(code)) {
+    cat('<details><summary>Generating code</summary>\n\n```r\n')
+    cat(paste(code, collapse = "\n"))
+    cat('\n```\n</details>\n\n')
+  }
+  .safe_tar_read(name)
+}
 ```
 
 ```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
@@ -119,16 +130,16 @@ safe_tar_read("vig_km_markers")
 
 Hazard ratios for age and gender from a minimal Cox PH model.
 
-```{r cox-basic}
-safe_tar_read("vig_cox_basic_table")
+```{r cox-basic, results='asis'}
+show_target("vig_cox_basic_table")
 ```
 
 ### Full Model: Age + Gender + ISS + Cytogenetic Risk
 
 Multivariable Cox model adjusting for ISS stage and IMWG cytogenetic risk classification.
 
-```{r cox-full}
-safe_tar_read("vig_cox_full_table")
+```{r cox-full, results='asis'}
+show_target("vig_cox_full_table")
 ```
 
 ### Forest Plot
@@ -143,16 +154,16 @@ safe_tar_read("vig_forest_plot")
 
 Schoenfeld residuals test for the proportional hazards assumption. A significant p-value (< 0.05) suggests the covariate's effect changes over time, violating the PH assumption. Covariates that fail this test may need time-varying coefficients or stratification.
 
-```{r ph-test}
-safe_tar_read("vig_ph_test_table")
+```{r ph-test, results='asis'}
+show_target("vig_ph_test_table")
 ```
 
 ## Model Comparison
 
 Comparison of nested Cox models using likelihood ratio test, AIC, and concordance index. The full model includes ISS stage and cytogenetic risk in addition to age and gender. A significant likelihood ratio test indicates the additional covariates improve model fit.
 
-```{r model-comparison}
-safe_tar_read("vig_cox_comparison")
+```{r model-comparison, results='asis'}
+show_target("vig_cox_comparison")
 ```
 
 ## Survival by Gene Expression

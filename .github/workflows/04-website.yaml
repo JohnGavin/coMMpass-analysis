@@ -89,14 +89,35 @@ jobs:
       - name: Verify no rendering errors in HTML output
         run: |
           errors=0
+          warnings=0
           for f in docs/articles/*.html; do
-            # Check for R error output patterns
+            name=$(basename "$f")
+
+            # Check 1: R error output patterns (FATAL)
             if grep -qP '#&gt; Error|#&gt; NULL|#&gt;.*not available|#&gt;.*could not find' "$f" 2>/dev/null; then
-              echo "::error file=$f::Rendering errors found in $(basename $f)"
+              echo "::error file=$f::Rendering errors found in $name"
               grep -nP '#&gt; Error|#&gt; NULL|#&gt;.*not available|#&gt;.*could not find' "$f" | head -5
               errors=$((errors + 1))
             fi
+
+            # Check 2: knitr::kable output (should be DT) (WARNING)
+            if grep -qP 'class="kable' "$f" 2>/dev/null; then
+              echo "::warning file=$f::knitr::kable table found in $name (should be DT::datatable)"
+              warnings=$((warnings + 1))
+            fi
+
+            # Check 3: Missing sessionInfo (WARNING)
+            if ! grep -qP 'sessionInfo|Session Info|session-info' "$f" 2>/dev/null; then
+              echo "::warning file=$f::No sessionInfo found in $name"
+              warnings=$((warnings + 1))
+            fi
           done
+
+          # Summary
+          echo "=== Validation Summary ==="
+          echo "Errors: $errors"
+          echo "Warnings: $warnings"
+
           if [ $errors -gt 0 ]; then
             echo "::error::$errors vignette(s) contain rendering errors"
             exit 1
