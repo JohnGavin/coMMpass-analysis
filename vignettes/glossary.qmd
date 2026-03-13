@@ -378,7 +378,9 @@ if (is.null(glossary)) {
   )
 }
 
-if (has_DT) {
+if (inherits(glossary, "datatables")) {
+  glossary
+} else if (has_DT) {
   DT::datatable(
     glossary,
     filter = "top",
