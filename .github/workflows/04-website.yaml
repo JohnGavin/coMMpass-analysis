@@ -58,13 +58,27 @@ jobs:
         run: |
           Rscript -e '
             tryCatch(
-              pkgdown::build_site(new_process = FALSE),
+              pkgdown::build_site(new_process = FALSE, quiet = FALSE),
               error = function(e) {
-                message("pkgdown error: ", conditionMessage(e))
-                message("\n--- Attempting direct quarto render for diagnostics ---")
-                out <- system2("quarto", c("render", "vignettes/"),
-                  stdout = TRUE, stderr = TRUE, env = c(paste0("IN_PKGDOWN=true")))
-                writeLines(out)
+                message("\n\npkgdown error: ", conditionMessage(e))
+                message("\n--- Rendering individual vignettes for diagnostics ---")
+                qmds <- list.files("vignettes", pattern = "\\.qmd$", full.names = TRUE)
+                for (f in qmds) {
+                  message("\n>>> Rendering: ", f)
+                  ok <- tryCatch({
+                    system2("quarto", c("render", f, "--output-dir", "/tmp/qmd_test",
+                      "--to", "html"), stdout = TRUE, stderr = TRUE,
+                      env = c(paste0("IN_PKGDOWN=true")))
+                    message("    OK: ", f)
+                    TRUE
+                  }, warning = function(w) {
+                    message("    WARN: ", f, " - ", conditionMessage(w))
+                    TRUE
+                  }, error = function(e2) {
+                    message("    FAIL: ", f, " - ", conditionMessage(e2))
+                    FALSE
+                  })
+                }
                 stop(e)
               }
             )
