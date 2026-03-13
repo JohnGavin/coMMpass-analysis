@@ -55,7 +55,20 @@ jobs:
             any::here
 
       - name: Build pkgdown site
-        run: Rscript -e "pkgdown::build_site(new_process = FALSE)"
+        run: |
+          Rscript -e '
+            tryCatch(
+              pkgdown::build_site(new_process = FALSE),
+              error = function(e) {
+                message("pkgdown error: ", conditionMessage(e))
+                message("\n--- Attempting direct quarto render for diagnostics ---")
+                out <- system2("quarto", c("render", "vignettes/"),
+                  stdout = TRUE, stderr = TRUE, env = c(paste0("IN_PKGDOWN=true")))
+                writeLines(out)
+                stop(e)
+              }
+            )
+          '
         env:
           IN_PKGDOWN: true
 
