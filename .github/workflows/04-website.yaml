@@ -54,23 +54,6 @@ jobs:
             any::visNetwork
             any::here
 
-      - name: Test quarto render (verbose)
-        run: |
-          Rscript -e '
-            # Test-render one vignette with quarto to get verbose error
-            tryCatch(
-              quarto::quarto_render("vignettes/api-usage.qmd", output_dir = tempdir()),
-              error = function(e) {
-                message("Quarto error: ", conditionMessage(e))
-                # Try again with full output
-                system2("quarto", c("render", "vignettes/api-usage.qmd",
-                  "--output-dir", tempdir()), stdout = TRUE, stderr = TRUE)
-              }
-            )
-          '
-        env:
-          IN_PKGDOWN: true
-
       - name: Build pkgdown site
         run: Rscript -e "pkgdown::build_site(new_process = FALSE)"
         env:

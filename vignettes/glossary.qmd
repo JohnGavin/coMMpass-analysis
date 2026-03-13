@@ -52,7 +52,12 @@ safe_tar_read <- function(name) {
     file.path("../inst/extdata/vignettes", paste0(name, ".rds"))
   )
   for (rds in rds_candidates) {
-    if (nzchar(rds) && file.exists(rds)) return(readRDS(rds))
+    if (nzchar(rds) && file.exists(rds)) {
+      obj <- readRDS(rds)
+      if (is.data.frame(obj) && requireNamespace("DT", quietly = TRUE))
+        return(DT::datatable(obj, rownames = FALSE))
+      return(obj)
+    }
   }
   NULL
 }
