@@ -53,10 +53,10 @@ safe_tar_read <- function(name) {
       obj <- readRDS(rds)
       if (is.data.frame(obj) && requireNamespace("DT", quietly = TRUE))
         return(DT::datatable(obj, rownames = FALSE))
-      return(obj)
+      if (!is.null(obj)) return(obj)
     }
   }
-  NULL
+  invisible(NULL)
 }
 
 gene <- params$gene
