@@ -8,10 +8,10 @@ library(crew)
 # Set global options
 tar_option_set(
   packages = c(
-    "TCGAbiolinks", "GenomicDataCommons", "SummarizedExperiment",
-    "DESeq2", "edgeR", "limma",
     "survival",  # survminer removed - not available in nixpkgs
     "tidyverse", "logger"
+    # Bioconductor packages (TCGAbiolinks, DESeq2, edgeR, limma, etc.)
+    # declared per-target in plan files to avoid blocking non-Bioc targets
   ),
   format = "rds",  # Fast serialization
   memory = "transient",  # Free memory after use

@@ -6,7 +6,8 @@ plan_de_visualization <- list(
   # VST-transformed expression for PCA and heatmaps
   tar_target(
     vst_counts,
-    run_vst(filtered_data, blind = TRUE)
+    run_vst(filtered_data, blind = TRUE),
+    packages = c("DESeq2", "SummarizedExperiment")
   ),
 
   # PCA from VST data with clinical metadata
@@ -21,7 +22,8 @@ plan_de_visualization <- list(
         meta <- as.data.frame(SummarizedExperiment::colData(vst_counts))
         compute_pca(vst_mat, n_top = 500L, metadata = meta)
       }
-    }
+    },
+    packages = c("SummarizedExperiment")
   ),
 
   # Pre-formatted volcano plot data (from DESeq2 results)
@@ -63,7 +65,8 @@ plan_de_visualization <- list(
         expr_matrix = vst_mat,
         de_results = tbl
       )
-    }
+    },
+    packages = c("SummarizedExperiment")
   ),
 
   # Method comparison summary table

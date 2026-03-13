@@ -11,7 +11,8 @@ plan_differential_expression <- list(
       design_formula = ~ condition,
       shrink_lfc = TRUE,
       paired = FALSE
-    )
+    ),
+    packages = c("DESeq2", "SummarizedExperiment")
   ),
 
   # DESeq2 analysis - paired longitudinal (within-patient)
@@ -22,7 +23,8 @@ plan_differential_expression <- list(
       clinical_data_clean,
       shrink_lfc = TRUE,
       paired = TRUE
-    )
+    ),
+    packages = c("DESeq2", "SummarizedExperiment")
   ),
 
   # edgeR analysis
@@ -32,7 +34,8 @@ plan_differential_expression <- list(
       normalized_data,
       clinical_data_clean,
       design_formula = ~ condition
-    )
+    ),
+    packages = c("edgeR", "SummarizedExperiment")
   ),
 
   # limma-voom analysis
@@ -42,7 +45,8 @@ plan_differential_expression <- list(
       normalized_data,
       clinical_data_clean,
       design_formula = ~ condition
-    )
+    ),
+    packages = c("limma", "edgeR", "SummarizedExperiment")
   ),
 
   # Consensus DE genes (unpaired methods)

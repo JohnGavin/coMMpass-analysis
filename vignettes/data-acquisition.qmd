@@ -56,6 +56,17 @@ safe_tar_read <- function(name) {
   }
   invisible(NULL)
 }
+
+show_target <- function(name) {
+  code_name <- paste0("code_", name)
+  code <- safe_tar_read(code_name)
+  if (!is.null(code) && is.character(code) && nzchar(code)) {
+    cat('<details><summary>Generating code</summary>\n\n```r\n')
+    cat(paste(code, collapse = "\n"))
+    cat('\n```\n</details>\n\n')
+  }
+  safe_tar_read(name)
+}
 ```
 
 ```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
@@ -92,8 +103,8 @@ safe_tar_read("vig_rnaseq_summary_text")
 safe_tar_read("vig_rnaseq_sample_stats")
 ```
 
-```{r count-distribution, fig.cap = "Distribution of mean gene expression (log10 scale) across all genes. The three peaks correspond to distinct gene populations: (1) unexpressed/noise genes near zero, (2) lowly-expressed genes detected in a subset of samples, and (3) moderately-to-highly expressed housekeeping/structural genes. This trimodal pattern is expected for GENCODE-annotated RNA-seq data, which includes ~60k entries spanning protein-coding genes, lncRNAs, pseudogenes, and other biotypes with very different expression levels. Data: GDC STAR-Counts."}
-safe_tar_read("vig_count_distribution_plot")
+```{r count-distribution, results='asis', fig.cap = "Distribution of mean gene expression (log10 scale) across all genes. The three peaks correspond to distinct gene populations: (1) unexpressed/noise genes near zero, (2) lowly-expressed genes detected in a subset of samples, and (3) moderately-to-highly expressed housekeeping/structural genes. This trimodal pattern is expected for GENCODE-annotated RNA-seq data, which includes ~60k entries spanning protein-coding genes, lncRNAs, pseudogenes, and other biotypes with very different expression levels. Data: GDC STAR-Counts."}
+show_target("vig_count_distribution_plot")
 ```
 
 ## Clinical Data
@@ -168,9 +179,8 @@ safe_tar_read("vig_git_changelog")
 <details>
 <summary>Git Commit Info (click to expand)</summary>
 
-```{r git-info}
-git_info <- safe_tar_read("vig_git_info")
-if (!is.null(git_info)) git_info else cat("*Git info available after pipeline run.*\n")
+```{r git-info, results='asis'}
+show_target("vig_git_info")
 ```
 
 </details>

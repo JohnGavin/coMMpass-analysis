@@ -284,9 +284,8 @@ safe_tar_read("vig_git_changelog")
 <details>
 <summary>Git Commit Info (click to expand)</summary>
 
-```{r git-info}
-git_info <- safe_tar_read("vig_git_info")
-if (!is.null(git_info)) git_info else cat("*Git info available after pipeline run.*\n")
+```{r git-info, results='asis'}
+show_target("vig_git_info")
 ```
 
 </details>

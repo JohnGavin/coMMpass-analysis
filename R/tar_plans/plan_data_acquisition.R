@@ -22,6 +22,7 @@ plan_data_acquisition <- list(
       data_dir = file.path(config$data_dir, "raw", "gdc"),
       sample_limit = config$sample_limit
     ),
+    packages = c("TCGAbiolinks", "SummarizedExperiment"),
     cue = tar_cue(mode = "never")  # Don't re-download
   ),
 
@@ -32,6 +33,7 @@ plan_data_acquisition <- list(
       project_id = config$project_id,
       data_dir = file.path(config$data_dir, "raw", "clinical")
     ),
+    packages = c("TCGAbiolinks"),
     cue = tar_cue(mode = "never")
   )
 )
