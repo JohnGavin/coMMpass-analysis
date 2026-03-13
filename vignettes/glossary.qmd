@@ -63,7 +63,10 @@ safe_tar_read <- function(name) {
 }
 ```
 
-```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
+```{r pkgdown-banner}
+#| results: asis
+#| eval: !expr in_pkgdown
+#| echo: false
 cat("::: {.callout-note}\n## Online documentation\nThis vignette displays pre-computed results. Run the targets pipeline locally for interactive analysis.\n:::\n")
 ```
 

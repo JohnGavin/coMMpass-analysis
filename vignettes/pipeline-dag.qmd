@@ -64,7 +64,10 @@ as_dt <- function(x, ...) {
 }
 ```
 
-```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
+```{r pkgdown-banner}
+#| results: asis
+#| eval: !expr in_pkgdown
+#| echo: false
 cat("::: {.callout-note}\n## Online documentation\nThis vignette shows pre-computed results from the targets pipeline.\n:::\n")
 ```
 
