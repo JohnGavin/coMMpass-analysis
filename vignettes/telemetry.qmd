@@ -12,14 +12,14 @@ vignette: >
 
 ```{r setup, include=FALSE}
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
+has_pipeline <- !in_pkgdown
 knitr::opts_chunk$set(
-  eval = !in_pkgdown,
   message = FALSE,
   warning = FALSE,
   collapse = TRUE,
   comment = "#>"
 )
-if (!in_pkgdown) library(targets)
+if (has_pipeline) library(targets)
 
 proj_dir <- Sys.getenv("TAR_PROJECT")
 tar_store <- NULL
@@ -71,6 +71,7 @@ Targets ordered by build duration. Long-running targets are candidates
 for caching optimization or parallel execution via `crew`.
 
 ```{r timing-table}
+#| eval: !expr has_pipeline
 #| fig.cap: "Target build times. Seconds: wall-clock time per target.
 #|   Bytes: serialized object size. Top targets by duration are data
 #|   downloads (raw_rnaseq, clinical_data) and DESeq2 paired analysis.
@@ -109,6 +110,7 @@ DT::datatable(
 High-level pipeline health metrics: target counts, build time, and storage size.
 
 ```{r status-summary}
+#| eval: !expr has_pipeline
 meta <- targets::tar_meta(store = Sys.getenv("TAR_STORE", "_targets"))
 n_total <- nrow(meta)
 n_error <- sum(!is.na(meta$error))
@@ -121,6 +123,7 @@ total_bytes <- sum(meta$bytes, na.rm = TRUE)
 ```
 
 ```{r status-table}
+#| eval: !expr has_pipeline
 DT::datatable(
   data.frame(
     Metric = c("Total targets", "With timing data", "With errors",
@@ -151,6 +154,7 @@ DT::datatable(
 Targets that produced errors or warnings during the most recent pipeline run.
 
 ```{r errors}
+#| eval: !expr has_pipeline
 meta <- targets::tar_meta(store = Sys.getenv("TAR_STORE", "_targets"))
 issues <- meta[!is.na(meta$error) | !is.na(meta$warnings),
                c("name", "error", "warnings")]
@@ -176,6 +180,7 @@ if (nrow(issues) > 0) {
 Targets that need rebuilding due to changed code or upstream dependencies.
 
 ```{r outdated}
+#| eval: !expr has_pipeline
 tryCatch({
   outdated <- targets::tar_outdated(reporter = "silent")
   if (length(outdated) > 0) {
@@ -202,6 +207,7 @@ tryCatch({
 Distribution of target serialized sizes, identifying large objects that dominate storage.
 
 ```{r size-plot, fig.cap="Target serialized sizes (log10 bytes). Comparison: most targets are under 1 MB; a few data objects (expression matrices, DE results) exceed 1 MB. Dashed line = 1 MB threshold. Source: targets::tar_meta()."}
+#| eval: !expr has_pipeline
 #| fig.height: 5
 meta <- targets::tar_meta(store = Sys.getenv("TAR_STORE", "_targets"))
 meta$bytes <- as.numeric(meta$bytes)
