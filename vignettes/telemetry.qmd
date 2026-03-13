@@ -46,12 +46,16 @@ safe_tar_read <- function(name) {
   for (rds in rds_candidates) {
     if (nzchar(rds) && file.exists(rds)) return(readRDS(rds))
   }
-  NULL
+  htmltools::div(
+    style = "background:#6c757d;color:white;padding:1em;border-radius:4px;margin:1em 0;",
+    htmltools::strong(paste0("[", name, "]")),
+    " \u2014 Run targets::tar_make() locally to generate this output."
+  )
 }
 ```
 
 ```{r pkgdown-banner, results='asis', eval=in_pkgdown, echo=FALSE}
-cat("::: {.callout-note}\n## Online documentation\nThis vignette shows pre-computed results from the targets pipeline. Some outputs may appear as placeholders in the online version.\n:::\n")
+cat("::: {.callout-note}\n## Online documentation\nThis vignette displays pre-computed results. Run the targets pipeline locally for interactive analysis.\n:::\n")
 ```
 
 Pipeline build telemetry from `targets::tar_meta()`. These are metadata

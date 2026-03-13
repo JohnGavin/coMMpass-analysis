@@ -134,55 +134,49 @@ plan_vignette_outputs <- list(
           biotype = gene_meta$biotype_group,
           stringsAsFactors = FALSE
         )
-        p <- plotly::plot_ly(alpha = 0.6) |>
-          plotly::add_histogram(
-            data = dplyr::filter(plot_df, biotype == "protein-coding"),
-            x = ~mean_expr, name = "protein-coding",
-            marker = list(color = "#0066CC"), nbinsx = 50
-          ) |>
-          plotly::add_histogram(
-            data = dplyr::filter(plot_df, biotype == "lncRNA / pseudogene"),
-            x = ~mean_expr, name = "lncRNA / pseudogene",
-            marker = list(color = "#DC3545"), nbinsx = 50
-          ) |>
-          plotly::add_histogram(
-            data = dplyr::filter(
-              plot_df, biotype == "other (miRNA, snoRNA, etc.)"
+        biotype_colors <- c(
+          "protein-coding" = "#0066CC",
+          "lncRNA / pseudogene" = "#DC3545",
+          "other (miRNA, snoRNA, etc.)" = "#6C757D"
+        )
+        p <- ggplot2::ggplot(plot_df, ggplot2::aes(
+          x = mean_expr, fill = biotype
+        )) +
+          ggplot2::geom_histogram(
+            bins = 50, alpha = 0.6, position = "identity"
+          ) +
+          ggplot2::scale_fill_manual(values = biotype_colors) +
+          ggplot2::labs(
+            title = "Distribution of Mean Gene Expression by Biotype",
+            subtitle = paste0(
+              format(nrow(counts), big.mark = ","), " genes, ",
+              ncol(counts), " samples"
             ),
-            x = ~mean_expr, name = "other (miRNA, snoRNA, etc.)",
-            marker = list(color = "#6C757D"), nbinsx = 50
-          ) |>
-          plotly::layout(
-            barmode = "overlay",
-            title = list(text = paste0(
-              "Distribution of Mean Gene Expression by Biotype<br>",
-              "<sup>", format(nrow(counts), big.mark = ","), " genes, ",
-              ncol(counts), " samples</sup>"
-            )),
-            xaxis = list(title = "Mean log10(counts + 1)"),
-            yaxis = list(title = "Number of Genes"),
-            bargap = 0.05
-          )
+            x = "Mean log10(counts + 1)",
+            y = "Number of Genes",
+            fill = NULL
+          ) +
+          ggplot2::theme_minimal()
       } else {
         plot_df <- data.frame(mean_expr = mean_expr)
-        p <- plotly::plot_ly(
-          x = mean_expr, type = "histogram", nbinsx = 50,
-          marker = list(color = "steelblue"), name = "Gene Expression"
-        ) |>
-          plotly::layout(
-            title = list(text = paste0(
-              "Distribution of Mean Gene Expression<br>",
-              "<sup>", format(nrow(counts), big.mark = ","), " genes, ",
-              ncol(counts), " samples</sup>"
-            )),
-            xaxis = list(title = "Mean log10(counts + 1)"),
-            yaxis = list(title = "Number of Genes"),
-            bargap = 0.05
-          )
+        p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = mean_expr)) +
+          ggplot2::geom_histogram(
+            bins = 50, fill = "steelblue", alpha = 0.7
+          ) +
+          ggplot2::labs(
+            title = "Distribution of Mean Gene Expression",
+            subtitle = paste0(
+              format(nrow(counts), big.mark = ","), " genes, ",
+              ncol(counts), " samples"
+            ),
+            x = "Mean log10(counts + 1)",
+            y = "Number of Genes"
+          ) +
+          ggplot2::theme_minimal()
       }
-      strip_plotly(p)
+      p
     },
-    packages = c("SummarizedExperiment", "plotly", "dplyr")
+    packages = c("SummarizedExperiment", "ggplot2", "dplyr")
   ),
 
   # --- Clinical column structure DT (data-acquisition) ---

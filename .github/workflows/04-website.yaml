@@ -9,6 +9,7 @@ on:
       - 'vignettes/**'
       - '_pkgdown.yml'
       - 'pkgdown/**'
+      - 'inst/extdata/**'
       - 'DESCRIPTION'
       - 'README.md'
       - '.github/workflows/04-website.yaml'
