@@ -105,7 +105,8 @@ plan_doc_examples <- list(
   # --- Glossary vignette: Glossary table (~64 terms, 8 categories) ---
   targets::tar_target(
     glossary_table,
-    data.frame(
+    {
+    glossary_df <- data.frame(
       Term = c(
         # Disease & Study (5)
         "Multiple Myeloma", "CoMMpass", "GDC", "MMRF", "TCGAbiolinks",
@@ -369,6 +370,31 @@ plan_doc_examples <- list(
       ),
       stringsAsFactors = FALSE
     )
+
+    n_terms <- nrow(glossary_df)
+    n_cats <- length(unique(glossary_df$Category))
+    caption <- paste0(
+      "CoMMpass glossary: ", n_terms, " terms across ", n_cats,
+      " categories (Disease, Cytogenetics, Staging, RNA-seq, DE, Survival, ",
+      "Pathway, Infrastructure). ",
+      "Definition = concise explanation; Appears_In = vignettes where the term is used; ",
+      "See_Also = external references and cross-links to other vignettes. ",
+      "Searchable — use the filter boxes to find terms by category or keyword. ",
+      "Source: curated from GDC documentation, Bioconductor, and domain literature."
+    )
+
+    DT::datatable(
+      glossary_df,
+      filter = "top", escape = FALSE,
+      colnames = c("Term", "Category", "Definition", "Appears In", "See Also"),
+      caption = htmltools::tags$caption(
+        style = "caption-side: top; text-align: left;", caption
+      ),
+      rownames = FALSE,
+      options = list(pageLength = 20, scrollX = TRUE, autoWidth = FALSE)
+    )
+    },
+    packages = c("DT", "htmltools")
   ),
 
   # --- exploratory-analysis.Rmd: "Simple Query" block ---

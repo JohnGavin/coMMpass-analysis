@@ -146,9 +146,15 @@ plan_telemetry <- list(
         colnames = c("Date", "Type", "Summary", "Files",
                       "+Lines", "-Lines", "File Categories"),
         caption = htmltools::tags$caption(
-          style = "caption-side: bottom; text-align: left;",
-          "Last 20 project commits with change statistics. ",
-          "Source: git log --numstat."
+          style = "caption-side: top; text-align: left;",
+          paste0(
+            "Last 20 project commits with change statistics. ",
+            "Date = commit date; Type = conventional-commit prefix ",
+            "(feat/fix/docs/ci/refactor/test/chore). ",
+            "Files = number of files modified; +Lines/-Lines = lines added/removed. ",
+            "Source: git log --numstat. ",
+            "See changes-by-type table for aggregate breakdown."
+          )
         ),
         options = list(
           pageLength = 10, dom = "tip",
@@ -237,6 +243,11 @@ plan_telemetry <- list(
         "Performance"   = "#2c3e50", "Other"         = "#bdc3c7"
       )
 
+      date_range <- summary$totals$date_range
+      n_total <- summary$totals$total_commits
+      n_added <- format(summary$totals$total_added, big.mark = ",")
+      n_removed <- format(summary$totals$total_removed, big.mark = ",")
+
       ggplot2::ggplot(wv, ggplot2::aes(x = week, y = commits, fill = type)) +
         ggplot2::geom_col() +
         ggplot2::scale_fill_manual(
@@ -244,12 +255,24 @@ plan_telemetry <- list(
         ) +
         ggplot2::labs(
           title = "Weekly Commit Velocity",
-          subtitle = paste("Last", summary$totals$total_commits, "commits"),
-          x = "Week", y = "Commits"
+          subtitle = paste("Last", n_total, "commits"),
+          x = "Week", y = "Commits",
+          caption = paste0(
+            "Stacked bar chart of weekly commit activity (", date_range, "). ",
+            "x-axis: ISO week; y-axis: number of commits; ",
+            "fill color = conventional-commit type (feat/fix/docs/ci/etc.). ",
+            n_total, " commits total; +", n_added, "/-", n_removed, " lines changed. ",
+            "Source: git log. ",
+            "See changes-by-type table for per-type aggregates and ",
+            "changelog for individual commit details."
+          )
         ) +
         ggplot2::theme_minimal(base_size = 10) +
         ggplot2::theme(
-          axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, size = 7)
+          axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, size = 7),
+          plot.caption = ggplot2::element_text(
+            size = 7, hjust = 0, lineheight = 1.2
+          )
         )
     },
     packages = c("ggplot2"),
@@ -347,9 +370,16 @@ plan_telemetry <- list(
           )
         ),
         caption = htmltools::tags$caption(
-          style = "caption-side: bottom; text-align: left;",
-          paste0(desc[1, "Package"], " codebase metrics. ",
-                 "Source: file system scan.")
+          style = "caption-side: top; text-align: left;",
+          paste0(
+            desc[1, "Package"], " v", desc[1, "Version"],
+            " codebase metrics. ",
+            "R source files includes R/ and R/tar_plans/ (excluding R/dev/). ",
+            "Lines of R code excludes comments and blank lines. ",
+            "Exported functions counted from NAMESPACE. ",
+            "Source: file system scan at pipeline build time. ",
+            "See pipeline-dag for target dependency structure."
+          )
         ),
         rownames = FALSE,
         options = list(dom = "t", paging = FALSE)
@@ -418,7 +448,7 @@ plan_telemetry <- list(
     cue = targets::tar_cue(mode = "always")
   ),
 
-  # --- Telemetry vignette: timing table (data.frame from meta CSV) ---
+  # --- Telemetry vignette: timing table (DT from meta CSV) ---
   targets::tar_target(
     vig_timing_table,
     {
@@ -438,8 +468,32 @@ plan_telemetry <- list(
           )
         )
       )
-      meta_timed[, c("name", "seconds", "size")]
+      display <- meta_timed[, c("name", "seconds", "size")]
+
+      total_time <- round(sum(meta_timed$seconds, na.rm = TRUE) / 60, 1)
+      slowest <- display$name[1]
+      caption <- paste0(
+        "Build durations for ", nrow(display), " targets with timing data. ",
+        "Sorted by seconds (descending); total build time = ", total_time, " min. ",
+        "Slowest target: ", slowest, " (",
+        round(meta_timed$seconds[1], 1), " s). ",
+        "Size = serialized object size on disk. ",
+        "Source: _targets/meta/meta (pipe-delimited CSV). ",
+        "See size distribution plot for visual comparison."
+      )
+
+      DT::datatable(
+        display,
+        colnames = c("Target", "Seconds", "Size"),
+        caption = htmltools::tags$caption(
+          style = "caption-side: top; text-align: left;", caption
+        ),
+        rownames = FALSE,
+        options = list(pageLength = 15, scrollX = TRUE,
+                       order = list(list(1, "desc")))
+      )
     },
+    packages = c("DT", "htmltools"),
     cue = targets::tar_cue(mode = "always")
   ),
 
@@ -452,20 +506,46 @@ plan_telemetry <- list(
       meta <- utils::read.csv(meta_path, stringsAsFactors = FALSE, sep = "|")
       meta$seconds <- as.numeric(meta$seconds)
       meta$bytes <- as.numeric(meta$bytes)
-      data.frame(
+
+      n_targets <- nrow(meta)
+      n_errors <- sum(!is.na(meta$error))
+      total_time <- round(sum(meta$seconds, na.rm = TRUE) / 60, 1)
+      total_size <- round(sum(meta$bytes, na.rm = TRUE) / 1e6, 1)
+
+      status_df <- data.frame(
         Metric = c("Total targets", "With timing data", "With errors",
                     "With warnings", "Total build time", "Total serialized size"),
         Value = c(
-          as.character(nrow(meta)),
+          as.character(n_targets),
           as.character(sum(!is.na(meta$seconds))),
-          as.character(sum(!is.na(meta$error))),
+          as.character(n_errors),
           as.character(sum(!is.na(meta$warnings))),
-          paste0(round(sum(meta$seconds, na.rm = TRUE) / 60, 1), " min"),
-          paste0(round(sum(meta$bytes, na.rm = TRUE) / 1e6, 1), " MB")
+          paste0(total_time, " min"),
+          paste0(total_size, " MB")
         ),
         stringsAsFactors = FALSE
       )
+
+      caption <- paste0(
+        "Pipeline build summary for ", n_targets, " targets. ",
+        "Total build time: ", total_time, " min; total serialized size: ",
+        total_size, " MB. ",
+        if (n_errors > 0) paste0(n_errors, " targets have errors — see errors table. ")
+        else "No errors in the last build. ",
+        "Source: _targets/meta/meta. ",
+        "See timing table for per-target durations and size plot for distribution."
+      )
+
+      DT::datatable(
+        status_df,
+        caption = htmltools::tags$caption(
+          style = "caption-side: top; text-align: left;", caption
+        ),
+        rownames = FALSE,
+        options = list(dom = "t", paging = FALSE)
+      )
     },
+    packages = c("DT", "htmltools"),
     cue = targets::tar_cue(mode = "always")
   ),
 
@@ -479,13 +559,36 @@ plan_telemetry <- list(
       issues <- meta[!is.na(meta$error) | !is.na(meta$warnings),
                      c("name", "error", "warnings")]
       if (nrow(issues) == 0) {
-        return(data.frame(
+        issues <- data.frame(
           Status = "No errors or warnings in the last build.",
           stringsAsFactors = FALSE
-        ))
+        )
+        caption <- paste0(
+          "Error and warning report for the pipeline build. ",
+          "No errors or warnings were recorded. ",
+          "Source: _targets/meta/meta. ",
+          "See pipeline-dag for dependency structure."
+        )
+      } else {
+        caption <- paste0(
+          nrow(issues), " targets with errors or warnings. ",
+          "name = target identifier; error = error message (if any); ",
+          "warnings = warning messages (if any). ",
+          "Source: _targets/meta/meta. ",
+          "See pipeline-dag for dependency chains to diagnose root causes."
+        )
       }
-      issues
+
+      DT::datatable(
+        issues,
+        caption = htmltools::tags$caption(
+          style = "caption-side: top; text-align: left;", caption
+        ),
+        rownames = FALSE,
+        options = list(pageLength = 15, scrollX = TRUE)
+      )
     },
+    packages = c("DT", "htmltools"),
     cue = targets::tar_cue(mode = "always")
   ),
 
@@ -508,6 +611,10 @@ plan_telemetry <- list(
       meta$bytes <- as.numeric(meta$bytes)
       meta_sized <- meta[!is.na(meta$bytes) & meta$bytes > 0, ]
       if (nrow(meta_sized) == 0) return(NULL)
+      total_mb <- round(sum(meta_sized$bytes, na.rm = TRUE) / 1e6, 1)
+      largest <- meta_sized$name[which.max(meta_sized$bytes)]
+      largest_mb <- round(max(meta_sized$bytes, na.rm = TRUE) / 1e6, 1)
+
       ggplot2::ggplot(
         meta_sized,
         ggplot2::aes(x = log10(bytes), y = stats::reorder(name, bytes))
@@ -520,10 +627,24 @@ plan_telemetry <- list(
         ggplot2::labs(
           title = "Target Sizes (serialized)",
           subtitle = paste0(nrow(meta_sized), " targets with stored objects"),
-          x = "log10(bytes)", y = NULL
+          x = "log10(bytes)", y = NULL,
+          caption = paste0(
+            "Serialized sizes for ", nrow(meta_sized), " targets stored in _targets/objects/. ",
+            "x-axis: log10(bytes); y-axis: target name sorted by size. ",
+            "Dashed red line = 1 MB threshold. ",
+            "Largest: ", largest, " (", largest_mb, " MB); ",
+            "total: ", total_mb, " MB. ",
+            "Source: _targets/meta/meta. ",
+            "See timing table for build durations and build status for overview."
+          )
         ) +
         ggplot2::theme_minimal(base_size = 10) +
-        ggplot2::theme(axis.text.y = ggplot2::element_text(size = 5))
+        ggplot2::theme(
+          axis.text.y = ggplot2::element_text(size = 5),
+          plot.caption = ggplot2::element_text(
+            size = 7, hjust = 0, lineheight = 1.2
+          )
+        )
     },
     packages = c("ggplot2"),
     cue = targets::tar_cue(mode = "always")
@@ -535,8 +656,29 @@ plan_telemetry <- list(
     {
       s <- vig_git_changelog_summary
       if (is.null(s) || is.null(s$by_type)) return(NULL)
-      s$by_type
+      bt <- s$by_type
+      n_commits <- s$totals$total_commits
+      dominant <- bt$type[1]
+      caption <- paste0(
+        "Commits by type (conventional-commit prefix) for the last ",
+        n_commits, " commits. ",
+        "Dominant type: ", dominant, " (", bt$commits[1], " commits). ",
+        "total_added/total_removed = lines of code changed per type. ",
+        "Source: git log --numstat. ",
+        "See commit velocity plot for weekly trends and changelog for details."
+      )
+      DT::datatable(
+        bt,
+        colnames = c("Type", "Commits", "Lines Added", "Lines Removed"),
+        caption = htmltools::tags$caption(
+          style = "caption-side: top; text-align: left;", caption
+        ),
+        rownames = FALSE,
+        options = list(dom = "t", paging = FALSE,
+                       order = list(list(1, "desc")))
+      )
     },
+    packages = c("DT", "htmltools"),
     cue = targets::tar_cue(mode = "always")
   ),
 
@@ -546,8 +688,29 @@ plan_telemetry <- list(
     {
       s <- vig_git_changelog_summary
       if (is.null(s) || is.null(s$by_file_category)) return(NULL)
-      s$by_file_category
+      bfc <- s$by_file_category
+      top_cat <- bfc$category[1]
+      caption <- paste0(
+        "Files changed by category across the last ",
+        s$totals$total_commits, " commits. ",
+        "Most active category: ", top_cat, " (",
+        bfc$commits_touching[1], " commits). ",
+        "category = file path pattern (R Source, Tests, Vignettes, CI/CD, etc.). ",
+        "commits_touching = number of commits that modified at least one file in this category. ",
+        "Source: git log --numstat."
+      )
+      DT::datatable(
+        bfc,
+        colnames = c("Category", "Commits Touching"),
+        caption = htmltools::tags$caption(
+          style = "caption-side: top; text-align: left;", caption
+        ),
+        rownames = FALSE,
+        options = list(dom = "t", paging = FALSE,
+                       order = list(list(1, "desc")))
+      )
     },
+    packages = c("DT", "htmltools"),
     cue = targets::tar_cue(mode = "always")
   ),
 
@@ -557,18 +720,50 @@ plan_telemetry <- list(
     {
       gh_data <- vig_github_activity
       if (is.null(gh_data) || !is.null(gh_data$error)) {
-        return(data.frame(
+        err_df <- data.frame(
           Status = paste0("GitHub API: ",
             if (!is.null(gh_data$error)) gh_data$error else "data not available"),
           stringsAsFactors = FALSE
+        )
+        caption <- paste0(
+          "GitHub activity metrics (unavailable). ",
+          "The GitHub API could not be reached or returned an error. ",
+          "Retry locally with a valid GITHUB_PAT. ",
+          "Source: GitHub REST API via gh package."
+        )
+        return(DT::datatable(
+          err_df,
+          caption = htmltools::tags$caption(
+            style = "caption-side: top; text-align: left;", caption
+          ),
+          rownames = FALSE,
+          options = list(dom = "t", paging = FALSE)
         ))
       }
-      data.frame(
+      gh_df <- data.frame(
         Metric = c("Open Issues", "Closed Issues", "Merged PRs"),
         Count = c(gh_data$issues_open, gh_data$issues_closed, gh_data$prs_merged),
         stringsAsFactors = FALSE
       )
+      total_issues <- gh_data$issues_open + gh_data$issues_closed
+      caption <- paste0(
+        "GitHub activity for JohnGavin/coMMpass-analysis. ",
+        total_issues, " total issues (",
+        gh_data$issues_open, " open, ", gh_data$issues_closed, " closed); ",
+        gh_data$prs_merged, " merged PRs. ",
+        "Source: GitHub REST API (/repos/{owner}/{repo}/issues and /pulls). ",
+        "See changelog for recent commit details."
+      )
+      DT::datatable(
+        gh_df,
+        caption = htmltools::tags$caption(
+          style = "caption-side: top; text-align: left;", caption
+        ),
+        rownames = FALSE,
+        options = list(dom = "t", paging = FALSE)
+      )
     },
+    packages = c("DT", "htmltools"),
     cue = targets::tar_cue(mode = "always")
   )
 )

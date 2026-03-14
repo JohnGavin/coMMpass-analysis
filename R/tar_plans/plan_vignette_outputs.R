@@ -561,9 +561,21 @@ plan_vignette_outputs <- list(
           x = NULL, y = "Count",
           title = "Sample Types",
           subtitle = paste0("n = ", sum(st$Freq), " total biospecimens"),
-          caption = "Data: GDC biospecimen"
+          caption = paste0(
+            "Distribution of sample types across ", sum(st$Freq),
+            " CoMMpass biospecimens. ",
+            "x-axis: sample type category (Primary Tumor, Blood Derived Normal, etc.); ",
+            "y-axis: count of samples. ",
+            "Key finding: Primary Tumor dominates (",
+            max(st$Freq), " samples). ",
+            "Source: GDC biospecimen API. ",
+            "See data-dictionary biospecimen columns for field definitions."
+          )
         ) +
-        ggplot2::theme_minimal()
+        ggplot2::theme_minimal() +
+        ggplot2::theme(plot.caption = ggplot2::element_text(
+          size = 7, hjust = 0, lineheight = 1.2
+        ))
     },
     packages = c("ggplot2")
   ),
@@ -586,9 +598,25 @@ plan_vignette_outputs <- list(
           subtitle = paste0("n = ", length(bio$samples_per_patient),
                             " patients, median = ",
                             median(bio$samples_per_patient), " samples"),
-          caption = "Data: GDC biospecimen"
+          caption = paste0(
+            "Distribution of samples per patient for ",
+            length(bio$samples_per_patient), " CoMMpass patients. ",
+            "x-axis: number of biospecimen samples per patient; ",
+            "y-axis: number of patients with that count. ",
+            "Median = ", median(bio$samples_per_patient),
+            " samples; range = ",
+            min(bio$samples_per_patient), "-",
+            max(bio$samples_per_patient), ". ",
+            "Multiple samples may reflect longitudinal collection ",
+            "(baseline + relapse). ",
+            "Source: GDC biospecimen. ",
+            "See paired DE analysis for baseline vs relapse comparisons."
+          )
         ) +
-        ggplot2::theme_minimal()
+        ggplot2::theme_minimal() +
+        ggplot2::theme(plot.caption = ggplot2::element_text(
+          size = 7, hjust = 0, lineheight = 1.2
+        ))
     },
     packages = c("ggplot2")
   ),
@@ -629,11 +657,26 @@ plan_vignette_outputs <- list(
           subtitle = paste0("n = ", rna$n_samples, " samples, median = ",
                             sprintf("%.1f", median(rna$library_sizes) / 1e6),
                             "M"),
-          caption = "Data: GDC STAR-Counts"
+          caption = paste0(
+            "Boxplot of per-sample library sizes for ", rna$n_samples,
+            " CoMMpass RNA-seq samples. ",
+            "y-axis: total mapped reads in millions. ",
+            "Median = ", sprintf("%.1f", median(rna$library_sizes) / 1e6),
+            "M; range = ", sprintf("%.1f", min(rna$library_sizes) / 1e6),
+            "M - ", sprintf("%.1f", max(rna$library_sizes) / 1e6), "M. ",
+            "Samples below the 5th percentile are flagged as QC outliers. ",
+            "Source: GDC STAR-Counts. ",
+            "See QC metrics table for outlier flags and genes-detected histogram."
+          )
         ) +
         ggplot2::theme_minimal() +
-        ggplot2::theme(axis.text.x = ggplot2::element_blank(),
-                       axis.ticks.x = ggplot2::element_blank())
+        ggplot2::theme(
+          axis.text.x = ggplot2::element_blank(),
+          axis.ticks.x = ggplot2::element_blank(),
+          plot.caption = ggplot2::element_text(
+            size = 7, hjust = 0, lineheight = 1.2
+          )
+        )
     },
     packages = c("ggplot2")
   ),
@@ -657,9 +700,23 @@ plan_vignette_outputs <- list(
                             format(median(rna$genes_detected),
                                    big.mark = ","),
                             " genes"),
-          caption = "Data: GDC STAR-Counts"
+          caption = paste0(
+            "Histogram of genes detected (count > 0) per sample for ",
+            rna$n_samples, " CoMMpass RNA-seq samples. ",
+            "x-axis: number of genes with at least 1 mapped read; ",
+            "y-axis: number of samples. ",
+            "Median = ", format(median(rna$genes_detected), big.mark = ","),
+            " genes; range = ", format(min(rna$genes_detected), big.mark = ","),
+            " - ", format(max(rna$genes_detected), big.mark = ","), ". ",
+            "Low detection indicates poor sequencing depth or RNA degradation. ",
+            "Source: GDC STAR-Counts. ",
+            "See QC metrics table for outlier flags based on this metric."
+          )
         ) +
-        ggplot2::theme_minimal()
+        ggplot2::theme_minimal() +
+        ggplot2::theme(plot.caption = ggplot2::element_text(
+          size = 7, hjust = 0, lineheight = 1.2
+        ))
     },
     packages = c("ggplot2")
   ),
@@ -1119,9 +1176,12 @@ plan_vignette_outputs <- list(
         caption = htmltools::tags$caption(
           style = "caption-side: top; text-align: left;",
           paste0(
-            "CoMMpass Data Dictionary - All Variables. ",
+            "CoMMpass Data Dictionary (",
+            nrow(dd_display), " variables). ",
             "Click column headers to sort; use filters to search. ",
-            "GDC links open the official data dictionary page."
+            "GDC links open the official GDC data dictionary page. ",
+            "Source: GDC clinical + biospecimen + RNA-seq metadata. ",
+            "See glossary for term definitions and units-table for measurement conventions."
           )
         )
       )
@@ -1281,8 +1341,16 @@ plan_vignette_outputs <- list(
                       "% Complete", "Unique Values"),
         caption = htmltools::tags$caption(
           style = "caption-side: top; text-align: left;",
-          paste0("Biospecimen data columns for ", nrow(bio), " records. ",
-                 "Click column headers to sort; use filters to search.")
+          paste0(
+            "Biospecimen data columns for ", nrow(bio), " records (",
+            ncol(bio), " variables). ",
+            "Column = field name from GDC biospecimen endpoint; ",
+            "R Type = data type in R; Non-NA = non-missing count; ",
+            "% Complete = data completeness; Unique Values = cardinality. ",
+            "Source: GDC biospecimen API. ",
+            "See clinical table for patient-level demographics and ",
+            "exploratory-analysis for sample-type distribution."
+          )
         )
       )
     },
@@ -1371,7 +1439,14 @@ plan_vignette_outputs <- list(
         options = list(pageLength = 15, scrollX = TRUE),
         caption = htmltools::tags$caption(
           style = "caption-side: top; text-align: left;",
-          "RNA-seq sample metadata columns from the SummarizedExperiment colData."
+          paste0(
+            "RNA-seq sample metadata columns from the SummarizedExperiment colData (",
+            nrow(sample_cols), " columns, ", ncol(se), " samples). ",
+            "Column = metadata field name; Type = R class; ",
+            "N_Unique = number of distinct values. ",
+            "Source: GDC mRNA-seq pipeline via TCGAbiolinks. ",
+            "See data-dictionary clinical table for patient-level variables."
+          )
         )
       )
     },
@@ -1406,7 +1481,16 @@ plan_vignette_outputs <- list(
         colnames = c("GDC Column", "Common Alias", "Notes"),
         caption = htmltools::tags$caption(
           style = "caption-side: top; text-align: left;",
-          "GDC column name mappings to common aliases used in analysis code."
+          paste0(
+            "GDC column name mappings to common aliases used in analysis code (",
+            nrow(mappings), " mappings). ",
+            "GDC_Column = official GDC field name; ",
+            "Common_Alias = shorthand used in pipeline code. ",
+            "Key: age_at_diagnosis is in DAYS (not years); ",
+            "vital_status determines whether days_to_death or ",
+            "days_to_last_follow_up is used for OS time. ",
+            "See data-dictionary for full variable definitions."
+          )
         )
       )
     },
@@ -1516,9 +1600,13 @@ plan_vignette_outputs <- list(
                                                 to = character(0))
 
       # --- Build visNetwork widget ---
-      visNetwork::visNetwork(
+      n_targets <- nrow(manifest)
+      n_layers <- length(unique(layers))
+      n_edges <- if (!is.null(edges)) nrow(edges) else 0
+
+      widget <- visNetwork::visNetwork(
         nodes, edges,
-        main = paste("Pipeline DAG:", nrow(manifest), "targets"),
+        main = paste("Pipeline DAG:", n_targets, "targets"),
         height = "600px", width = "100%"
       ) |>
         visNetwork::visEdges(arrows = "to", color = list(opacity = 0.4)) |>
@@ -1528,8 +1616,24 @@ plan_vignette_outputs <- list(
         ) |>
         visNetwork::visLegend(useGroups = TRUE, position = "right") |>
         visNetwork::visPhysics(stabilization = list(iterations = 200))
+
+      caption_html <- htmltools::tags$figcaption(
+        style = "text-align: left; font-size: 0.85em; margin-top: 0.5em; line-height: 1.4;",
+        paste0(
+          "Interactive pipeline DAG with ", n_targets, " targets across ",
+          n_layers, " layers and ", n_edges, " dependency edges. ",
+          "Nodes are colored by layer (data-acquisition, cleaning, cytogenetics, QC, ",
+          "DE, survival, pathway, EDA, storage, API, documentation, infrastructure). ",
+          "Click a node to highlight its direct dependencies; use the dropdown to find targets by name. ",
+          "Hover for target name and layer. ",
+          "Source: targets::tar_manifest(). ",
+          "See project-overview for architectural description and telemetry for build metrics."
+        )
+      )
+
+      htmltools::tagList(widget, caption_html)
     },
-    packages = c("targets", "visNetwork")
+    packages = c("targets", "visNetwork", "htmltools")
   ),
 
   # --- Git info table (shared by all vignettes) ---
@@ -1614,7 +1718,7 @@ plan_vignette_outputs <- list(
   tar_target(
     vig_units_table,
     {
-      data.frame(
+      units_df <- data.frame(
         Variable = c(
           "age_at_diagnosis", "days_to_death", "days_to_last_follow_up",
           "days_to_last_known_disease_status",
@@ -1633,7 +1737,28 @@ plan_vignette_outputs <- list(
         ),
         stringsAsFactors = FALSE
       )
-    }
+
+      caption <- paste0(
+        "Unit reference for ", nrow(units_df), " key variables. ",
+        "All time/age variables are in DAYS (GDC convention); ",
+        "divide by 365.25 for years. ",
+        "Expression units: raw counts for DE analysis (DESeq2/edgeR), ",
+        "TPM for cross-sample comparison, FPKM is deprecated. ",
+        "Source: GDC data model. ",
+        "See data-dictionary for full variable definitions."
+      )
+
+      DT::datatable(
+        units_df,
+        colnames = c("Variable", "Unit", "Conversion / Notes"),
+        caption = htmltools::tags$caption(
+          style = "caption-side: top; text-align: left;", caption
+        ),
+        rownames = FALSE,
+        options = list(dom = "t", paging = FALSE)
+      )
+    },
+    packages = c("DT", "htmltools")
   ),
 
   # ================================================================
@@ -1649,7 +1774,7 @@ plan_vignette_outputs <- list(
       parquet_files <- list.files(msigdb_dir, pattern = "\\.parquet$",
                                   full.names = TRUE)
       if (length(parquet_files) == 0) return(NULL)
-      do.call(rbind, lapply(parquet_files, function(f) {
+      stats_df <- do.call(rbind, lapply(parquet_files, function(f) {
         tbl <- arrow::read_parquet(f)
         data.frame(
           File = basename(f),
@@ -1662,8 +1787,32 @@ plan_vignette_outputs <- list(
           stringsAsFactors = FALSE
         )
       }))
+
+      total_sets <- sum(stats_df$Gene_Sets)
+      total_genes <- max(stats_df$Unique_Genes)
+      caption <- paste0(
+        "MSigDB gene set collections bundled in inst/extdata/msigdb/ (",
+        nrow(stats_df), " parquet files). ",
+        "Total: ", total_sets, " gene sets across ",
+        format(total_genes, big.mark = ","), " unique Ensembl gene IDs. ",
+        "Gene_Sets = distinct pathways per collection; ",
+        "Unique_Genes = genes annotated in that collection. ",
+        "Source: MSigDB Hallmark + KEGG via msigdbr. ",
+        "See differential-expression GSEA/ORA sections for enrichment results."
+      )
+
+      DT::datatable(
+        stats_df,
+        colnames = c("File", "Size", "Rows", "Columns",
+                      "Gene Sets", "Unique Genes", "ID Type"),
+        caption = htmltools::tags$caption(
+          style = "caption-side: top; text-align: left;", caption
+        ),
+        rownames = FALSE,
+        options = list(dom = "t", paging = FALSE, scrollX = TRUE)
+      )
     },
-    packages = c("arrow")
+    packages = c("arrow", "DT", "htmltools")
   ),
 
   # ================================================================
@@ -1680,18 +1829,35 @@ plan_vignette_outputs <- list(
       if (!(gene %in% rownames(vst_mat))) return(NULL)
       expr_vals <- as.numeric(vst_mat[gene, ])
       df <- data.frame(expression = expr_vals)
+      med_val <- round(median(expr_vals), 2)
+      sd_val <- round(sd(expr_vals), 2)
+      n_samp <- length(expr_vals)
+
       ggplot2::ggplot(df, ggplot2::aes(x = expression)) +
         ggplot2::geom_histogram(bins = 30, fill = "#2166AC", alpha = 0.7) +
         ggplot2::geom_vline(xintercept = median(expr_vals), linetype = "dashed",
                             color = "#B2182B") +
         ggplot2::labs(
           title = paste0(gene, " Expression Distribution"),
-          subtitle = paste0("n = ", length(expr_vals), " samples | ",
-                            "Median = ", round(median(expr_vals), 2),
-                            " | SD = ", round(sd(expr_vals), 2)),
-          x = "VST Expression", y = "Count"
+          subtitle = paste0("n = ", n_samp, " samples | ",
+                            "Median = ", med_val,
+                            " | SD = ", sd_val),
+          x = "VST Expression", y = "Count",
+          caption = paste0(
+            "Distribution of ", gene, " VST-normalized expression across ",
+            n_samp, " CoMMpass bone marrow samples. ",
+            "x-axis: variance-stabilized transformed counts (DESeq2 vst()); ",
+            "y-axis: number of samples. ",
+            "Dashed red line = median (", med_val, "); SD = ", sd_val, ". ",
+            "VST stabilizes variance across the expression range. ",
+            "Source: GDC STAR-Counts. ",
+            "See DE volcano plot for differential expression of this gene."
+          )
         ) +
-        ggplot2::theme_minimal(base_size = 12)
+        ggplot2::theme_minimal(base_size = 12) +
+        ggplot2::theme(plot.caption = ggplot2::element_text(
+          size = 7, hjust = 0, lineheight = 1.2
+        ))
     },
     packages = c("ggplot2")
   ),
@@ -1708,8 +1874,26 @@ plan_vignette_outputs <- list(
         survival_data, vst_mat, gene = gene, split = "median"
       )
       if (is.null(km_res$fit)) return(NULL)
-      coMMpass::plot_km(km_res,
+      p <- coMMpass::plot_km(km_res,
         title = paste0("Survival by ", gene, " Expression (Median Split)"))
+
+      n_high <- km_res$n_per_group["High"]
+      n_low <- km_res$n_per_group["Low"]
+      logrank_p <- if (!is.na(km_res$logrank_p)) {
+        if (km_res$logrank_p < 0.001) "< 0.001" else sprintf("%.3f", km_res$logrank_p)
+      } else "NA"
+
+      p + ggplot2::labs(caption = paste0(
+        "KM survival curves for ", gene, " high (n = ", n_high,
+        ") vs low (n = ", n_low, ") expression groups (median split of VST values). ",
+        "x-axis: time in days from diagnosis; y-axis: survival probability. ",
+        "Shaded bands = 95% CI. Log-rank p = ", logrank_p, ". ",
+        "Source: GDC clinical (OS) + STAR-Counts (VST). ",
+        "See survival-analysis for multivariate Cox models adjusting for clinical covariates."
+      )) +
+        ggplot2::theme(plot.caption = ggplot2::element_text(
+          size = 7, hjust = 0, lineheight = 1.2
+        ))
     },
     packages = c("ggplot2")
   ),
@@ -1730,7 +1914,18 @@ plan_vignette_outputs <- list(
         NULL
       }
       if (is.null(cyto_df)) return(NULL)
-      coMMpass::plot_expression_by_subtype(vst_mat, cyto_df, gene = gene)
+      p <- coMMpass::plot_expression_by_subtype(vst_mat, cyto_df, gene = gene)
+      p + ggplot2::labs(caption = paste0(
+        gene, " VST expression across cytogenetic subtypes defined by FISH markers. ",
+        "Each box = IQR of VST values; whiskers = 1.5x IQR; dots = outliers. ",
+        "Subtypes: t(4;14), t(11;14), t(14;16), del(17p), gain(1q), standard-risk. ",
+        "Comparison: Wilcoxon rank-sum between each subtype vs rest. ",
+        "Source: GDC STAR-Counts (VST) + FISH data. ",
+        "See exploratory-analysis cytogenetic landscape for alteration frequencies."
+      )) +
+        ggplot2::theme(plot.caption = ggplot2::element_text(
+          size = 7, hjust = 0, lineheight = 1.2
+        ))
     },
     packages = c("ggplot2")
   ),
@@ -1751,8 +1946,35 @@ plan_vignette_outputs <- list(
         candidate_genes = top_candidates, method = "pearson"
       )
       if (nrow(cor_batch) == 0) return(NULL)
-      head(cor_batch[, c("gene", "estimate", "p_value", "padj")], 10)
-    }
+      top10 <- head(cor_batch[, c("gene", "estimate", "p_value", "padj")], 10)
+      top10$estimate <- round(top10$estimate, 3)
+      top10$p_value <- signif(top10$p_value, 4)
+      top10$padj <- signif(top10$padj, 4)
+
+      top_gene <- top10$gene[1]
+      top_r <- top10$estimate[1]
+      n_samples <- ncol(vst_mat)
+      caption <- paste0(
+        "Top 10 genes most correlated with ", gene,
+        " (Pearson r, VST-normalized expression, n = ", n_samples, " samples). ",
+        "Strongest correlation: ", top_gene, " (r = ", top_r, "). ",
+        "estimate = Pearson correlation coefficient; ",
+        "p_value = unadjusted; padj = BH-corrected. ",
+        "Candidates: top 500 most variable genes. ",
+        "See scatter plot below for visualization of the top correlation."
+      )
+
+      DT::datatable(
+        top10,
+        colnames = c("Gene", "Pearson r", "p-value", "Adjusted p"),
+        caption = htmltools::tags$caption(
+          style = "caption-side: top; text-align: left;", caption
+        ),
+        rownames = FALSE,
+        options = list(dom = "t", paging = FALSE)
+      )
+    },
+    packages = c("DT", "htmltools")
   ),
 
   tar_target(
@@ -1773,7 +1995,24 @@ plan_vignette_outputs <- list(
       if (nrow(cor_batch) == 0) return(NULL)
       top_gene <- cor_batch$gene[1]
       cor_res <- coMMpass::correlate_genes(vst_mat, gene, top_gene)
-      coMMpass::plot_gene_correlation(cor_res)
+      r_val <- round(cor_res$estimate, 3)
+      p_val <- if (cor_res$p_value < 0.001) "< 0.001" else sprintf("%.4f", cor_res$p_value)
+      n_samp <- ncol(vst_mat)
+
+      p <- coMMpass::plot_gene_correlation(cor_res)
+      p + ggplot2::labs(caption = paste0(
+        "Scatter plot of ", gene, " vs ", top_gene,
+        " VST expression (Pearson r = ", r_val,
+        ", p ", p_val, ", n = ", n_samp, " samples). ",
+        "Each point = one patient sample; blue line = linear regression fit. ",
+        "VST values are variance-stabilized counts (DESeq2). ",
+        top_gene, " is the most correlated gene from the top 500 most variable. ",
+        "Source: GDC STAR-Counts. ",
+        "See correlations table above for the full top-10 list."
+      )) +
+        ggplot2::theme(plot.caption = ggplot2::element_text(
+          size = 7, hjust = 0, lineheight = 1.2
+        ))
     },
     packages = c("ggplot2")
   )

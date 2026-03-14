@@ -23,9 +23,20 @@ make_age_histogram <- function(eda_clinical_summary) {
       title = "Age at Diagnosis",
       subtitle = paste0("n = ", length(clin$age_years),
                         " patients, median = ", med_age, " years"),
-      caption = "Data: GDC clinical. Dashed red line = median."
+      caption = paste0(
+        "Age at diagnosis for ", length(clin$age_years), " CoMMpass patients. ",
+        "x-axis: age in years (converted from GDC days via / 365.25); ",
+        "y-axis: number of patients. ",
+        "Median = ", med_age, " years (dashed red line). ",
+        "Source: GDC clinical. ",
+        "See glossary for age unit conventions; ",
+        "survival-analysis Cox models include age as a covariate."
+      )
     ) +
-    ggplot2::theme_minimal()
+    ggplot2::theme_minimal() +
+    ggplot2::theme(plot.caption = ggplot2::element_text(
+      size = 7, hjust = 0, lineheight = 1.2
+    ))
 }
 
 #' @keywords internal
@@ -224,9 +235,20 @@ make_iss_barplot <- function(eda_iss_summary) {
       title = "ISS Stage Distribution",
       subtitle = paste0("n = ", sum(iss_plot$Freq),
                         " patients with staging data"),
-      caption = "ISS: International Staging System (Greipp et al., 2005)"
+      caption = paste0(
+        "ISS stage distribution for ", sum(iss_plot$Freq),
+        " patients with staging data. ",
+        "Stage I: B2M < 3.5 mg/L + albumin >= 3.5 g/dL. ",
+        "Stage II: not I or III. Stage III: B2M >= 5.5 mg/L. ",
+        "x-axis: ISS stage; y-axis: number of patients. ",
+        "Source: ISS (Greipp et al. 2005, doi:10.1200/JCO.2005.04.242). ",
+        "See survival-analysis KM curves by ISS for prognostic impact."
+      )
     ) +
-    ggplot2::theme_minimal()
+    ggplot2::theme_minimal() +
+    ggplot2::theme(plot.caption = ggplot2::element_text(
+      size = 7, hjust = 0, lineheight = 1.2
+    ))
 }
 
 #' @keywords internal

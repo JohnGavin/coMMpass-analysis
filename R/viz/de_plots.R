@@ -31,7 +31,9 @@ make_de_method_barplot <- function(de_method_summary) {
         "limma: empirical Bayes moderated t-test with voom weights. ",
         "Up (red) = log2FC > 1. Down (blue) = log2FC < -1. ",
         "Thresholds: |log2FC| > 1, padj < 0.05. ",
-        "With sample_limit=20, zero significant genes is expected."
+        "With sample_limit=20, zero significant genes is expected. ",
+        "Source: DESeq2/edgeR/limma results. ",
+        "See method table for exact counts and annotated DE table for top genes."
       )
     ) +
     ggplot2::theme_minimal(base_size = 12) +
