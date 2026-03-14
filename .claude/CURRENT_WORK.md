@@ -6,42 +6,55 @@
 
 ### Completed This Session
 
-**Fix 3 NULL-Target Bugs + Auto-generate package.nix (#93)**
+**Full 9-Step R Package Workflow**
 
-1. **Fix 1 (plan_eda.R):** Fixed `age_at_diagnosis` character→numeric coercion. GDC stores as VARCHAR; replaced `is.numeric()` guard with `suppressWarnings(as.numeric())` + validation (negative rejection, coercion failure count, suspicious age flag). Also wrapped `days_to_death` and `days_to_last_follow_up` in `as.numeric()`.
+1. **Steps 1-4 (prior session):** Fixed 11 NULL targets — DE condition derivation, barcode ID matching, consensus type handling, median OS text.
 
-2. **Fix 2 (gene symbol resolution):** Added `resolve_gene_id()` to `R/07_gene_annotation.R` — maps HGNC symbols (e.g., "CD70") to Ensembl IDs via `SummarizedExperiment::rowData(se)$gene_name`. Updated 5 gene-report targets in `plan_vignette_outputs.R` to use it. 4 of 5 now produce non-NULL output (KM plot requires `run_km_by_expression` function, guarded).
+2. **Step 5: document/test/check**
+   - `devtools::document()` — clean
+   - `devtools::test()` — 0 FAIL, 862 PASS, 14 SKIP (expected: GDC API, msigdbr, SCE guards)
+   - `devtools::check()` — 0 errors, 0 notes, 1 warning (qpdf missing — added to default.R, pending nix regen)
+   - Fixed R CMD check NOTE: added `y_pos`, `p_label` to `globalVariables()`
+   - Fixed test warnings: `unname()` in `data.frame()` call
+   - Accepted 4 updated snapshots (DE results now real instead of empty stubs)
 
-3. **Fix 3 (nix_exclude):** Added `anndataR` and `SingleCellExperiment` to `nix_exclude` in `default.R` (optional deps, compat issues, guarded by `requireNamespace()`).
+3. **Step 5: Rebuild outdated targets**
+   - 17 targets rebuilt successfully
+   - 7 msigdbr-dependent targets excluded (upstream sha256 broken)
+   - 2 report targets skipped (depend on pathway analysis)
+   - 140 RDS files exported to `inst/extdata/vignettes/`
 
-4. **Issue #93 (package.nix auto-generation):** Folded `package.nix` generation into `default.R` — runs BEFORE `rix::rix()` so it always succeeds. Uses shared `date = "2026-02-01"` variable. 44 deps auto-derived from DESCRIPTION (was 20 hand-maintained). Dots→underscores mapping for nix attribute names.
+4. **Step 5b: Cachix push**
+   - Built `package.nix`: `/nix/store/5js20ifyam0d4vifkv0npg0fln0hlfmh-r-coMMpass`
+   - Pushed to johngavin cachix (51.50 MiB)
+   - Pinned as `coMMpass-v0.1.0`
 
-5. **ggplot RDS size reduction:** Fixed ggplot2 4.0 S7 `aes()` environment capture (vst_counts 148MB, vst_mat 24MB captured in quosures). Used `rm()` before returning plots. Results: `vig_gene_expression_dist` 41MB→79KB (99.8%), `vig_count_distribution_plot` 25MB→516KB (97.9%).
+5. **Steps 6-9: Commit, push, verify**
+   - Committed: `0530e73 fix(check): Resolve R CMD check NOTE + update snapshots/RDS`
+   - Pushed to `origin/main`
 
-6. **Cachix push completed:** `package.nix` built via `nix-build`, pushed to johngavin cachix, pinned as `coMMpass-v0.1.0` (keep-forever). Fixed `push_to_cachix.sh` `--watch-mode auto` parse error.
+### Current State
 
-7. **Issues created:** #87 (no condition column), #88 (no FISH data), #89 (no PFS endpoints), #90 (patient ID mismatch), #91 (treatment parquet), #92 (median OS not reached), #93 (auto-generate package.nix).
+**R CMD check: 0 errors, 0 notes, 1 warning** (qpdf — will resolve after `default.nix` regeneration)
 
-### Files Modified
-- `default.R` — nix_exclude additions + package.nix auto-generation code
-- `package.nix` — now auto-generated (44 deps, date 2026-02-01)
-- `R/07_gene_annotation.R` — new `resolve_gene_id()` function
-- `R/tar_plans/plan_eda.R` — character→numeric coercion fixes with validation
-- `R/tar_plans/plan_vignette_outputs.R` — 5 gene-report targets + env capture fix
-- `NAMESPACE` — export resolve_gene_id
-- `push_to_cachix.sh` — removed `--watch-mode auto` flag
-- `inst/extdata/vignettes/*.rds` — 87 RDS files re-exported
+**Tests: 0 FAIL, 862 PASS, 14 SKIP**
 
-### 28 NULL Targets — Root Causes (Issues Filed)
-- RC1: No `condition` column for DE design formula (11 targets) — #87
-- RC2: GDC lacks FISH/cytogenetic columns (9 targets) — #88
-- RC3: GDC lacks PFS endpoints (7 targets) — #89
-- RC4: Patient ID format mismatch clinical↔biospecimen (1 target) — #90
-- `treatment_data_clean`: No treatment parquet file — #91
-- `vig_km_overall_text`: Median OS not reached — #92
+**NULL targets: 17** (all data limitations, no code fixes possible)
+- 6 FISH/cytogenetic: vig_km_risk, vig_km_markers, shiny_risk_os_by_risk, shiny_cox_os_age_risk, shiny_cox_os_full, shiny_risk_os_by_response
+- 7 PFS: shiny_pfs_data + 6 cascade
+- 1 treatment: treatment_data_clean
+- 2 GSEA: vig_gsea_dotplot, vig_ora_barplot (depend on errored gsea_kegg)
+- 1 errored: gsea_kegg (msigdbr not installed — upstream bug)
 
-### Remaining Items
-- 28 NULL targets above need data availability fixes (issues #87-#92)
-- msigdbr upstream sha256 bug in rstats-on-nix (still broken)
-- `rix::rix()` fails inside nix-shell for date "2026-02-01" — needs rix version update
-- `run_km_by_expression` function not yet implemented (gene-report KM target)
+### Files Modified This Session
+- `R/08_cytogenetic_viz.R` — globalVariables + unname fix
+- `default.R` — add qpdf to system_pkgs
+- `tests/testthat/_snaps/snapshot-real-data.md` — updated snapshots
+- `inst/extdata/vignettes/*.rds` — 140 files exported (16 new)
+
+### Follow-up Items
+- Regenerate `default.nix` to get qpdf in nix shell (removes last check WARNING)
+- msigdbr upstream sha256 still broken in rstats-on-nix
+- `expr_by_subtype` is 44 MB (5 ggplots with env capture) — needs size reduction
+- FISH, PFS, treatment data require MMRF IA flat files (not available from GDC API)
+- `de_report` and `summary_report` remain outdated (depend on pathway analysis)
