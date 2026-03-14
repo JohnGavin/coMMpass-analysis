@@ -131,7 +131,7 @@ main() {
   log_info "Only locally-built paths are pushed (deps substituted from rstats-on-nix are skipped)"
 
   PUSH_LOG="/tmp/cachix-push-${PKG_NAME}.log"
-  if ! cachix watch-exec johngavin --watch-mode auto -- \
+  if ! cachix watch-exec johngavin -- \
        nix-build package.nix --no-out-link 2>&1 | tee "$PUSH_LOG"; then
     log_error "Build or push failed"
     log_info "Log: $PUSH_LOG"
