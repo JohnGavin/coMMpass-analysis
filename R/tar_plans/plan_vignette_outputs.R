@@ -174,6 +174,8 @@ plan_vignette_outputs <- list(
           ) +
           ggplot2::theme_minimal()
       }
+      # Remove large objects from aes() quosure environment before serializing
+      rm(se, counts, log_counts, mean_expr, gene_meta)
       p
     },
     packages = c("SummarizedExperiment", "ggplot2", "dplyr")
@@ -1824,27 +1826,28 @@ plan_vignette_outputs <- list(
     {
       if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) return(NULL)
       if (is.null(vst_counts)) return(NULL)
-      gene <- "CD70"
+      gene_symbol <- "CD70"
+      gene_id <- resolve_gene_id(gene_symbol, vst_counts)
+      if (is.na(gene_id)) return(NULL)
       vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
-      if (!(gene %in% rownames(vst_mat))) return(NULL)
-      expr_vals <- as.numeric(vst_mat[gene, ])
+      expr_vals <- as.numeric(vst_mat[gene_id, ])
       df <- data.frame(expression = expr_vals)
       med_val <- round(median(expr_vals), 2)
       sd_val <- round(sd(expr_vals), 2)
       n_samp <- length(expr_vals)
 
-      ggplot2::ggplot(df, ggplot2::aes(x = expression)) +
+      p <- ggplot2::ggplot(df, ggplot2::aes(x = expression)) +
         ggplot2::geom_histogram(bins = 30, fill = "#2166AC", alpha = 0.7) +
         ggplot2::geom_vline(xintercept = median(expr_vals), linetype = "dashed",
                             color = "#B2182B") +
         ggplot2::labs(
-          title = paste0(gene, " Expression Distribution"),
+          title = paste0(gene_symbol, " Expression Distribution"),
           subtitle = paste0("n = ", n_samp, " samples | ",
                             "Median = ", med_val,
                             " | SD = ", sd_val),
           x = "VST Expression", y = "Count",
           caption = paste0(
-            "Distribution of ", gene, " VST-normalized expression across ",
+            "Distribution of ", gene_symbol, " VST-normalized expression across ",
             n_samp, " CoMMpass bone marrow samples. ",
             "x-axis: variance-stabilized transformed counts (DESeq2 vst()); ",
             "y-axis: number of samples. ",
@@ -1858,6 +1861,9 @@ plan_vignette_outputs <- list(
         ggplot2::theme(plot.caption = ggplot2::element_text(
           size = 7, hjust = 0, lineheight = 1.2
         ))
+      # Remove large objects from aes() quosure environment before serializing
+      rm(vst_counts, vst_mat, expr_vals, gene_id)
+      p
     },
     packages = c("ggplot2")
   ),
@@ -1867,15 +1873,17 @@ plan_vignette_outputs <- list(
     {
       if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) return(NULL)
       if (is.null(vst_counts) || is.null(survival_data)) return(NULL)
-      gene <- "CD70"
+      if (!exists("run_km_by_expression", mode = "function")) return(NULL)
+      gene_symbol <- "CD70"
+      gene_id <- resolve_gene_id(gene_symbol, vst_counts)
+      if (is.na(gene_id)) return(NULL)
       vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
-      if (!(gene %in% rownames(vst_mat))) return(NULL)
-      km_res <- coMMpass::run_km_by_expression(
-        survival_data, vst_mat, gene = gene, split = "median"
+      km_res <- run_km_by_expression(
+        survival_data, vst_mat, gene = gene_id, split = "median"
       )
       if (is.null(km_res$fit)) return(NULL)
-      p <- coMMpass::plot_km(km_res,
-        title = paste0("Survival by ", gene, " Expression (Median Split)"))
+      p <- plot_km(km_res,
+        title = paste0("Survival by ", gene_symbol, " Expression (Median Split)"))
 
       n_high <- km_res$n_per_group["High"]
       n_low <- km_res$n_per_group["Low"]
@@ -1884,7 +1892,7 @@ plan_vignette_outputs <- list(
       } else "NA"
 
       p + ggplot2::labs(caption = paste0(
-        "KM survival curves for ", gene, " high (n = ", n_high,
+        "KM survival curves for ", gene_symbol, " high (n = ", n_high,
         ") vs low (n = ", n_low, ") expression groups (median split of VST values). ",
         "x-axis: time in days from diagnosis; y-axis: survival probability. ",
         "Shaded bands = 95% CI. Log-rank p = ", logrank_p, ". ",
@@ -1903,9 +1911,11 @@ plan_vignette_outputs <- list(
     {
       if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) return(NULL)
       if (is.null(vst_counts) || is.null(cytogenetic_data)) return(NULL)
-      gene <- "CD70"
+      if (!exists("plot_expression_by_subtype", mode = "function")) return(NULL)
+      gene_symbol <- "CD70"
+      gene_id <- resolve_gene_id(gene_symbol, vst_counts)
+      if (is.na(gene_id)) return(NULL)
       vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
-      if (!(gene %in% rownames(vst_mat))) return(NULL)
       cyto_df <- if (is.character(cytogenetic_data) && file.exists(cytogenetic_data)) {
         arrow::read_parquet(cytogenetic_data)
       } else if (is.data.frame(cytogenetic_data)) {
@@ -1914,9 +1924,9 @@ plan_vignette_outputs <- list(
         NULL
       }
       if (is.null(cyto_df)) return(NULL)
-      p <- coMMpass::plot_expression_by_subtype(vst_mat, cyto_df, gene = gene)
-      p + ggplot2::labs(caption = paste0(
-        gene, " VST expression across cytogenetic subtypes defined by FISH markers. ",
+      p <- plot_expression_by_subtype(vst_mat, cyto_df, gene = gene_id)
+      p <- p + ggplot2::labs(caption = paste0(
+        gene_symbol, " VST expression across cytogenetic subtypes defined by FISH markers. ",
         "Each box = IQR of VST values; whiskers = 1.5x IQR; dots = outliers. ",
         "Subtypes: t(4;14), t(11;14), t(14;16), del(17p), gain(1q), standard-risk. ",
         "Comparison: Wilcoxon rank-sum between each subtype vs rest. ",
@@ -1926,6 +1936,8 @@ plan_vignette_outputs <- list(
         ggplot2::theme(plot.caption = ggplot2::element_text(
           size = 7, hjust = 0, lineheight = 1.2
         ))
+      rm(vst_counts, vst_mat, cyto_df, gene_id)
+      p
     },
     packages = c("ggplot2")
   ),
@@ -1935,14 +1947,15 @@ plan_vignette_outputs <- list(
     {
       if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) return(NULL)
       if (is.null(vst_counts)) return(NULL)
-      gene <- "CD70"
+      gene_symbol <- "CD70"
+      gene_id <- resolve_gene_id(gene_symbol, vst_counts)
+      if (is.na(gene_id)) return(NULL)
       vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
-      if (!(gene %in% rownames(vst_mat))) return(NULL)
       gene_vars <- apply(vst_mat, 1, var)
       top_candidates <- names(sort(gene_vars, decreasing = TRUE))[1:500]
-      top_candidates <- setdiff(top_candidates, gene)
-      cor_batch <- coMMpass::correlate_genes_batch(
-        vst_mat, target_gene = gene,
+      top_candidates <- setdiff(top_candidates, gene_id)
+      cor_batch <- correlate_genes_batch(
+        vst_mat, target_gene = gene_id,
         candidate_genes = top_candidates, method = "pearson"
       )
       if (nrow(cor_batch) == 0) return(NULL)
@@ -1955,7 +1968,7 @@ plan_vignette_outputs <- list(
       top_r <- top10$estimate[1]
       n_samples <- ncol(vst_mat)
       caption <- paste0(
-        "Top 10 genes most correlated with ", gene,
+        "Top 10 genes most correlated with ", gene_symbol,
         " (Pearson r, VST-normalized expression, n = ", n_samples, " samples). ",
         "Strongest correlation: ", top_gene, " (r = ", top_r, "). ",
         "estimate = Pearson correlation coefficient; ",
@@ -1982,26 +1995,27 @@ plan_vignette_outputs <- list(
     {
       if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) return(NULL)
       if (is.null(vst_counts)) return(NULL)
-      gene <- "CD70"
+      gene_symbol <- "CD70"
+      gene_id <- resolve_gene_id(gene_symbol, vst_counts)
+      if (is.na(gene_id)) return(NULL)
       vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
-      if (!(gene %in% rownames(vst_mat))) return(NULL)
       gene_vars <- apply(vst_mat, 1, var)
       top_candidates <- names(sort(gene_vars, decreasing = TRUE))[1:500]
-      top_candidates <- setdiff(top_candidates, gene)
-      cor_batch <- coMMpass::correlate_genes_batch(
-        vst_mat, target_gene = gene,
+      top_candidates <- setdiff(top_candidates, gene_id)
+      cor_batch <- correlate_genes_batch(
+        vst_mat, target_gene = gene_id,
         candidate_genes = top_candidates, method = "pearson"
       )
       if (nrow(cor_batch) == 0) return(NULL)
       top_gene <- cor_batch$gene[1]
-      cor_res <- coMMpass::correlate_genes(vst_mat, gene, top_gene)
+      cor_res <- correlate_genes(vst_mat, gene_id, top_gene)
       r_val <- round(cor_res$estimate, 3)
       p_val <- if (cor_res$p_value < 0.001) "< 0.001" else sprintf("%.4f", cor_res$p_value)
       n_samp <- ncol(vst_mat)
 
-      p <- coMMpass::plot_gene_correlation(cor_res)
-      p + ggplot2::labs(caption = paste0(
-        "Scatter plot of ", gene, " vs ", top_gene,
+      p <- plot_gene_correlation(cor_res)
+      p <- p + ggplot2::labs(caption = paste0(
+        "Scatter plot of ", gene_symbol, " vs ", top_gene,
         " VST expression (Pearson r = ", r_val,
         ", p ", p_val, ", n = ", n_samp, " samples). ",
         "Each point = one patient sample; blue line = linear regression fit. ",
@@ -2013,6 +2027,8 @@ plan_vignette_outputs <- list(
         ggplot2::theme(plot.caption = ggplot2::element_text(
           size = 7, hjust = 0, lineheight = 1.2
         ))
+      rm(vst_counts, vst_mat, gene_id, cor_batch, cor_res)
+      p
     },
     packages = c("ggplot2")
   )

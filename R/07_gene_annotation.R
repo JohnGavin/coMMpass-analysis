@@ -1,6 +1,32 @@
 # R/07_gene_annotation.R
 # Gene annotation and enrichment visualization functions
 
+#' Resolve a gene symbol to the matching Ensembl ID in a SummarizedExperiment
+#'
+#' Checks if `gene_symbol` is already a rowname of `se`. If not, looks up the
+#' symbol in `rowData(se)$gene_name` and returns the corresponding Ensembl ID.
+#'
+#' @param gene_symbol Character. HGNC gene symbol (e.g., "CD70").
+#' @param se A SummarizedExperiment, DESeqTransform, or matrix with Ensembl ID rownames.
+#' @return The matching Ensembl ID (character), or `NA_character_` if not found.
+#' @keywords internal
+#' @export
+resolve_gene_id <- function(gene_symbol, se) {
+  rnames <- rownames(se)
+  # Already a valid rowname (e.g., user passed an Ensembl ID)
+  if (gene_symbol %in% rnames) return(gene_symbol)
+  # Look up gene_name in rowData for SE-like objects
+
+  if (inherits(se, "SummarizedExperiment") || inherits(se, "DESeqTransform")) {
+    rd <- SummarizedExperiment::rowData(se)
+    if ("gene_name" %in% colnames(rd)) {
+      idx <- which(rd$gene_name == gene_symbol)
+      if (length(idx) >= 1) return(rnames[idx[1]])
+    }
+  }
+  NA_character_
+}
+
 #' Annotate Ensembl gene IDs with symbols and descriptions
 #'
 #' Maps Ensembl gene IDs to HGNC symbols and Entrez IDs. Uses msigdbr gene

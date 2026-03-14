@@ -19,13 +19,22 @@ plan_eda <- list(
       if (!is.data.frame(clin) || nrow(clin) == 0) return(NULL)
       names(clin) <- make.unique(names(clin))
 
-      # Age in years (GDC stores age_at_diagnosis in days)
+      # Age in years (GDC stores age_at_diagnosis in days, as character)
       age_years <- NULL
-      if ("age_at_diagnosis" %in% names(clin) &&
-          is.numeric(clin$age_at_diagnosis)) {
-        vals <- clin$age_at_diagnosis[!is.na(clin$age_at_diagnosis)]
-        is_days <- length(vals) > 0 && max(vals, na.rm = TRUE) > 120
-        age_years <- if (is_days) vals / 365.25 else vals
+      n_age_coercion_failures <- 0L
+      n_age_suspicious <- 0L
+      if ("age_at_diagnosis" %in% names(clin)) {
+        raw <- suppressWarnings(as.numeric(clin$age_at_diagnosis))
+        n_age_coercion_failures <- sum(is.na(raw) & !is.na(clin$age_at_diagnosis))
+        vals <- raw[!is.na(raw)]
+        # Validate: reject negative values
+        vals <- vals[vals >= 0]
+        if (length(vals) > 0) {
+          is_days <- max(vals, na.rm = TRUE) > 120
+          age_years <- if (is_days) vals / 365.25 else vals
+          # Flag suspicious ages for myeloma (<25 years)
+          n_age_suspicious <- sum(age_years < 25, na.rm = TRUE)
+        }
       }
 
       list(
@@ -33,6 +42,8 @@ plan_eda <- list(
         n_variables   = ncol(clin),
         completeness  = mean(!is.na(clin)),
         age_years     = age_years,
+        n_age_coercion_failures = n_age_coercion_failures,
+        n_age_suspicious = n_age_suspicious,
         gender_table  = if ("gender" %in% names(clin))
           as.data.frame(table(Gender = clin$gender, useNA = "ifany")) else NULL,
         race_table    = if ("race" %in% names(clin))
@@ -40,9 +51,9 @@ plan_eda <- list(
         vital_table   = if ("vital_status" %in% names(clin))
           as.data.frame(table(Status = clin$vital_status, useNA = "ifany")) else NULL,
         days_to_death = if ("days_to_death" %in% names(clin))
-          summary(clin$days_to_death[!is.na(clin$days_to_death)]) else NULL,
+          summary(as.numeric(clin$days_to_death[!is.na(clin$days_to_death)])) else NULL,
         days_to_last_followup = if ("days_to_last_follow_up" %in% names(clin))
-          summary(clin$days_to_last_follow_up[!is.na(clin$days_to_last_follow_up)]) else NULL
+          summary(as.numeric(clin$days_to_last_follow_up[!is.na(clin$days_to_last_follow_up)])) else NULL
       )
     }
   ),
