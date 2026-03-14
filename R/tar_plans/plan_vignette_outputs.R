@@ -1604,5 +1604,177 @@ plan_vignette_outputs <- list(
   }),
   tar_target(code_vig_git_info, {
     paste(deparse(body(make_git_info)), collapse = "\n")
-  })
+  }),
+
+  # ================================================================
+  # glossary.qmd targets
+  # ================================================================
+
+  # --- Units reference table ---
+  tar_target(
+    vig_units_table,
+    {
+      data.frame(
+        Variable = c(
+          "age_at_diagnosis", "days_to_death", "days_to_last_follow_up",
+          "days_to_last_known_disease_status",
+          "unstranded / stranded_*", "tpm_unstranded", "fpkm_unstranded"
+        ),
+        Unit = c("days", "days", "days", "days",
+                 "raw integer counts", "TPM", "FPKM"),
+        Conversion_or_Notes = c(
+          "age_years = age_at_diagnosis / 365.25",
+          "Used directly in survival analysis",
+          "Censoring time for survival",
+          "Disease assessment time",
+          "Input for DESeq2/edgeR",
+          "Cross-sample comparison (transcripts per million)",
+          "Largely deprecated, use TPM"
+        ),
+        stringsAsFactors = FALSE
+      )
+    }
+  ),
+
+  # ================================================================
+  # data-sources.qmd targets
+  # ================================================================
+
+  # --- MSigDB parquet stats ---
+  tar_target(
+    vig_msigdb_stats,
+    {
+      msigdb_dir <- file.path("inst", "extdata", "msigdb")
+      if (!dir.exists(msigdb_dir)) return(NULL)
+      parquet_files <- list.files(msigdb_dir, pattern = "\\.parquet$",
+                                  full.names = TRUE)
+      if (length(parquet_files) == 0) return(NULL)
+      do.call(rbind, lapply(parquet_files, function(f) {
+        tbl <- arrow::read_parquet(f)
+        data.frame(
+          File = basename(f),
+          Size = paste0(round(file.size(f) / 1024, 1), " KB"),
+          Rows = nrow(tbl),
+          Columns = ncol(tbl),
+          Gene_Sets = length(unique(tbl$gs_name)),
+          Unique_Genes = length(unique(tbl$ensembl_gene)),
+          ID_Type = "Ensembl",
+          stringsAsFactors = FALSE
+        )
+      }))
+    },
+    packages = c("arrow")
+  ),
+
+  # ================================================================
+  # gene-report.qmd targets (require Bioconductor — guarded stubs)
+  # ================================================================
+
+  tar_target(
+    vig_gene_expression_dist,
+    {
+      if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) return(NULL)
+      if (is.null(vst_counts)) return(NULL)
+      gene <- "CD70"
+      vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
+      if (!(gene %in% rownames(vst_mat))) return(NULL)
+      expr_vals <- as.numeric(vst_mat[gene, ])
+      df <- data.frame(expression = expr_vals)
+      ggplot2::ggplot(df, ggplot2::aes(x = expression)) +
+        ggplot2::geom_histogram(bins = 30, fill = "#2166AC", alpha = 0.7) +
+        ggplot2::geom_vline(xintercept = median(expr_vals), linetype = "dashed",
+                            color = "#B2182B") +
+        ggplot2::labs(
+          title = paste0(gene, " Expression Distribution"),
+          subtitle = paste0("n = ", length(expr_vals), " samples | ",
+                            "Median = ", round(median(expr_vals), 2),
+                            " | SD = ", round(sd(expr_vals), 2)),
+          x = "VST Expression", y = "Count"
+        ) +
+        ggplot2::theme_minimal(base_size = 12)
+    },
+    packages = c("ggplot2")
+  ),
+
+  tar_target(
+    vig_gene_km_expression,
+    {
+      if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) return(NULL)
+      if (is.null(vst_counts) || is.null(survival_data)) return(NULL)
+      gene <- "CD70"
+      vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
+      if (!(gene %in% rownames(vst_mat))) return(NULL)
+      km_res <- coMMpass::run_km_by_expression(
+        survival_data, vst_mat, gene = gene, split = "median"
+      )
+      if (is.null(km_res$fit)) return(NULL)
+      coMMpass::plot_km(km_res,
+        title = paste0("Survival by ", gene, " Expression (Median Split)"))
+    },
+    packages = c("ggplot2")
+  ),
+
+  tar_target(
+    vig_gene_expr_subtype,
+    {
+      if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) return(NULL)
+      if (is.null(vst_counts) || is.null(cytogenetic_data)) return(NULL)
+      gene <- "CD70"
+      vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
+      if (!(gene %in% rownames(vst_mat))) return(NULL)
+      cyto_df <- if (is.character(cytogenetic_data) && file.exists(cytogenetic_data)) {
+        arrow::read_parquet(cytogenetic_data)
+      } else if (is.data.frame(cytogenetic_data)) {
+        cytogenetic_data
+      } else {
+        NULL
+      }
+      if (is.null(cyto_df)) return(NULL)
+      coMMpass::plot_expression_by_subtype(vst_mat, cyto_df, gene = gene)
+    },
+    packages = c("ggplot2")
+  ),
+
+  tar_target(
+    vig_gene_correlations,
+    {
+      if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) return(NULL)
+      if (is.null(vst_counts)) return(NULL)
+      gene <- "CD70"
+      vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
+      if (!(gene %in% rownames(vst_mat))) return(NULL)
+      gene_vars <- apply(vst_mat, 1, var)
+      top_candidates <- names(sort(gene_vars, decreasing = TRUE))[1:500]
+      top_candidates <- setdiff(top_candidates, gene)
+      cor_batch <- coMMpass::correlate_genes_batch(
+        vst_mat, target_gene = gene,
+        candidate_genes = top_candidates, method = "pearson"
+      )
+      if (nrow(cor_batch) == 0) return(NULL)
+      head(cor_batch[, c("gene", "estimate", "p_value", "padj")], 10)
+    }
+  ),
+
+  tar_target(
+    vig_gene_correlation_plot,
+    {
+      if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) return(NULL)
+      if (is.null(vst_counts)) return(NULL)
+      gene <- "CD70"
+      vst_mat <- SummarizedExperiment::assay(vst_counts, "vst")
+      if (!(gene %in% rownames(vst_mat))) return(NULL)
+      gene_vars <- apply(vst_mat, 1, var)
+      top_candidates <- names(sort(gene_vars, decreasing = TRUE))[1:500]
+      top_candidates <- setdiff(top_candidates, gene)
+      cor_batch <- coMMpass::correlate_genes_batch(
+        vst_mat, target_gene = gene,
+        candidate_genes = top_candidates, method = "pearson"
+      )
+      if (nrow(cor_batch) == 0) return(NULL)
+      top_gene <- cor_batch$gene[1]
+      cor_res <- coMMpass::correlate_genes(vst_mat, gene, top_gene)
+      coMMpass::plot_gene_correlation(cor_res)
+    },
+    packages = c("ggplot2")
+  )
 )

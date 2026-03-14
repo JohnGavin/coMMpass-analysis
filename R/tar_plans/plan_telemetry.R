@@ -381,7 +381,7 @@ plan_telemetry <- list(
       meta_path <- file.path("_targets", "meta", "meta")
       if (file.exists(meta_path)) {
         meta <- tryCatch(
-          utils::read.csv(meta_path, stringsAsFactors = FALSE),
+          utils::read.csv(meta_path, stringsAsFactors = FALSE, sep = "|"),
           error = function(e) NULL
         )
       } else {
@@ -415,6 +415,160 @@ plan_telemetry <- list(
       )
     },
     packages = c("dplyr", "tibble"),
+    cue = targets::tar_cue(mode = "always")
+  ),
+
+  # --- Telemetry vignette: timing table (data.frame from meta CSV) ---
+  targets::tar_target(
+    vig_timing_table,
+    {
+      meta_path <- file.path("_targets", "meta", "meta")
+      if (!file.exists(meta_path)) return(NULL)
+      meta <- utils::read.csv(meta_path, stringsAsFactors = FALSE, sep = "|")
+      meta_timed <- meta[!is.na(meta$seconds), c("name", "seconds", "bytes")]
+      meta_timed$seconds <- as.numeric(meta_timed$seconds)
+      meta_timed <- meta_timed[order(-meta_timed$seconds), ]
+      meta_timed$size <- ifelse(
+        is.na(meta_timed$bytes), "\u2014",
+        ifelse(meta_timed$bytes > 1e6,
+          paste0(round(meta_timed$bytes / 1e6, 1), " MB"),
+          ifelse(meta_timed$bytes > 1e3,
+            paste0(round(meta_timed$bytes / 1e3, 1), " KB"),
+            paste0(meta_timed$bytes, " B")
+          )
+        )
+      )
+      meta_timed[, c("name", "seconds", "size")]
+    },
+    cue = targets::tar_cue(mode = "always")
+  ),
+
+  # --- Telemetry vignette: build status summary ---
+  targets::tar_target(
+    vig_build_status,
+    {
+      meta_path <- file.path("_targets", "meta", "meta")
+      if (!file.exists(meta_path)) return(NULL)
+      meta <- utils::read.csv(meta_path, stringsAsFactors = FALSE, sep = "|")
+      meta$seconds <- as.numeric(meta$seconds)
+      meta$bytes <- as.numeric(meta$bytes)
+      data.frame(
+        Metric = c("Total targets", "With timing data", "With errors",
+                    "With warnings", "Total build time", "Total serialized size"),
+        Value = c(
+          as.character(nrow(meta)),
+          as.character(sum(!is.na(meta$seconds))),
+          as.character(sum(!is.na(meta$error))),
+          as.character(sum(!is.na(meta$warnings))),
+          paste0(round(sum(meta$seconds, na.rm = TRUE) / 60, 1), " min"),
+          paste0(round(sum(meta$bytes, na.rm = TRUE) / 1e6, 1), " MB")
+        ),
+        stringsAsFactors = FALSE
+      )
+    },
+    cue = targets::tar_cue(mode = "always")
+  ),
+
+  # --- Telemetry vignette: errors/warnings table ---
+  targets::tar_target(
+    vig_errors_table,
+    {
+      meta_path <- file.path("_targets", "meta", "meta")
+      if (!file.exists(meta_path)) return(NULL)
+      meta <- utils::read.csv(meta_path, stringsAsFactors = FALSE, sep = "|")
+      issues <- meta[!is.na(meta$error) | !is.na(meta$warnings),
+                     c("name", "error", "warnings")]
+      if (nrow(issues) == 0) {
+        return(data.frame(
+          Status = "No errors or warnings in the last build.",
+          stringsAsFactors = FALSE
+        ))
+      }
+      issues
+    },
+    cue = targets::tar_cue(mode = "always")
+  ),
+
+  # --- Telemetry vignette: outdated list (text, cannot call tar_outdated inside pipeline) ---
+  targets::tar_target(
+    vig_outdated_list,
+    {
+      "Run targets::tar_outdated() locally to check for outdated targets."
+    },
+    cue = targets::tar_cue(mode = "always")
+  ),
+
+  # --- Telemetry vignette: size distribution plot ---
+  targets::tar_target(
+    vig_size_plot,
+    {
+      meta_path <- file.path("_targets", "meta", "meta")
+      if (!file.exists(meta_path)) return(NULL)
+      meta <- utils::read.csv(meta_path, stringsAsFactors = FALSE, sep = "|")
+      meta$bytes <- as.numeric(meta$bytes)
+      meta_sized <- meta[!is.na(meta$bytes) & meta$bytes > 0, ]
+      if (nrow(meta_sized) == 0) return(NULL)
+      ggplot2::ggplot(
+        meta_sized,
+        ggplot2::aes(x = log10(bytes), y = stats::reorder(name, bytes))
+      ) +
+        ggplot2::geom_col(fill = "steelblue", width = 0.6) +
+        ggplot2::geom_vline(xintercept = log10(1e6), linetype = "dashed",
+                            color = "red", alpha = 0.5) +
+        ggplot2::annotate("text", x = log10(1e6), y = 1, label = "1 MB",
+                          hjust = -0.2, color = "red", size = 3) +
+        ggplot2::labs(
+          title = "Target Sizes (serialized)",
+          subtitle = paste0(nrow(meta_sized), " targets with stored objects"),
+          x = "log10(bytes)", y = NULL
+        ) +
+        ggplot2::theme_minimal(base_size = 10) +
+        ggplot2::theme(axis.text.y = ggplot2::element_text(size = 5))
+    },
+    packages = c("ggplot2"),
+    cue = targets::tar_cue(mode = "always")
+  ),
+
+  # --- Telemetry vignette: changes by type (extracted from summary) ---
+  targets::tar_target(
+    vig_changes_by_type,
+    {
+      s <- vig_git_changelog_summary
+      if (is.null(s) || is.null(s$by_type)) return(NULL)
+      s$by_type
+    },
+    cue = targets::tar_cue(mode = "always")
+  ),
+
+  # --- Telemetry vignette: changes by file category ---
+  targets::tar_target(
+    vig_changes_by_file_category,
+    {
+      s <- vig_git_changelog_summary
+      if (is.null(s) || is.null(s$by_file_category)) return(NULL)
+      s$by_file_category
+    },
+    cue = targets::tar_cue(mode = "always")
+  ),
+
+  # --- Telemetry vignette: GitHub activity table ---
+  targets::tar_target(
+    vig_github_activity_table,
+    {
+      gh_data <- vig_github_activity
+      if (is.null(gh_data) || !is.null(gh_data$error)) {
+        return(data.frame(
+          Status = paste0("GitHub API: ",
+            if (!is.null(gh_data$error)) gh_data$error else "data not available"),
+          stringsAsFactors = FALSE
+        ))
+      }
+      data.frame(
+        Metric = c("Open Issues", "Closed Issues", "Merged PRs"),
+        Count = c(gh_data$issues_open, gh_data$issues_closed, gh_data$prs_merged),
+        stringsAsFactors = FALSE
+      )
+    },
     cue = targets::tar_cue(mode = "always")
   )
 )

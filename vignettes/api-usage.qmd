@@ -89,14 +89,7 @@ safe_tar_read("vig_api_endpoints_dt")
 Fetch endpoint data from the command line using `curl` and `jq`.
 
 ```{r example-curl, results='asis'}
-code <- safe_tar_read("code_api_curl")
-if (!is.null(code)) {
-  cat("<details>\n<summary>Show code</summary>\n\n```bash\n")
-  cat(paste(code, collapse = "\n"))
-  cat("\n```\n</details>\n")
-} else {
-  cat("*Code example not available — pre-computed target not found.*\n")
-}
+safe_tar_read("code_api_curl")
 ```
 
 ## Example: R (jsonlite)
@@ -104,14 +97,7 @@ if (!is.null(code)) {
 Load API data directly into R data frames using `jsonlite::fromJSON()`.
 
 ```{r example-r, results='asis'}
-code <- safe_tar_read("code_api_r")
-if (!is.null(code)) {
-  cat("<details>\n<summary>Show code</summary>\n\n```r\n")
-  cat(paste(code, collapse = "\n"))
-  cat("\n```\n</details>\n")
-} else {
-  cat("*Code example not available — pre-computed target not found.*\n")
-}
+safe_tar_read("code_api_r")
 ```
 
 ## Example: Python (requests)
@@ -119,14 +105,7 @@ if (!is.null(code)) {
 Access the API from Python using `requests` and `pandas`.
 
 ```{r example-python, results='asis'}
-code <- safe_tar_read("code_api_python")
-if (!is.null(code)) {
-  cat("<details>\n<summary>Show code</summary>\n\n```python\n")
-  cat(paste(code, collapse = "\n"))
-  cat("\n```\n</details>\n")
-} else {
-  cat("*Code example not available — pre-computed target not found.*\n")
-}
+safe_tar_read("code_api_python")
 ```
 
 ## Raw Data Sources
