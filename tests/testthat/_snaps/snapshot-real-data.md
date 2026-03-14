@@ -263,7 +263,7 @@
     Code
       cat("names:", paste(sort(names(res)), collapse = ", "), "\n")
     Output
-      names: method, n_deg, note, results_table 
+      names: design, method, n_deg, paired, results_shrunk, results_table, shrinkage_coef 
     Code
       cat("method:", res$method, "\n")
     Output
@@ -271,16 +271,16 @@
     Code
       cat("n_deg:", res$n_deg, "\n")
     Output
-      n_deg: 0 
+      n_deg: 1615 
     Code
       cat("results_table cols:", paste(names(res$results_table), collapse = ", "),
       "\n")
     Output
-      results_table cols: gene, log2FoldChange, padj 
+      results_table cols: baseMean, log2FoldChange, lfcSE, stat, pvalue, padj 
     Code
       cat("results_table nrow:", nrow(res$results_table), "\n")
     Output
-      results_table nrow: 0 
+      results_table nrow: 30675 
 
 # deseq2_results significance snapshot
 
@@ -288,7 +288,7 @@
       sig <- sum(res$results_table$padj < 0.05, na.rm = TRUE)
       cat("Significant (padj < 0.05):", sig, "\n")
     Output
-      Significant (padj < 0.05): 0 
+      Significant (padj < 0.05): 1615 
     Code
       (function(r) cat("log2FC range:", r[1], "to", r[2], "\n"))(range(res$
         results_table$log2FC, na.rm = TRUE))
@@ -309,7 +309,7 @@
     Code
       cat("names:", paste(sort(names(res)), collapse = ", "), "\n")
     Output
-      names: method, n_deg, note, results_table 
+      names: design, method, n_deg, results_table 
     Code
       cat("method:", res$method, "\n")
     Output
@@ -317,16 +317,16 @@
     Code
       cat("n_deg:", res$n_deg, "\n")
     Output
-      n_deg: 0 
+      n_deg: 3738 
     Code
       cat("results_table cols:", paste(names(res$results_table), collapse = ", "),
       "\n")
     Output
-      results_table cols: gene, log2FoldChange, padj 
+      results_table cols: logFC, logCPM, F, PValue, FDR 
     Code
       cat("results_table nrow:", nrow(res$results_table), "\n")
     Output
-      results_table nrow: 0 
+      results_table nrow: 30675 
 
 # edger_results significance snapshot
 
@@ -355,7 +355,7 @@
     Code
       cat("names:", paste(sort(names(res)), collapse = ", "), "\n")
     Output
-      names: method, n_deg, note, results_table 
+      names: design, method, n_deg, results_table 
     Code
       cat("method:", res$method, "\n")
     Output
@@ -363,16 +363,16 @@
     Code
       cat("n_deg:", res$n_deg, "\n")
     Output
-      n_deg: 0 
+      n_deg: 159 
     Code
       cat("results_table cols:", paste(names(res$results_table), collapse = ", "),
       "\n")
     Output
-      results_table cols: gene, log2FoldChange, padj 
+      results_table cols: logFC, AveExpr, t, P.Value, adj.P.Val, B 
     Code
       cat("results_table nrow:", nrow(res$results_table), "\n")
     Output
-      results_table nrow: 0 
+      results_table nrow: 30675 
 
 # gsea_results structure snapshot
 

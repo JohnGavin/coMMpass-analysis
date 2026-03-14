@@ -36,7 +36,7 @@ r_pkgs <- r_pkgs[!r_pkgs %in% bioc_pkgs]
 system_pkgs <- c(
   "curl", "openssl", "libxml2", "glpk", "zlib",
   "locale", "direnv", "jq", "curlMinimal", "nano",
-  "duckdb", "tree", "bc", "htop", "btop", "cacert",
+  "duckdb", "qpdf", "tree", "bc", "htop", "btop", "cacert",
   "gh", "git", "gnupg", "toybox", "gettext", "pandoc",
   "less", "unzip", "libiconv", "gcc", "libgcc", "clang",
   "quarto"

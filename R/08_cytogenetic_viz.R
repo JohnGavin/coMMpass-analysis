@@ -5,7 +5,8 @@
 utils::globalVariables(c(
   "patient", "marker_label", "alt_type", "freq",
   "label1", "label2", "signed_logp",
-  "expression", "marker_status"
+  "expression", "marker_status",
+  "y_pos", "p_label"
 ))
 
 #' Plot cytogenetic oncoprint
@@ -495,7 +496,7 @@ plot_expression_by_subtype <- function(expr_matrix,
     if (sum(valid) < 3) return(NULL)
 
     data.frame(
-      expression = expr_vals[valid],
+      expression = unname(expr_vals[valid]),
       marker_status = status[valid],
       marker_label = if (m %in% names(marker_labels)) marker_labels[m] else m,
       stringsAsFactors = FALSE
