@@ -15,6 +15,9 @@ plan_gene_correlations <- list(
         head(consensus_de_genes$gene, 10)
       } else if (is.character(consensus_de_genes)) {
         head(consensus_de_genes, 10)
+      } else if (is.list(consensus_de_genes) &&
+                 !is.null(consensus_de_genes$consensus_genes)) {
+        head(consensus_de_genes$consensus_genes, 10)
       } else {
         return(NULL)
       }

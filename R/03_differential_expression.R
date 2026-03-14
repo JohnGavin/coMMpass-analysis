@@ -264,6 +264,38 @@ prepare_coldata <- function(se_data, clinical_data, design_formula) {
 
   col_data <- as.data.frame(SummarizedExperiment::colData(se_data))
 
+  # Derive missing design variables from available clinical data
+  if ("condition" %in% design_vars && !"condition" %in% names(col_data)) {
+    # Derive condition from vital_status (Alive → control, Dead → case)
+    if ("vital_status" %in% names(col_data)) {
+      vs <- tolower(col_data$vital_status)
+      col_data$condition <- factor(
+        ifelse(vs %in% c("dead", "deceased"), "Dead", "Alive"),
+        levels = c("Alive", "Dead")
+      )
+      n_dead <- sum(col_data$condition == "Dead", na.rm = TRUE)
+      n_alive <- sum(col_data$condition == "Alive", na.rm = TRUE)
+      logger::log_info(
+        "Derived 'condition' from vital_status: {n_alive} Alive, {n_dead} Dead"
+      )
+      if (n_dead < 3 || n_alive < 3) {
+        logger::log_warn(
+          "Too few samples in one group (Alive={n_alive}, Dead={n_dead}); ",
+          "need >= 3 per group for DE"
+        )
+        return(NULL)
+      }
+    } else if ("vital_status" %in% names(clinical_data)) {
+      # Try from clinical_data argument if not in SE colData
+      vs <- tolower(clinical_data$vital_status)
+      col_data$condition <- factor(
+        ifelse(vs %in% c("dead", "deceased"), "Dead", "Alive"),
+        levels = c("Alive", "Dead")
+      )
+      logger::log_info("Derived 'condition' from clinical_data$vital_status")
+    }
+  }
+
   # Check if design variables are available
   missing_vars <- setdiff(design_vars, names(col_data))
   if (length(missing_vars) > 0) {

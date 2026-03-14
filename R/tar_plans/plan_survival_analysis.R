@@ -100,6 +100,9 @@ plan_survival_analysis <- list(
         head(consensus_de_genes$gene, 5)
       } else if (is.character(consensus_de_genes)) {
         head(consensus_de_genes, 5)
+      } else if (is.list(consensus_de_genes) &&
+                 !is.null(consensus_de_genes$consensus_genes)) {
+        head(consensus_de_genes$consensus_genes, 5)
       } else {
         return(NULL)
       }
@@ -107,10 +110,12 @@ plan_survival_analysis <- list(
       available <- intersect(top_genes, rownames(vst_mat))
       if (length(available) == 0) return(NULL)
 
-      lapply(stats::setNames(available, available), function(g) {
+      result <- lapply(stats::setNames(available, available), function(g) {
         run_km_by_expression(survival_data, vst_mat, gene = g,
                              split = "median")
       })
+      rm(vst_counts, vst_mat)
+      result
     },
     packages = c("survival")
   ),
@@ -133,6 +138,9 @@ plan_survival_analysis <- list(
         head(consensus_de_genes$gene, 5)
       } else if (is.character(consensus_de_genes)) {
         head(consensus_de_genes, 5)
+      } else if (is.list(consensus_de_genes) &&
+                 !is.null(consensus_de_genes$consensus_genes)) {
+        head(consensus_de_genes$consensus_genes, 5)
       } else {
         return(NULL)
       }
@@ -140,9 +148,11 @@ plan_survival_analysis <- list(
       available <- intersect(top_genes, rownames(vst_mat))
       if (length(available) == 0) return(NULL)
 
-      lapply(stats::setNames(available, available), function(g) {
+      result <- lapply(stats::setNames(available, available), function(g) {
         plot_expression_by_subtype(vst_mat, cyto, gene = g)
       })
+      rm(vst_counts, vst_mat, cyto)
+      result
     }
   )
 )

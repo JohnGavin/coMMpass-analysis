@@ -459,16 +459,34 @@ plot_expression_by_subtype <- function(expr_matrix,
     gain_1q = "gain(1q)"
   )
 
-  # Match patients
-  common <- intersect(cyto_data$patient_id, colnames(expr_matrix))
-  if (length(common) < 3) {
-    return(ggplot2::ggplot() +
-             ggplot2::annotate("text", x = 0.5, y = 0.5,
-                               label = "Too few matched patients") +
-             ggplot2::theme_void())
-  }
+  # Match patients (handle GDC barcodes: MMRF_1618_1_BM_CD138pos → MMRF_1618)
+  sample_ids <- colnames(expr_matrix)
+  barcode_patient <- sub("^(MMRF_\\d+)_.*$", "\\1", sample_ids)
+  use_barcode_map <- !identical(sample_ids, barcode_patient) &&
+    any(barcode_patient %in% cyto_data$patient_id)
 
-  expr_vals <- as.numeric(expr_matrix[gene, common])
+  if (use_barcode_map) {
+    patient_to_sample <- setNames(sample_ids, barcode_patient)
+    patient_to_sample <- patient_to_sample[!duplicated(names(patient_to_sample))]
+    common <- intersect(cyto_data$patient_id, names(patient_to_sample))
+    if (length(common) < 3) {
+      return(ggplot2::ggplot() +
+               ggplot2::annotate("text", x = 0.5, y = 0.5,
+                                 label = "Too few matched patients") +
+               ggplot2::theme_void())
+    }
+    matched_samples <- patient_to_sample[common]
+    expr_vals <- as.numeric(expr_matrix[gene, matched_samples])
+  } else {
+    common <- intersect(cyto_data$patient_id, sample_ids)
+    if (length(common) < 3) {
+      return(ggplot2::ggplot() +
+               ggplot2::annotate("text", x = 0.5, y = 0.5,
+                                 label = "Too few matched patients") +
+               ggplot2::theme_void())
+    }
+    expr_vals <- as.numeric(expr_matrix[gene, common])
+  }
 
   # Build long data frame across markers
   long_list <- lapply(markers, function(m) {

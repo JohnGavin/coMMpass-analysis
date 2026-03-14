@@ -1003,7 +1003,18 @@ plan_vignette_outputs <- list(
       if (is.null(km_overall)) return(NULL)
       if (is.null(km_overall$fit)) return(NULL)
       median_os <- km_overall$median_survival
-      if (all(is.na(median_os))) return(NULL)
+      if (all(is.na(median_os))) {
+        n_patients <- if (!is.null(km_overall$fit)) {
+          sum(km_overall$fit$n)
+        } else NA
+        return(paste0(
+          "\n**Median overall survival** has not been reached in this cohort",
+          if (!is.na(n_patients)) paste0(" (n = ", n_patients, " patients)") else "",
+          ". This indicates that more than 50% of patients remain alive at ",
+          "last follow-up, which is consistent with improving outcomes in ",
+          "multiple myeloma with modern therapies.\n"
+        ))
+      }
       paste0(
         "\n**Median overall survival:** ",
         round(median_os[1]), " days (",
@@ -1873,7 +1884,6 @@ plan_vignette_outputs <- list(
     {
       if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) return(NULL)
       if (is.null(vst_counts) || is.null(survival_data)) return(NULL)
-      if (!exists("run_km_by_expression", mode = "function")) return(NULL)
       gene_symbol <- "CD70"
       gene_id <- resolve_gene_id(gene_symbol, vst_counts)
       if (is.na(gene_id)) return(NULL)
@@ -1911,7 +1921,6 @@ plan_vignette_outputs <- list(
     {
       if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) return(NULL)
       if (is.null(vst_counts) || is.null(cytogenetic_data)) return(NULL)
-      if (!exists("plot_expression_by_subtype", mode = "function")) return(NULL)
       gene_symbol <- "CD70"
       gene_id <- resolve_gene_id(gene_symbol, vst_counts)
       if (is.na(gene_id)) return(NULL)

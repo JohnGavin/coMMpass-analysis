@@ -285,14 +285,34 @@ run_km_by_expression <- function(surv_data,
   }
 
   # Match patients between survival data and expression matrix
-  common <- intersect(surv_data$patient_id, colnames(expr_matrix))
-  if (length(common) < min_per_group * 2) {
-    return(list(fit = NULL, logrank_p = NA_real_,
-                note = paste0("Only ", length(common), " matched patients")))
-  }
+  # GDC barcodes: MMRF_1618_1_BM_CD138pos; patient IDs: MMRF_1618
+  sample_ids <- colnames(expr_matrix)
+  barcode_patient <- sub("^(MMRF_\\d+)_.*$", "\\1", sample_ids)
+  use_barcode_map <- !identical(sample_ids, barcode_patient) &&
+    any(barcode_patient %in% surv_data$patient_id)
 
-  sd <- surv_data[surv_data$patient_id %in% common, ]
-  expr_vals <- as.numeric(expr_matrix[gene, sd$patient_id])
+  if (use_barcode_map) {
+    # Build patient→sample mapping (prefer visit 1, i.e. first sample)
+    patient_to_sample <- setNames(sample_ids, barcode_patient)
+    patient_to_sample <- patient_to_sample[!duplicated(names(patient_to_sample))]
+    common_patients <- intersect(surv_data$patient_id, names(patient_to_sample))
+    if (length(common_patients) < min_per_group * 2) {
+      return(list(fit = NULL, logrank_p = NA_real_,
+                  note = paste0("Only ", length(common_patients),
+                                " matched patients (barcode mapping)")))
+    }
+    sd <- surv_data[surv_data$patient_id %in% common_patients, ]
+    matched_samples <- patient_to_sample[sd$patient_id]
+    expr_vals <- as.numeric(expr_matrix[gene, matched_samples])
+  } else {
+    common <- intersect(surv_data$patient_id, sample_ids)
+    if (length(common) < min_per_group * 2) {
+      return(list(fit = NULL, logrank_p = NA_real_,
+                  note = paste0("Only ", length(common), " matched patients")))
+    }
+    sd <- surv_data[surv_data$patient_id %in% common, ]
+    expr_vals <- as.numeric(expr_matrix[gene, sd$patient_id])
+  }
 
   # Split into groups
   if (split == "median") {

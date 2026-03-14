@@ -6,35 +6,42 @@
 
 ### Completed This Session
 
-**Caption Compliance Overhaul — Phases 1-6**
+**Fix 3 NULL-Target Bugs + Auto-generate package.nix (#93)**
 
-1. **Phase 1 (Rules):** Updated 3 rule files (visualization-standards.md, quarto-vignette-format.md, quarto-vignette-data.md) with mandatory caption pre-computation, min 3 sentences, cross-refs.
-2. **Phase 2 (Uncaptioned Tables):** Converted 10 bare data.frame targets to DT::datatable with captions in plan_telemetry.R (6), plan_vignette_outputs.R (3), plan_doc_examples.R (1).
-3. **Phase 3 (Gene-Report):** Added 4 rich plot captions (expression-dist, KM, subtype, correlation) with dynamic values.
-4. **Phase 4 (Plot Captions):** Enhanced 6 EDA plot captions (age, ISS, sample-type, samples-per-patient, library-size, genes-detected) + 2 telemetry plots (velocity, size) + 1 DE plot.
-5. **Phase 5 (Pipeline-DAG):** Wrapped visNetwork in tagList with figcaption (target count, layers, edges, interaction instructions).
-6. **Phase 6 (Build/Export):** 28/34 modified targets rebuilt and exported with new captions. 6 targets need Bioconductor to rebuild (5 gene-report + age_histogram).
+1. **Fix 1 (plan_eda.R):** Fixed `age_at_diagnosis` character→numeric coercion. GDC stores as VARCHAR; replaced `is.numeric()` guard with `suppressWarnings(as.numeric())` + validation (negative rejection, coercion failure count, suspicious age flag). Also wrapped `days_to_death` and `days_to_last_follow_up` in `as.numeric()`.
+
+2. **Fix 2 (gene symbol resolution):** Added `resolve_gene_id()` to `R/07_gene_annotation.R` — maps HGNC symbols (e.g., "CD70") to Ensembl IDs via `SummarizedExperiment::rowData(se)$gene_name`. Updated 5 gene-report targets in `plan_vignette_outputs.R` to use it. 4 of 5 now produce non-NULL output (KM plot requires `run_km_by_expression` function, guarded).
+
+3. **Fix 3 (nix_exclude):** Added `anndataR` and `SingleCellExperiment` to `nix_exclude` in `default.R` (optional deps, compat issues, guarded by `requireNamespace()`).
+
+4. **Issue #93 (package.nix auto-generation):** Folded `package.nix` generation into `default.R` — runs BEFORE `rix::rix()` so it always succeeds. Uses shared `date = "2026-02-01"` variable. 44 deps auto-derived from DESCRIPTION (was 20 hand-maintained). Dots→underscores mapping for nix attribute names.
+
+5. **ggplot RDS size reduction:** Fixed ggplot2 4.0 S7 `aes()` environment capture (vst_counts 148MB, vst_mat 24MB captured in quosures). Used `rm()` before returning plots. Results: `vig_gene_expression_dist` 41MB→79KB (99.8%), `vig_count_distribution_plot` 25MB→516KB (97.9%).
+
+6. **Cachix push completed:** `package.nix` built via `nix-build`, pushed to johngavin cachix, pinned as `coMMpass-v0.1.0` (keep-forever). Fixed `push_to_cachix.sh` `--watch-mode auto` parse error.
+
+7. **Issues created:** #87 (no condition column), #88 (no FISH data), #89 (no PFS endpoints), #90 (patient ID mismatch), #91 (treatment parquet), #92 (median OS not reached), #93 (auto-generate package.nix).
 
 ### Files Modified
-- `R/tar_plans/plan_telemetry.R` — 8 targets: 6 bare df→DT, 2 caption enrichment, 2 plot caption enhancements
-- `R/tar_plans/plan_vignette_outputs.R` — 16 targets: 3 bare df→DT, 4 caption enrichment, 5 gene-report captions, 4 EDA inline caption enhancements
-- `R/tar_plans/plan_doc_examples.R` — 1 target: glossary_table df→DT
-- `R/viz/eda_plots.R` — 2 functions: age_histogram and iss_barplot captions enhanced
-- `R/viz/de_plots.R` — 1 function: de_method_barplot caption enhanced
-- `~/.claude/hooks/vignette_check.sh` — Added bare data.frame static analysis check
-- `~/.claude/projects/.../memory/MEMORY.md` — Added caption compliance section
+- `default.R` — nix_exclude additions + package.nix auto-generation code
+- `package.nix` — now auto-generated (44 deps, date 2026-02-01)
+- `R/07_gene_annotation.R` — new `resolve_gene_id()` function
+- `R/tar_plans/plan_eda.R` — character→numeric coercion fixes with validation
+- `R/tar_plans/plan_vignette_outputs.R` — 5 gene-report targets + env capture fix
+- `NAMESPACE` — export resolve_gene_id
+- `push_to_cachix.sh` — removed `--watch-mode auto` flag
+- `inst/extdata/vignettes/*.rds` — 87 RDS files re-exported
 
-### RDS Files Updated (16 of 34)
-All exported to `inst/extdata/vignettes/*.rds` with `compress = "xz"`.
-All DT objects verified with captions (top-justified, left-aligned, 3+ sentences).
-
-### Targets Needing Bioconductor Rebuild (6)
-- vig_gene_correlations, vig_gene_expression_dist, vig_gene_km_expression
-- vig_gene_expr_subtype, vig_gene_correlation_plot, vig_age_histogram
-- Old RDS files exist as fallback (pre-caption-change versions)
+### 28 NULL Targets — Root Causes (Issues Filed)
+- RC1: No `condition` column for DE design formula (11 targets) — #87
+- RC2: GDC lacks FISH/cytogenetic columns (9 targets) — #88
+- RC3: GDC lacks PFS endpoints (7 targets) — #89
+- RC4: Patient ID format mismatch clinical↔biospecimen (1 target) — #90
+- `treatment_data_clean`: No treatment parquet file — #91
+- `vig_km_overall_text`: Median OS not reached — #92
 
 ### Remaining Items
-- 6 targets above need Bioconductor packages (DESeq2, SummarizedExperiment, TCGAbiolinks)
-- 4 Cox/survival tables still knitr_kable format (not yet converted to DT)
-- vig_dd_biospecimen_table, vig_dd_rnaseq_sample_table: in store with OLD captions (need Bioconductor to rebuild with enriched captions)
+- 28 NULL targets above need data availability fixes (issues #87-#92)
 - msigdbr upstream sha256 bug in rstats-on-nix (still broken)
+- `rix::rix()` fails inside nix-shell for date "2026-02-01" — needs rix version update
+- `run_km_by_expression` function not yet implemented (gene-report KM target)
