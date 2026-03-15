@@ -8,7 +8,7 @@ check_adjustment(
   model_covariates,
   exposure = "cytogenetic_risk",
   outcome = "overall_survival",
-  dag = commpass_dag()
+  dag = NULL
 )
 }
 \arguments{

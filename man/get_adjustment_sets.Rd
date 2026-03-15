@@ -7,7 +7,7 @@
 get_adjustment_sets(
   exposure = "cytogenetic_risk",
   outcome = "overall_survival",
-  dag = commpass_dag()
+  dag = NULL
 )
 }
 \arguments{

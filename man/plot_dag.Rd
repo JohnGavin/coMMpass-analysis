@@ -4,7 +4,7 @@
 \alias{plot_dag}
 \title{Plot the CoMMpass causal DAG}
 \usage{
-plot_dag(dag = commpass_dag(), title = "CoMMpass Causal DAG")
+plot_dag(dag = NULL, title = "CoMMpass Causal DAG")
 }
 \arguments{
 \item{dag}{A `dagitty` DAG object. Defaults to [commpass_dag()].}

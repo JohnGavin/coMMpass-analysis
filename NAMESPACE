@@ -86,8 +86,3 @@ importFrom(stats,sd)
 importFrom(stats,setNames)
 importFrom(utils,head)
 importFrom(utils,installed.packages)
-
-export(check_adjustment)
-export(commpass_dag)
-export(get_adjustment_sets)
-export(plot_dag)

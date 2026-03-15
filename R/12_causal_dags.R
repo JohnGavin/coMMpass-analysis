@@ -66,7 +66,8 @@ commpass_dag <- function() {
 #' @export
 get_adjustment_sets <- function(exposure = "cytogenetic_risk",
                                 outcome = "overall_survival",
-                                dag = commpass_dag()) {
+                                dag = NULL) {
+  if (is.null(dag)) dag <- commpass_dag()
   dagitty::adjustmentSets(dag, exposure = exposure, outcome = outcome,
                           type = "minimal")
 }
@@ -80,8 +81,9 @@ get_adjustment_sets <- function(exposure = "cytogenetic_risk",
 #' @param title Plot title.
 #' @return A ggplot object.
 #' @export
-plot_dag <- function(dag = commpass_dag(),
+plot_dag <- function(dag = NULL,
                      title = "CoMMpass Causal DAG") {
+  if (is.null(dag)) dag <- commpass_dag()
   if (!requireNamespace("ggdag", quietly = TRUE)) {
     cli::cli_abort("Package {.pkg ggdag} required for DAG plots")
   }
@@ -118,7 +120,8 @@ plot_dag <- function(dag = commpass_dag(),
 check_adjustment <- function(model_covariates,
                              exposure = "cytogenetic_risk",
                              outcome = "overall_survival",
-                             dag = commpass_dag()) {
+                             dag = NULL) {
+  if (is.null(dag)) dag <- commpass_dag()
   adj_sets <- get_adjustment_sets(exposure, outcome, dag)
   adj_list <- lapply(adj_sets, as.character)
 
