@@ -58,7 +58,9 @@ Suggests:
     plotly,
     plumber,
     visNetwork,
-    here
+    here,
+    dagitty,
+    ggdag
 biocViews: Software
 Additional_repositories:
     https://bioc.r-universe.dev

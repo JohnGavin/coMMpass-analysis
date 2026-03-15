@@ -60,6 +60,7 @@ c(
   plan_cytogenetic_viz,    # Oncoprint and co-occurrence visualization
   plan_gene_correlations,  # Gene-gene correlation analysis
   plan_treatment,          # Treatment/regimen data cleaning
+  plan_causal,          # Causal DAG analysis (dagitty/ggdag)
   plan_api,             # Static JSON API generation (Phase 1)
   plan_pkgctx,          # Auto-generate .ctx.yaml API context files
   plan_dag_validation,  # Cross-layer dependency validation

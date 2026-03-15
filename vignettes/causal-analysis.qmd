@@ -1,0 +1,162 @@
+---
+title: "07. Causal Analysis"
+format:
+  html:
+    code-fold: true
+    code-summary: "Show code"
+vignette: >
+  %\VignetteIndexEntry{07. Causal Analysis}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width = 10,
+  fig.height = 8
+)
+if (!in_pkgdown) library(targets)
+
+proj_dir <- Sys.getenv("TAR_PROJECT")
+tar_store <- NULL
+if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
+  tar_store <- file.path(proj_dir, "_targets")
+} else if (dir.exists("_targets")) {
+  tar_store <- "_targets"
+} else if (dir.exists("../_targets")) {
+  tar_store <- "../_targets"
+}
+
+safe_tar_read <- function(name) {
+  render_val <- function(val) {
+    if (inherits(val, c("gtable", "grob", "gTree"))) {
+      grid::grid.newpage(); grid::grid.draw(val); return(invisible(val))
+    }
+    val
+  }
+  if (!is.null(tar_store)) {
+    val <- tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
+    if (!is.null(val) && !(is.character(val) && length(val) == 1 && grepl("not available", val, ignore.case = TRUE))) {
+      return(render_val(val))
+    }
+  }
+  rds_candidates <- c(
+    system.file(paste0("extdata/vignettes/", name, ".rds"), package = "coMMpass"),
+    file.path("inst/extdata/vignettes", paste0(name, ".rds")),
+    file.path("../inst/extdata/vignettes", paste0(name, ".rds"))
+  )
+  for (rds in rds_candidates) {
+    if (nzchar(rds) && file.exists(rds)) {
+      obj <- readRDS(rds)
+      if (is.data.frame(obj) && requireNamespace("DT", quietly = TRUE))
+        return(DT::datatable(obj, rownames = FALSE))
+      if (!is.null(obj)) return(render_val(obj))
+    }
+  }
+  invisible(NULL)
+}
+```
+
+## Overview
+
+This vignette documents the **causal assumptions** underlying the CoMMpass
+survival and differential expression analyses. We use directed acyclic graphs
+(DAGs) to make these assumptions explicit, identify confounders, and check
+whether current models adjust for the right variables.
+
+::: {.callout-note}
+DAGs encode domain knowledge, not statistical results. They represent our
+*assumptions* about how variables relate causally, which then determines
+what we need to adjust for in regression models.
+:::
+
+## Causal DAG
+
+The CoMMpass DAG encodes relationships between cytogenetic risk, ISS stage,
+treatment, gene expression, and overall survival. Latent (unmeasured)
+variables — tumor biology and comorbidities — represent important confounders
+that cannot be directly adjusted for.
+
+```{r dag-plot, fig.height = 8, fig.width = 10, fig.cap = "CoMMpass causal DAG. Nodes represent measured and latent variables. Edges represent assumed causal effects. Exposure: cytogenetic_risk. Outcome: overall_survival. Latent variables (tumor_biology, comorbidities) represent unmeasured confounders."}
+safe_tar_read("vig_causal_dag_plot")
+```
+
+### Key Causal Assumptions
+
+1. **Cytogenetic risk → survival**: High-risk cytogenetics (del(17p), t(4;14),
+   gain(1q)) directly shorten survival via treatment resistance and aggressive
+   disease biology.
+
+2. **ISS stage as mediator**: Cytogenetic risk influences ISS stage (via tumor
+   burden), which in turn affects treatment decisions and survival.
+
+3. **Treatment as collider**: Treatment selection depends on both disease
+   severity (ISS, cytogenetics) and patient fitness (age, comorbidities).
+   Conditioning on treatment can induce collider bias.
+
+4. **Gene expression as downstream**: Expression patterns are downstream of
+   both cytogenetic alterations and tumor biology. They mediate some of the
+   effect on survival.
+
+## Adjustment Sets
+
+For each causal question, the DAG identifies the **minimal sufficient
+adjustment set** — the smallest set of variables that blocks all backdoor
+paths between exposure and outcome.
+
+```{r adjustment-table}
+safe_tar_read("vig_causal_adjustment_table")
+```
+
+## Model Adequacy Check
+
+We compare the covariates used in current Cox proportional hazards models
+against the DAG-implied adjustment sets.
+
+```{r model-check-table}
+safe_tar_read("vig_causal_model_check_table")
+```
+
+### Interpretation
+
+- If **Sufficient = TRUE**, the model's covariates include at least one
+  complete adjustment set — the causal effect estimate is valid under
+  the DAG assumptions.
+- If **Sufficient = FALSE**, there may be unblocked backdoor paths
+  (residual confounding). The recommendation column suggests which
+  variables to add.
+
+::: {.callout-warning}
+**Unmeasured confounders**: The DAG includes latent variables (tumor biology,
+comorbidities) that cannot be adjusted for with available data. Causal
+estimates remain subject to unmeasured confounding even with perfect
+measured-variable adjustment.
+:::
+
+## Implications for Analysis
+
+| Analysis | Causal Question | DAG Recommendation |
+|----------|----------------|-------------------|
+| DE analysis | Cytogenetic risk → expression | Adjust for age (confounder via comorbidities) |
+| KM survival | Cytogenetic risk → OS | Stratify by ISS; do NOT condition on treatment |
+| Cox regression | Cytogenetic risk → OS | Adjust for age, comorbidities; avoid treatment as covariate |
+| Treatment effect | Treatment → OS | Adjust for age, ISS, cytogenetic risk |
+
+## References
+
+- Textor J, van der Zander B, Gilthorpe MS, Liśkiewicz M, Ellison GT (2016).
+  Robust causal inference using directed acyclic graphs: the R package dagitty.
+  *International Journal of Epidemiology*, 45(6), 1887-1894.
+- Hernán MA, Robins JM (2020). *Causal Inference: What If*.
+  Chapman & Hall/CRC.
+- Pearl J (2009). *Causality*. Cambridge University Press.
+
+```{r session-info}
+sessionInfo()
+```
