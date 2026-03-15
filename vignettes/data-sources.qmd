@@ -78,8 +78,8 @@ Genetic Profile (CoMMpass) study is a longitudinal observational study of
 
 - **ClinicalTrials.gov:** [NCT01454297](https://clinicaltrials.gov/study/NCT01454297)
 - **GDC Project:** [MMRF-COMMPASS](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)
-- **MMRF Researcher Gateway:** <https://research.themmrf.org/>
-- **dbGaP Controlled Access:** [phs000748](https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000748)
+- **MMRF Researcher Gateway:** <https://research.themmrf.org/> (not currently accessible — FISH, PFS, treatment response data unavailable)
+- **dbGaP Controlled Access:** [phs000748](https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000748) (not used by this pipeline — requires institutional IRB)
 
 ### Citation
 
@@ -90,11 +90,12 @@ Genetic Profile (CoMMpass) study is a longitudinal observational study of
 
 ## Data Access Tiers
 
-| Tier | Data | Access |
-|------|------|--------|
-| **Open Access** | RNA-seq counts (STAR), clinical metadata | GDC Data Portal, no login required |
-| **Open Access (S3)** | RNA-seq files | `s3://gdc-mmrf-commpass-phs000748-2-open/` |
-| **Controlled Access** | WGS, WES, protected clinical | dbGaP application ([phs000748](https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000748)) |
+| Tier | Data | Access | Used by pipeline |
+|------|------|--------|------------------|
+| **Open Access** | RNA-seq counts (STAR), clinical metadata, treatment records | GDC Data Portal, no login required | **Yes** |
+| **Open Access (S3)** | RNA-seq files | `s3://gdc-mmrf-commpass-phs000748-2-open/` | **Yes** |
+| **MMRF Gateway** | FISH/cytogenetics, PFS, treatment response | Free registration (pending access) | **No** — 12 targets blocked |
+| **Controlled Access** | WGS, WES, protected clinical | dbGaP application ([phs000748](...)) | **No** — requires institutional IRB |
 
 ## Pipeline Data Sources (Real)
 
@@ -103,8 +104,10 @@ The `targets` pipeline downloads real patient data from GDC:
 | Data | Source | Function |
 |------|--------|----------|
 | RNA-seq SummarizedExperiment | [GDC STAR-Counts](https://docs.gdc.cancer.gov/Data/Bioinformatics_Pipelines/Expression_mRNA_Pipeline/) | `download_rnaseq_data()` via `TCGAbiolinks::GDCdownload()` |
-| Clinical metadata | [GDC clinical endpoint](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS) | `download_clinical_data()` via `TCGAbiolinks::GDCquery_clinic()` |
-| MSigDB gene sets | [MSigDB](https://www.gsea-msigdb.org/gsea/msigdb/) | Pre-bundled parquet in `inst/extdata/msigdb/` |
+| Clinical metadata (demographics, ISS, vital status) | [GDC clinical endpoint](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS) | `download_clinical_data()` via `TCGAbiolinks::GDCquery_clinic()` |
+| Treatment records (7,184 records, 994 patients) | [GDC API](https://api.gdc.cancer.gov/) | `download_clinical_data()` via GDC REST API |
+| Biospecimen metadata | [GDC biospecimen endpoint](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS) | `download_clinical_data()` via `TCGAbiolinks::GDCquery_clinic()` |
+| MSigDB gene sets (Hallmark + KEGG) | [MSigDB](https://www.gsea-msigdb.org/gsea/msigdb/) | Pre-bundled parquet in `inst/extdata/msigdb/` |
 
 The pipeline runs with a configurable `sample_limit` parameter (default 200
 in local builds; CI uses 20). All vignettes load pre-computed results from

@@ -8,7 +8,7 @@ The [CoMMpass study](https://themmrf.org/finding-a-cure/personalized-treatment-a
 
 - Reproducible Nix environment with all required R/Bioconductor packages
 - Analysis workflows for RNA-seq, single-cell, and survival analysis
-- Direct access to CoMMpass data via AWS S3, GDC, and MMRF Researcher Gateway
+- Direct access to CoMMpass data via GDC API and AWS S3 (open access)
 
 ## Interactive Dashboard
 
@@ -66,12 +66,12 @@ library(coMMpass)
 
 ## Data Access
 
-| Access Level | Data Type | Requirements |
-|---|---|---|
-| **[AWS Open Data](https://registry.opendata.aws/mmrf-commpass/)** | RNA-seq gene expression | None (just AWS CLI) |
-| **[MMRF Researcher Gateway](https://research.themmrf.org/)** | Clinical + genomic | Free registration |
-| **[GDC Data Portal](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)** | 995 cases, 34,109 files | GDC account |
-| **dbGaP Controlled** | Raw sequences (BAM/FASTQ) | Institutional affiliation + IRB |
+| Access Level | Data Type | Requirements | Used by this pipeline |
+|---|---|---|---|
+| **[GDC Data Portal](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)** | Clinical, RNA-seq (995 cases) | None (open access) | Yes |
+| **[AWS Open Data](https://registry.opendata.aws/mmrf-commpass/)** | RNA-seq gene expression | None (AWS CLI) | Yes |
+| **[MMRF Researcher Gateway](https://research.themmrf.org/)** | FISH, PFS, treatment response | Free registration (pending) | No (12 targets blocked) |
+| **dbGaP Controlled** | Raw sequences (BAM/FASTQ) | Institutional IRB | No |
 
 ### AWS S3 (Easiest - No Account Required)
 

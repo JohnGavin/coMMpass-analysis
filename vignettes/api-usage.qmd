@@ -110,10 +110,14 @@ safe_tar_read("code_api_python")
 
 ## Raw Data Sources
 
-For non-derived data, access the original sources directly:
+This pipeline uses **open-access GDC data only**. For non-derived data:
+
 - **GDC Data Portal:** <https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS>
-- **MMRF Research Gateway:** <https://research.themmrf.org/>
 - **GDC API:** <https://api.gdc.cancer.gov/>
+
+Additional data (FISH, PFS, treatment response) would require MMRF Researcher
+Gateway access (<https://research.themmrf.org/>), which is not currently available
+to this project.
 
 ## Phase 2 Roadmap
 
