@@ -46,6 +46,14 @@ reference:
   contents:
   - has_concept("cytogenetics")
 
+- title: "Causal Analysis"
+  desc: "Causal DAGs, adjustment sets, and model adequacy checks"
+  contents:
+  - commpass_dag
+  - get_adjustment_sets
+  - plot_dag
+  - check_adjustment
+
 - title: "Storage"
   desc: "DuckDB-backed parquet querying"
   contents:
@@ -88,6 +96,7 @@ articles:
   - exploratory-analysis
   - differential-expression
   - survival-analysis
+  - causal-analysis
   - gene-report
   - pipeline-dag
   - telemetry
