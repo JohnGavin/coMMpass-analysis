@@ -6,35 +6,39 @@
 
 ### Completed This Session
 
-1. **Regenerated default.nix with qpdf**
-   - Date "2026-02-01" expired → updated to "2026-02-02"
-   - `qpdf` added to system_pkgs — clears last R CMD check WARNING
-   - Both `default.nix` and `package.nix` regenerated
+1. **Regenerated default.nix** — date 2026-02-02, qpdf added
+2. **Reduced ggplot sizes** — 7 targets, 96 MB → 1.1 MB via ggplotGrob()
+3. **GDC treatment extraction** — 7,184 records, 994 patients
+4. **Cox model fix** — drop all-NA covariates, ISS + age (C=0.673)
+5. **msigdbr fix** — fallback path for local parquets
+6. **Causal DAGs (#85)** — dagitty/ggdag, adjustment sets, model checks, vignette
+7. **pkgdown validated** — 14 articles, 112 ref pages, 54 figures, 0 errors
 
-2. **Reduced ggplot target sizes (96 MB → 1.1 MB)**
-   - Root cause: ggplot2 4.0 S7 objects serialize with massive overhead (~9 MB each)
-   - Fix: `ggplotGrob()` conversion at target level — renders plot, strips S7 structure
-   - 7 targets converted: expr_by_subtype, vig_volcano/ma/heatmap/paired_de/count_dist/gene_expr_subtype
-   - Updated `safe_tar_read()` in 4 vignettes with `render_val()` for grob auto-display
-   - Total RDS files: 3.4 MB (140 files) — down from ~51 MB
+### Pipeline State
 
-3. **17 NULL targets confirmed unfixable**
-   - All data-driven: missing FISH, PFS, treatment data from MMRF IA flat files
-   - msigdbr upstream sha256 still broken
-   - Architecture correct — targets return NULL for missing data, vignettes gracefully degrade
+- **R CMD check**: 0 errors, 0 warnings, 0 notes
+- **Tests**: 0 FAIL, 869 PASS, 14 SKIP
+- **Targets**: 0 errored, 12 NULL (data limitations)
+- **RDS**: 143 files, 3.4 MB total
+- **pkgdown**: 14 articles built, 54 figure PNGs
 
-### Current State
+### NULL Targets (12 — all PFS/response/FISH data)
+- 7 PFS: shiny_pfs_data + 6 cascade (need pfs_time/pfs_status)
+- 3 FISH: vig_km_markers, vig_km_risk, shiny_risk_os_by_risk (need cytogenetic markers)
+- 2 response: shiny_km_os_by_response, shiny_risk_os_by_response (need treatment response)
+- All require MMRF Researcher Gateway registration (pending)
 
-**R CMD check: 0 errors, 0 warnings, 0 notes** (clean)
-**Tests: 0 FAIL, 862 PASS, 14 SKIP**
-**140 RDS files, 3.4 MB total**
+### Issues Closed This Session
+- #93 (package.nix from default.R) — done
+- #85 (causal DAGs) — done
 
-### NULL Targets (17 — data limitations)
-- 5 root-cause: treatment_data_clean, shiny_km_os_by_response, shiny_pfs_data, shiny_cox_os_age_risk, shiny_cox_os_full
-- 10 cascade: shiny_risk_*, shiny_km_pfs_*, vig_km_markers, vig_km_risk
-- 2 enrichment: vig_gsea_dotplot, vig_ora_barplot (depend on errored gsea_kegg/msigdbr)
+### Issues Labelled Low-Priority
+- #79 (API documentation) — scope notes added
+- #86 (plumber2 API) — 5 phases documented
 
-### Follow-up Items
-- msigdbr upstream sha256 fix in rstats-on-nix (needed for 3 pathway targets)
-- MMRF IA flat files needed for FISH/PFS/treatment (14 targets)
-- Consider applying grob conversion to remaining non-critical ggplot targets
+### Open Issues (by priority)
+1. #9 — Full data acquisition pipeline (blocked: MMRF Gateway access)
+2. #88, #89, #91 — NULL targets (blocked by #9)
+3. #79, #86 — API (low-priority, scope documented)
+4. #84 — Bayesian survival (low-priority)
+5. #70, #69, #66, #65, #8 — Analysis extensions (low-priority)
