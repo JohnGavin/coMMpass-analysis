@@ -176,7 +176,9 @@ plan_survival_shiny <- list(
   tar_target(
     shiny_cox_os_age_risk,
     {
-      covs <- intersect(c("age_years", "risk_group"), names(survival_data))
+      # Use age + ISS/risk_group — drop covariates that are all NA
+      covs <- intersect(c("age_years", "iss_stage", "risk_group"), names(survival_data))
+      covs <- covs[sapply(covs, function(c) sum(!is.na(survival_data[[c]])) >= 10)]
       if (length(covs) < 2) return(NULL)
       tryCatch(
         run_cox_regression(survival_data, covariates = covs),
@@ -189,10 +191,12 @@ plan_survival_shiny <- list(
   tar_target(
     shiny_cox_os_full,
     {
+      # Use all available covariates — drop those with insufficient non-NA values
       covs <- intersect(
-        c("age_years", "iss_stage", "risk_group"),
+        c("age_years", "gender", "iss_stage", "risk_group"),
         names(survival_data)
       )
+      covs <- covs[sapply(covs, function(c) sum(!is.na(survival_data[[c]])) >= 10)]
       if (length(covs) < 2) return(NULL)
       tryCatch(
         run_cox_regression(survival_data, covariates = covs),

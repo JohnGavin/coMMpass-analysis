@@ -329,6 +329,63 @@ download_clinical_data <- function(
   )
   saveRDS(metadata, file.path(data_dir, "clinical_metadata.rds"))
 
+  # Download treatment data via GDC API (nested in diagnoses)
+  logger::log_info("Extracting treatment data from GDC API...")
+  tryCatch({
+    all_trts <- list()
+    offset <- 0L
+    page_size <- 100L
+    total <- nrow(clinical)
+
+    while (offset < total) {
+      url <- paste0(
+        "https://api.gdc.cancer.gov/cases?",
+        "filters=%7B%22op%22%3A%22%3D%22%2C%22content%22%3A%7B%22field%22%3A",
+        "%22project.project_id%22%2C%22value%22%3A%22", project_id, "%22%7D%7D",
+        "&expand=diagnoses.treatments",
+        "&fields=submitter_id,diagnoses.treatments.therapeutic_agents,",
+        "diagnoses.treatments.regimen_or_line_of_therapy,",
+        "diagnoses.treatments.days_to_treatment_start,",
+        "diagnoses.treatments.days_to_treatment_end",
+        "&size=", page_size, "&from=", offset
+      )
+      res <- jsonlite::fromJSON(url)
+      hits <- res$data$hits
+      for (i in seq_len(nrow(hits))) {
+        pid <- hits$submitter_id[i]
+        diags <- hits$diagnoses[[i]]
+        if (is.null(diags) || !is.data.frame(diags)) next
+        trts <- diags$treatments[[1]]
+        if (is.null(trts) || !is.data.frame(trts)) next
+        trts$public_id <- pid
+        all_trts <- c(all_trts, list(trts))
+      }
+      offset <- offset + page_size
+    }
+
+    if (length(all_trts) > 0) {
+      trt_df <- do.call(rbind, all_trts)
+      # Keep only useful columns
+      keep_cols <- intersect(
+        c("public_id", "therapeutic_agents", "regimen_or_line_of_therapy",
+          "days_to_treatment_start", "days_to_treatment_end"),
+        names(trt_df)
+      )
+      trt_df <- trt_df[, keep_cols, drop = FALSE]
+      if (use_parquet) {
+        arrow::write_parquet(
+          trt_df,
+          file.path(data_dir, "treatment_data.parquet"),
+          compression = "zstd"
+        )
+      }
+      saveRDS(trt_df, file.path(data_dir, "treatment_data.rds"))
+      logger::log_info("Saved {nrow(trt_df)} treatment records for {length(unique(trt_df$public_id))} patients")
+    }
+  }, error = function(e) {
+    logger::log_warn("Failed to extract treatment data: {conditionMessage(e)}")
+  })
+
   logger::log_info("Clinical data saved to {data_dir}")
 
   return(as.character(data_dir))

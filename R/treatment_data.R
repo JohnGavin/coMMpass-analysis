@@ -45,17 +45,29 @@ clean_treatment_data <- function(trtresp_raw) {
     stringsAsFactors = FALSE
   )
 
-  # Treatment line
-  line_col <- intersect(c("line", "treatment_line", "theression"), names(trt))
-  result$treatment_line <- if (length(line_col) > 0) {
-    suppressWarnings(as.integer(trt[[line_col[1]]]))
+  # Treatment line — extract from text if needed (GDC: "First line of therapy")
+  line_col <- intersect(c("line", "treatment_line", "theression",
+                          "regimen_or_line_of_therapy"), names(trt))
+  if (length(line_col) > 0) {
+    raw_line <- trt[[line_col[1]]]
+    # Try numeric first
+    num_line <- suppressWarnings(as.integer(raw_line))
+    if (all(is.na(num_line)) && is.character(raw_line)) {
+      # Parse "First line of therapy" → 1, "Second line" → 2, etc.
+      line_map <- c(first = 1L, second = 2L, third = 3L, fourth = 4L,
+                    fifth = 5L, sixth = 6L, seventh = 7L, eighth = 8L)
+      first_word <- tolower(sub("\\s.*", "", raw_line))
+      num_line <- line_map[first_word]
+    }
+    result$treatment_line <- num_line
   } else {
-    NA_integer_
+    result$treatment_line <- NA_integer_
   }
 
   # Regimen name — standardize common abbreviations
   reg_col <- intersect(
-    c("trtshnm", "regimen", "regimen_name", "treatment_name"),
+    c("trtshnm", "regimen", "regimen_name", "treatment_name",
+      "therapeutic_agents"),
     names(trt)
   )
   raw_regimen <- if (length(reg_col) > 0) trt[[reg_col[1]]] else NA_character_
@@ -79,7 +91,8 @@ clean_treatment_data <- function(trtresp_raw) {
   }
 
   # Treatment start (days from diagnosis)
-  start_col <- intersect(c("trtstdy", "treatment_start_days", "start_days"), names(trt))
+  start_col <- intersect(c("trtstdy", "treatment_start_days", "start_days",
+                           "days_to_treatment_start"), names(trt))
   result$treatment_start_days <- if (length(start_col) > 0) {
     suppressWarnings(as.integer(trt[[start_col[1]]]))
   } else {
