@@ -66,7 +66,7 @@ shell_hook <- paste0(
 )
 
 # ── Shared date pin (used by both default.nix and package.nix) ────────────────
-date <- "2026-02-01"
+date <- "2026-02-02"
 
 # ── Generate package.nix (buildRPackage for cachix push) ─────────────────────
 # Runs BEFORE rix::rix() so package.nix is always generated even if rix fails.

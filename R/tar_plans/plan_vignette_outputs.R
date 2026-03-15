@@ -176,7 +176,8 @@ plan_vignette_outputs <- list(
       }
       # Remove large objects from aes() quosure environment before serializing
       rm(se, counts, log_counts, mean_expr, gene_meta)
-      p
+      # Convert to grob to strip ggplot2 S7 env overhead
+      ggplot2::ggplotGrob(p)
     },
     packages = c("SummarizedExperiment", "ggplot2", "dplyr")
   ),
@@ -855,9 +856,10 @@ plan_vignette_outputs <- list(
     {
       if (is.null(volcano_plot_data)) return(NULL)
       if (nrow(volcano_plot_data) == 0) return(NULL)
-      plot_volcano(volcano_plot_data, lfc_threshold = 1,
+      p <- plot_volcano(volcano_plot_data, lfc_threshold = 1,
                    padj_threshold = 0.05, n_label = 10,
                    title = "DESeq2 Volcano Plot")
+      ggplot2::ggplotGrob(p)
     }
   ),
 
@@ -867,8 +869,9 @@ plan_vignette_outputs <- list(
     {
       if (is.null(ma_plot_data)) return(NULL)
       if (nrow(ma_plot_data) == 0) return(NULL)
-      plot_ma(ma_plot_data, lfc_threshold = 1, padj_threshold = 0.05,
+      p <- plot_ma(ma_plot_data, lfc_threshold = 1, padj_threshold = 0.05,
               title = "DESeq2 MA Plot")
+      ggplot2::ggplotGrob(p)
     }
   ),
 
@@ -879,9 +882,10 @@ plan_vignette_outputs <- list(
       if (is.null(top_de_heatmap_data)) return(NULL)
       if (is.null(top_de_heatmap_data$expr_matrix)) return(NULL)
       if (is.null(top_de_heatmap_data$de_results)) return(NULL)
-      plot_heatmap_de(top_de_heatmap_data$expr_matrix,
+      p <- plot_heatmap_de(top_de_heatmap_data$expr_matrix,
                       top_de_heatmap_data$de_results,
                       n_genes = 50, title = "Top 50 DE Genes")
+      ggplot2::ggplotGrob(p)
     }
   ),
 
@@ -946,9 +950,10 @@ plan_vignette_outputs <- list(
       if (is.null(pr$results_table) || nrow(pr$results_table) == 0) {
         return(NULL)
       }
-      plot_volcano(pr$results_table, lfc_threshold = 1,
+      p <- plot_volcano(pr$results_table, lfc_threshold = 1,
                    padj_threshold = 0.05, n_label = 10,
                    title = "Paired DE: Baseline vs Relapse")
+      ggplot2::ggplotGrob(p)
     }
   ),
 
@@ -1149,7 +1154,7 @@ plan_vignette_outputs <- list(
     {
       if (is.null(expr_by_subtype)) return(NULL)
       if (length(expr_by_subtype) == 0) return(NULL)
-      # Return list of plots (first non-NULL)
+      # Return list of grobs (first non-NULL)
       valid <- Filter(Negate(is.null), expr_by_subtype)
       if (length(valid) == 0) return(NULL)
       valid
@@ -1946,7 +1951,7 @@ plan_vignette_outputs <- list(
           size = 7, hjust = 0, lineheight = 1.2
         ))
       rm(vst_counts, vst_mat, cyto_df, gene_id)
-      p
+      ggplot2::ggplotGrob(p)
     },
     packages = c("ggplot2")
   ),

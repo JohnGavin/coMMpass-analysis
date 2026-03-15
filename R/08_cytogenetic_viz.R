@@ -538,6 +538,9 @@ plot_expression_by_subtype <- function(expr_matrix,
   long$marker_status <- factor(long$marker_status,
                                 levels = c("negative", "positive"))
 
+  # Remove large objects to prevent ggplot2 aes() environment capture
+  rm(expr_matrix, cyto_data, expr_vals, long_list)
+
   ggplot2::ggplot(long, ggplot2::aes(x = marker_status, y = expression,
                                       fill = marker_status)) +
     ggplot2::geom_violin(alpha = 0.4, scale = "width") +

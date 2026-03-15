@@ -37,10 +37,16 @@ if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
 }
 
 safe_tar_read <- function(name) {
+  render_val <- function(val) {
+    if (inherits(val, c("gtable", "grob", "gTree"))) {
+      grid::grid.newpage(); grid::grid.draw(val); return(invisible(val))
+    }
+    val
+  }
   if (!is.null(tar_store)) {
     val <- tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
     if (!is.null(val) && !(is.character(val) && length(val) == 1 && grepl("not available", val, ignore.case = TRUE))) {
-      return(val)
+      return(render_val(val))
     }
   }
   rds_candidates <- c(
@@ -53,7 +59,7 @@ safe_tar_read <- function(name) {
       obj <- readRDS(rds)
       if (is.data.frame(obj) && requireNamespace("DT", quietly = TRUE))
         return(DT::datatable(obj, rownames = FALSE))
-      if (!is.null(obj)) return(obj)
+      if (!is.null(obj)) return(render_val(obj))
     }
   }
   invisible(NULL)

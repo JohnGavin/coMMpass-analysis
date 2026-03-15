@@ -2,14 +2,14 @@
 #
 # Builds coMMpass as an installable R package derivation.
 # Used by push_to_cachix.sh to push to johngavin cachix.
-# Same rstats-on-nix pin as default.nix (2026-02-01).
+# Same rstats-on-nix pin as default.nix (2026-02-02).
 #
 # Usage:
 #   nix-build package.nix --no-out-link
 #   ./push_to_cachix.sh
 
 let
-  pkgs = import (fetchTarball "https://github.com/rstats-on-nix/nixpkgs/archive/2026-02-01.tar.gz") {};
+  pkgs = import (fetchTarball "https://github.com/rstats-on-nix/nixpkgs/archive/2026-02-02.tar.gz") {};
 in pkgs.rPackages.buildRPackage {
   name = "coMMpass";
   src = ./.;
