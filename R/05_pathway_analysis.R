@@ -97,6 +97,17 @@ load_local_gene_sets <- function(collection) {
     package = "coMMpass"
   )
 
+  # Fallback for non-installed package (e.g. targets pipeline via tar_source)
+  if (pq_file == "" || !file.exists(pq_file)) {
+    fallback_paths <- c(
+      file.path("inst", "extdata", "msigdb", file_map[[collection]]),
+      file.path("..", "inst", "extdata", "msigdb", file_map[[collection]])
+    )
+    for (fb in fallback_paths) {
+      if (file.exists(fb)) { pq_file <- fb; break }
+    }
+  }
+
   if (pq_file == "" || !file.exists(pq_file)) return(NULL)
   pq_df <- arrow::read_parquet(pq_file)
   split(pq_df$ensembl_gene, pq_df$gs_name)
