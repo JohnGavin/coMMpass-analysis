@@ -68,10 +68,10 @@ graph LR
   end
 
   subgraph Analysis
-    DE["Differential&lt;br/&gt;Expression"]
-    Surv["Survival&lt;br/&gt;Analysis"]
-    Path["Pathway&lt;br/&gt;Analysis"]
-    EDA["Exploratory&lt;br/&gt;Analysis"]
+    DE["Differential<br/>Expression"]
+    Surv["Survival<br/>Analysis"]
+    Path["Pathway<br/>Analysis"]
+    EDA["Exploratory<br/>Analysis"]
     Cyto["Cytogenetics"]
   end
 
@@ -155,7 +155,7 @@ graph TD
   DC["data-cleaning"]
   CY["cytogenetics"]
   QC["quality-control"]
-  DEX["differential-&lt;br/&gt;expression"]
+  DEX["differential-<br/>expression"]
   SU["survival"]
   PW["pathway"]
   ED["eda"]
@@ -237,16 +237,16 @@ graph LR
   subgraph Clinical["Clinical Path"]
     direction LR
     C1["Data Sources"]
-    C2["Exploratory&lt;br/&gt;Analysis"]
-    C3["Survival&lt;br/&gt;Analysis"]
+    C2["Exploratory<br/>Analysis"]
+    C3["Survival<br/>Analysis"]
     C1 --> C2 --> C3
   end
 
   subgraph Genomics["Genomics Path"]
     direction LR
     G1["Data Sources"]
-    G2["Data&lt;br/&gt;Acquisition"]
-    G3["Differential&lt;br/&gt;Expression"]
+    G2["Data<br/>Acquisition"]
+    G3["Differential<br/>Expression"]
     G4["Gene Report"]
     G1 --> G2 --> G3 --> G4
   end
