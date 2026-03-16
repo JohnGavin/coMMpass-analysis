@@ -23,50 +23,14 @@ knitr::opts_chunk$set(
 )
 if (!in_pkgdown) library(targets)
 
-# Discover targets store
-proj_dir <- Sys.getenv("TAR_PROJECT")
-tar_store <- NULL
-if (proj_dir != "" && dir.exists(file.path(proj_dir, "_targets"))) {
-  tar_store <- file.path(proj_dir, "_targets")
-} else if (dir.exists("_targets")) {
-  tar_store <- "_targets"
-} else if (dir.exists("../_targets")) {
-  tar_store <- "../_targets"
+# Shared vignette utilities (safe_tar_read, show_target, render helpers)
+utils_path <- system.file("vignette_utils.R", package = "coMMpass")
+if (utils_path == "") {
+  utils_path <- if (file.exists("../inst/vignette_utils.R")) "../inst/vignette_utils.R"
+  else if (file.exists("inst/vignette_utils.R")) "inst/vignette_utils.R"
+  else stop("Cannot find vignette_utils.R")
 }
-
-safe_tar_read <- function(name) {
-  if (!is.null(tar_store)) {
-    val <- tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
-    if (!is.null(val) && !(is.character(val) && length(val) == 1 && grepl("not available", val, ignore.case = TRUE))) {
-      return(val)
-    }
-  }
-  rds_candidates <- c(
-    system.file(paste0("extdata/vignettes/", name, ".rds"), package = "coMMpass"),
-    file.path("inst/extdata/vignettes", paste0(name, ".rds")),
-    file.path("../inst/extdata/vignettes", paste0(name, ".rds"))
-  )
-  for (rds in rds_candidates) {
-    if (nzchar(rds) && file.exists(rds)) {
-      obj <- readRDS(rds)
-      if (is.data.frame(obj) && requireNamespace("DT", quietly = TRUE))
-        return(DT::datatable(obj, rownames = FALSE))
-      if (!is.null(obj)) return(obj)
-    }
-  }
-  invisible(NULL)
-}
-
-show_target <- function(name, .safe_tar_read = safe_tar_read) {
-  code_name <- paste0("code_", name)
-  code <- .safe_tar_read(code_name)
-  if (!is.null(code) && is.character(code) && nzchar(code)) {
-    cat('<details><summary>Generating code</summary>\n\n```r\n')
-    cat(paste(code, collapse = "\n"))
-    cat('\n```\n</details>\n\n')
-  }
-  .safe_tar_read(name)
-}
+source(utils_path, local = TRUE)
 ```
 
 ```{r pkgdown-banner}

@@ -615,36 +615,41 @@ plan_telemetry <- list(
       largest <- meta_sized$name[which.max(meta_sized$bytes)]
       largest_mb <- round(max(meta_sized$bytes, na.rm = TRUE) / 1e6, 1)
 
-      ggplot2::ggplot(
+      # Assign size categories for faceted display
+      meta_sized$size_cat <- cut(
+        meta_sized$bytes,
+        breaks = c(0, 1e3, 1e4, 1e5, 1e6, Inf),
+        labels = c("< 1 KB", "1-10 KB", "10-100 KB", "100 KB-1 MB", "> 1 MB"),
+        ordered_result = TRUE
+      )
+
+      p <- ggplot2::ggplot(
         meta_sized,
-        ggplot2::aes(x = log10(bytes), y = stats::reorder(name, bytes))
+        ggplot2::aes(x = bytes / 1e3, y = stats::reorder(name, bytes))
       ) +
-        ggplot2::geom_col(fill = "steelblue", width = 0.6) +
-        ggplot2::geom_vline(xintercept = log10(1e6), linetype = "dashed",
-                            color = "red", alpha = 0.5) +
-        ggplot2::annotate("text", x = log10(1e6), y = 1, label = "1 MB",
-                          hjust = -0.2, color = "red", size = 3) +
+        ggplot2::geom_col(fill = "steelblue", width = 0.7) +
+        ggplot2::facet_wrap(~size_cat, scales = "free", ncol = 1) +
         ggplot2::labs(
           title = "Target Sizes (serialized)",
           subtitle = paste0(nrow(meta_sized), " targets with stored objects"),
-          x = "log10(bytes)", y = NULL,
+          x = "Size (KB)", y = NULL,
           caption = paste0(
             "Serialized sizes for ", nrow(meta_sized), " targets stored in _targets/objects/. ",
-            "x-axis: log10(bytes); y-axis: target name sorted by size. ",
-            "Dashed red line = 1 MB threshold. ",
+            "Faceted by size category. ",
             "Largest: ", largest, " (", largest_mb, " MB); ",
             "total: ", total_mb, " MB. ",
-            "Source: _targets/meta/meta. ",
-            "See timing table for build durations and build status for overview."
+            "Source: _targets/meta/meta."
           )
         ) +
         ggplot2::theme_minimal(base_size = 10) +
         ggplot2::theme(
-          axis.text.y = ggplot2::element_text(size = 5),
+          axis.text.y = ggplot2::element_text(size = 7),
+          strip.text = ggplot2::element_text(size = 9, face = "bold"),
           plot.caption = ggplot2::element_text(
             size = 7, hjust = 0, lineheight = 1.2
           )
         )
+      ggplot2::ggplotGrob(p)
     },
     packages = c("ggplot2"),
     cue = targets::tar_cue(mode = "always")

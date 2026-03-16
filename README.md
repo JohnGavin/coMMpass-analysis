@@ -112,6 +112,12 @@ GDCdownload(query)
 # Downloading chunk 4 of 4 (169 files, size = 830.245815 MB) as ...tar.gz
 
 data <- GDCprepare(query)
+# Returns a RangedSummarizedExperiment:
+str(data, max.level = 2)
+# Formal class 'RangedSummarizedExperiment' [package "SummarizedExperiment"]
+#   ..@ assays  : 4 assays (unstranded, stranded_first, stranded_second, tpm_unstrand)
+#   ..@ colData : 859 samples × 89 clinical variables
+#   ..@ rowData : 60,660 genes (Ensembl IDs, gene symbols, biotypes)
 ```
 
 ## Key Packages Included
