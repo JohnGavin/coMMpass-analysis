@@ -14,6 +14,8 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
+#| echo: false
+#| results: asis
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -62,6 +64,8 @@ cat("::: {.callout-note}\n## Online documentation\nThis vignette displays pre-co
 Searchable table of all variables available in the CoMMpass dataset with types, categories, and descriptions.
 
 ```{r dictionary-table}
+#| echo: false
+#| results: asis
 show_target("vig_dd_dictionary_table")
 ```
 
@@ -74,14 +78,19 @@ show_target("vig_dd_dictionary_table")
 ### Sample Rows
 
 ```{r clinical-preview}
+#| echo: false
+#| results: asis
 show_target("vig_clinical_preview")
 ```
 
 ```{r clinical-summary-text, results='asis'}
+#| echo: false
 show_target("vig_dd_clinical_text")
 ```
 
 ```{r clinical-summary-table}
+#| echo: false
+#| results: asis
 show_target("vig_dd_clinical_table")
 ```
 
@@ -91,10 +100,13 @@ show_target("vig_dd_clinical_table")
 - Includes sample type, tissue type, and preservation method
 
 ```{r biospecimen-summary-text, results='asis'}
+#| echo: false
 show_target("vig_dd_biospecimen_text")
 ```
 
 ```{r biospecimen-summary-table}
+#| echo: false
+#| results: asis
 show_target("vig_dd_biospecimen_table")
 ```
 
@@ -106,14 +118,19 @@ show_target("vig_dd_biospecimen_table")
 - See [units reference](glossary.html#units-reference) for quantification units
 
 ```{r rnaseq-dims-text, results='asis'}
+#| echo: false
 show_target("vig_dd_rnaseq_text")
 ```
 
 ```{r rnaseq-biotype-table}
+#| echo: false
+#| results: asis
 show_target("vig_dd_rnaseq_biotype_table")
 ```
 
 ```{r rnaseq-sample-metadata}
+#| echo: false
+#| results: asis
 show_target("vig_dd_rnaseq_sample_table")
 ```
 
@@ -126,6 +143,8 @@ show_target("vig_dd_rnaseq_sample_table")
 ### Sample Rows
 
 ```{r treatment-preview}
+#| echo: false
+#| results: asis
 show_target("vig_treatment_preview")
 ```
 
@@ -134,6 +153,8 @@ show_target("vig_treatment_preview")
 GDC uses standardized column names. Common aliases used in analysis:
 
 ```{r column-mappings}
+#| echo: false
+#| results: asis
 show_target("vig_dd_column_mappings")
 ```
 
@@ -189,6 +210,8 @@ pipeline data and synthetic test data, see the
 Recent project commits with lines added, files changed, and change categories.
 
 ```{r changelog}
+#| echo: false
+#| results: asis
 show_target("vig_git_changelog")
 ```
 

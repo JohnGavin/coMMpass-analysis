@@ -14,6 +14,8 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
+#| echo: false
+#| results: asis
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -77,6 +79,8 @@ safe_tar_read("dag_layer_validation")
 Interactive DAG showing the targets pipeline network with layer-based coloring. Nodes are colored by functional layer. Hover for target details, use the dropdown to search by name.
 
 ```{r pipeline-visnetwork}
+#| echo: false
+#| results: asis
 show_target("vig_pipeline_dag")
 ```
 
@@ -98,6 +102,8 @@ selection, see `inst/shinylive/pipeline_dag.qmd`.
 Recent project commits with lines added, files changed, and change categories.
 
 ```{r changelog}
+#| echo: false
+#| results: asis
 show_target("vig_git_changelog")
 ```
 

@@ -14,6 +14,8 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
+#| echo: false
+#| results: asis
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -57,30 +59,35 @@ appear in place of plots when pre-computed outputs are not yet available.
 ## Clinical Demographics
 
 ```{r clinical-demographics, results='asis'}
+#| echo: false
 show_target("vig_clinical_demographics_text")
 ```
 
 ### Age at Diagnosis
 
 ```{r age-histogram, results='asis', fig.cap = "Age at diagnosis distribution for CoMMpass patients. GDC stores age in days; values are converted to years (age / 365.25). Data: GDC clinical endpoint."}
+#| echo: false
 show_target("vig_age_histogram")
 ```
 
 ### Gender Distribution
 
 ```{r gender-table, results='asis'}
+#| echo: false
 show_target("vig_gender_table")
 ```
 
 ### Race Distribution
 
 ```{r race-table, results='asis'}
+#| echo: false
 show_target("vig_race_table")
 ```
 
 ### Vital Status
 
 ```{r vital-status, results='asis'}
+#| echo: false
 show_target("vig_vital_table")
 ```
 
@@ -91,64 +98,79 @@ stages based on serum beta-2 microglobulin and albumin levels. Higher stages
 indicate more advanced disease and worse prognosis.
 
 ```{r iss-distribution, results='asis'}
+#| echo: false
 show_target("vig_iss_distribution_text")
 ```
 
 ### ISS Stage Distribution
 
 ```{r iss-table, results='asis'}
+#| echo: false
 show_target("vig_iss_table")
 ```
 
 ```{r iss-barplot, results='asis', fig.cap = "ISS stage distribution across CoMMpass patients. Higher stages indicate more advanced disease. ISS = International Staging System."}
+#| echo: false
 show_target("vig_iss_barplot")
 ```
 
 ### Age by ISS Stage
 
 ```{r iss-age, results='asis'}
+#| echo: false
 show_target("vig_iss_age_table")
 ```
 
 ## Survival Endpoints
 
 ```{r survival-endpoints, results='asis'}
+#| echo: false
 show_target("vig_survival_endpoints")
 ```
 
 ## Biospecimen Overview
 
 ```{r biospecimen-overview, results='asis'}
+#| echo: false
 show_target("vig_biospecimen_overview_text")
 ```
 
 ### Sample Types
 
 ```{r sample-type-bar, fig.cap = "Sample type distribution across all CoMMpass biospecimens. Data: GDC biospecimen endpoint."}
+#| echo: false
+#| results: asis
 show_target("vig_sample_type_barplot")
 ```
 
 ### Samples per Patient
 
 ```{r samples-per-patient, fig.cap = "Number of biospecimen samples per patient. Most patients have multiple samples (longitudinal collection). Data: GDC biospecimen."}
+#| echo: false
+#| results: asis
 show_target("vig_samples_per_patient_hist")
 ```
 
 ## RNA-seq Quality
 
 ```{r rnaseq-quality, results='asis'}
+#| echo: false
 show_target("vig_rnaseq_quality_text")
 ```
 
 ### Library Size Distribution
 
 ```{r library-size-boxplot, fig.cap = "Library sizes (millions of reads) across RNA-seq samples. Library size = total mapped read counts per sample. Data: GDC STAR-Counts."}
+#| echo: false
+#| results: asis
 show_target("vig_library_size_boxplot")
 ```
 
 ### Genes Detected per Sample
 
 ```{r genes-detected-histogram, fig.cap = "Number of genes detected (count > 0) per RNA-seq sample. Samples with unusually low detection may be outliers. Data: GDC STAR-Counts."}
+#| echo: false
+#| results: asis
 show_target("vig_genes_detected_hist")
 ```
 
@@ -159,10 +181,14 @@ reveals sample-level structure. Points are colored by clinical covariates to che
 for batch effects or biological groupings.
 
 ```{r pca-biplot, fig.cap = "PCA biplot of RNA-seq samples using top 500 most variable genes (VST). PC1 and PC2 with variance explained. Colored by gender. Clustering by sex indicates strong expression differences."}
+#| echo: false
+#| results: asis
 show_target("vig_pca_biplot")
 ```
 
 ```{r pca-biplot-vital, fig.cap = "PCA biplot colored by vital status. Overlap between alive/dead suggests survival is not the dominant source of transcriptomic variation."}
+#| echo: false
+#| results: asis
 show_target("vig_pca_biplot_vital")
 ```
 
@@ -175,22 +201,28 @@ High-risk alterations include t(4;14), t(14;16), del(17p), and gain(1q).
 ### Alteration Frequencies
 
 ```{r cyto-frequency, results='asis'}
+#| echo: false
 show_target("vig_cyto_frequency_table")
 ```
 
 ### Oncoprint
 
 ```{r cyto-oncoprint, fig.height = 5, fig.cap = "Cytogenetic oncoprint showing alteration landscape across patients. Rows: FISH markers. Columns: patients sorted by alteration frequency. Blue = translocation, red = deletion, green = gain. Percentages show alteration frequency among tested patients."}
+#| echo: false
+#| results: asis
 show_target("vig_cyto_oncoprint")
 ```
 
 ### Co-occurrence Analysis
 
 ```{r cyto-cooccurrence, results='asis'}
+#| echo: false
 show_target("vig_cyto_cooccurrence_table")
 ```
 
 ```{r cyto-cooccurrence-heatmap, fig.cap = "Pairwise co-occurrence heatmap. Red: co-occurrence (positive association). Blue: mutual exclusivity (negative association). Color intensity: -log10(adjusted p-value). * = significant at padj < 0.05."}
+#| echo: false
+#| results: asis
 show_target("vig_cyto_cooccurrence_heatmap")
 ```
 
@@ -210,6 +242,7 @@ safe_tar_read("code_eda_simple_query")
 ```
 
 ```{r duckdb-demo-simple, results='asis'}
+#| echo: false
 show_target("vig_duckdb_demo_simple")
 ```
 
@@ -220,12 +253,14 @@ safe_tar_read("code_eda_aggregation")
 ```
 
 ```{r duckdb-demo-agg, results='asis'}
+#| echo: false
 show_target("vig_duckdb_demo_agg")
 ```
 
 ## Cross-dataset Integration
 
 ```{r integration, results='asis'}
+#| echo: false
 show_target("vig_integration_text")
 ```
 
@@ -246,6 +281,8 @@ pipeline data and synthetic test data, see the
 Recent project commits with lines added, files changed, and change categories.
 
 ```{r changelog}
+#| echo: false
+#| results: asis
 show_target("vig_git_changelog")
 ```
 
@@ -255,6 +292,7 @@ show_target("vig_git_changelog")
 <summary>Git Commit Info (click to expand)</summary>
 
 ```{r git-info, results='asis'}
+#| echo: false
 show_target("vig_git_info")
 ```
 

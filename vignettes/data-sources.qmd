@@ -14,6 +14,8 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
+#| echo: false
+#| results: asis
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -72,6 +74,8 @@ Genetic Profile (CoMMpass) study is a longitudinal observational study of
 ## Data at a Glance
 
 ```{r data-at-glance}
+#| echo: false
+#| results: asis
 show_target("vig_data_at_glance")
 ```
 
@@ -136,6 +140,8 @@ pathway enrichment analysis.
 ### Bundled Files
 
 ```{r msigdb-stats}
+#| echo: false
+#| results: asis
 show_target("vig_msigdb_stats")
 ```
 
@@ -153,6 +159,8 @@ show_target("vig_msigdb_stats")
 Recent project commits with lines added, files changed, and change categories.
 
 ```{r changelog}
+#| echo: false
+#| results: asis
 show_target("vig_git_changelog")
 ```
 

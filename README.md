@@ -23,7 +23,19 @@ Planned features:
 
 ## Usage
 
-### Quick Start
+### Quick Start (without Nix)
+
+```r
+# Install from GitHub
+remotes::install_github("JohnGavin/coMMpass-analysis")
+library(coMMpass)
+
+# Download data and run the pipeline
+data_dir <- acquire_commpass_data(sample_limit = 50)
+targets::tar_make()
+```
+
+### Quick Start (with Nix — fully reproducible)
 
 ```bash
 # Requires Nix package manager (https://nixos.org/download.html)

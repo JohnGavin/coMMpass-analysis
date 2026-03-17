@@ -14,6 +14,8 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
+#| echo: false
+#| results: asis
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -95,6 +97,7 @@ flowchart LR
 Current pipeline settings including sample limit, random seed, and data paths.
 
 ```{r config, results='asis'}
+#| echo: false
 show_target("vig_config_text")
 ```
 
@@ -105,14 +108,18 @@ show_target("vig_config_text")
 RNA-seq gene expression data is downloaded from GDC as a [SummarizedExperiment](https://bioconductor.org/packages/SummarizedExperiment/) object containing [STAR-Counts](https://docs.gdc.cancer.gov/Data/Bioinformatics_Pipelines/Expression_mRNA_Pipeline/).
 
 ```{r rnaseq-summary-text, results='asis'}
+#| echo: false
 show_target("vig_rnaseq_summary_text")
 ```
 
 ```{r rnaseq-sample-table}
+#| echo: false
+#| results: asis
 show_target("vig_rnaseq_sample_stats")
 ```
 
 ```{r count-distribution, results='asis', fig.cap = "Distribution of mean gene expression (log10 scale) across all genes. The three peaks correspond to distinct gene populations: (1) unexpressed/noise genes near zero, (2) lowly-expressed genes detected in a subset of samples, and (3) moderately-to-highly expressed housekeeping/structural genes. This trimodal pattern is expected for GENCODE-annotated RNA-seq data, which includes ~60k entries spanning protein-coding genes, lncRNAs, pseudogenes, and other biotypes with very different expression levels. Data: GDC STAR-Counts."}
+#| echo: false
 show_target("vig_count_distribution_plot")
 ```
 
@@ -121,6 +128,8 @@ show_target("vig_count_distribution_plot")
 Clinical metadata from [GDC](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS) provides patient demographics, disease characteristics, and outcomes. See the [data dictionary](data-dictionary.html) for variable definitions and the [glossary](glossary.html) for units.
 
 ```{r clinical-columns}
+#| echo: false
+#| results: asis
 show_target("vig_clinical_column_info")
 ```
 
@@ -129,10 +138,13 @@ show_target("vig_clinical_column_info")
 Missing data rates across clinical variables, highlighting fields with substantial missingness.
 
 ```{r missing-data-text, results='asis'}
+#| echo: false
 show_target("vig_missing_data_text")
 ```
 
 ```{r missing-data-table}
+#| echo: false
+#| results: asis
 show_target("vig_missing_data_table")
 ```
 
@@ -152,14 +164,18 @@ The per-sample expression summary (Total Counts, Genes Detected) is shown in the
 - **Outlier** --- flagged `Yes` if the sample falls in the **bottom 5th percentile** of either library size OR genes detected
 
 ```{r qc-text, results='asis'}
+#| echo: false
 show_target("vig_qc_text")
 ```
 
 ```{r qc-table}
+#| echo: false
+#| results: asis
 show_target("vig_qc_table")
 ```
 
 ```{r filtered-summary, results='asis'}
+#| echo: false
 show_target("vig_filtered_summary")
 ```
 
@@ -180,6 +196,8 @@ pipeline data and synthetic test data, see the
 Recent project commits with lines added, files changed, and change categories.
 
 ```{r changelog}
+#| echo: false
+#| results: asis
 show_target("vig_git_changelog")
 ```
 
@@ -189,6 +207,7 @@ show_target("vig_git_changelog")
 <summary>Git Commit Info (click to expand)</summary>
 
 ```{r git-info, results='asis'}
+#| echo: false
 show_target("vig_git_info")
 ```
 

@@ -14,6 +14,8 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
+#| echo: false
+#| results: asis
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -56,6 +58,8 @@ safe_tar_read("glossary_table")
 **Age and time variables are stored in DAYS by GDC.** This is the single most common source of errors in GDC analyses. See the [data dictionary](data-dictionary.html) for all variable definitions.
 
 ```{r units-table}
+#| echo: false
+#| results: asis
 show_target("vig_units_table")
 ```
 
@@ -64,6 +68,8 @@ show_target("vig_units_table")
 Recent project commits with lines added, files changed, and change categories.
 
 ```{r changelog}
+#| echo: false
+#| results: asis
 show_target("vig_git_changelog")
 ```
 

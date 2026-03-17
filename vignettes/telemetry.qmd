@@ -14,6 +14,8 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
+#| echo: false
+#| results: asis
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -52,6 +54,8 @@ Targets ordered by build duration. Long-running targets are candidates
 for caching optimization or parallel execution via `crew`.
 
 ```{r timing-table}
+#| echo: false
+#| results: asis
 show_target("vig_timing_table")
 ```
 
@@ -60,6 +64,8 @@ show_target("vig_timing_table")
 High-level pipeline health metrics: target counts, build time, and storage size.
 
 ```{r status-table}
+#| echo: false
+#| results: asis
 show_target("vig_build_status")
 ```
 
@@ -68,6 +74,8 @@ show_target("vig_build_status")
 Targets that produced errors or warnings during the most recent pipeline run.
 
 ```{r errors}
+#| echo: false
+#| results: asis
 show_target("vig_errors_table")
 ```
 
@@ -76,6 +84,8 @@ show_target("vig_errors_table")
 Targets that need rebuilding due to changed code or upstream dependencies.
 
 ```{r outdated}
+#| echo: false
+#| results: asis
 show_target("vig_outdated_list")
 ```
 
@@ -84,6 +94,8 @@ show_target("vig_outdated_list")
 Distribution of target serialized sizes, identifying large objects that dominate storage.
 
 ```{r size-plot, fig.cap="Target serialized sizes (log10 bytes). Dashed line = 1 MB threshold. Source: _targets/meta/meta.", fig.height=5}
+#| echo: false
+#| results: asis
 show_target("vig_size_plot")
 ```
 
@@ -95,6 +107,8 @@ Weekly commit counts colored by conventional-commit type (feat, fix, docs, etc.)
 across the last 200 commits.
 
 ```{r commit-velocity, fig.cap="Weekly commit velocity colored by change type. Each bar segment represents commits of a given type (feat, fix, docs, ci, etc.) in that ISO week. Source: git log.", fig.height=5}
+#| echo: false
+#| results: asis
 show_target("vig_commit_velocity")
 ```
 
@@ -103,6 +117,8 @@ show_target("vig_commit_velocity")
 Commits grouped by conventional-commit prefix, with total lines added and removed.
 
 ```{r changes-by-type}
+#| echo: false
+#| results: asis
 show_target("vig_changes_by_type")
 ```
 
@@ -112,6 +128,8 @@ How often each file category (R Source, Tests, Vignettes, CI/CD, etc.) was
 touched across the last 200 commits.
 
 ```{r changes-by-file-category}
+#| echo: false
+#| results: asis
 show_target("vig_changes_by_file_category")
 ```
 
@@ -120,6 +138,8 @@ show_target("vig_changes_by_file_category")
 Full 20-commit changelog with lines added, files changed, and change categories.
 
 ```{r recent-commits}
+#| echo: false
+#| results: asis
 show_target("vig_git_changelog")
 ```
 
@@ -130,6 +150,8 @@ show_target("vig_git_changelog")
 Open/closed issue and merged PR counts from the GitHub API.
 
 ```{r github-activity}
+#| echo: false
+#| results: asis
 show_target("vig_github_activity_table")
 ```
 
@@ -138,6 +160,8 @@ show_target("vig_github_activity_table")
 R files, test files, exports, lines of code, and package version.
 
 ```{r codebase-metrics}
+#| echo: false
+#| results: asis
 show_target("vig_codebase_metrics")
 ```
 

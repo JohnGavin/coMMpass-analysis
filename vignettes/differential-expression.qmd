@@ -14,6 +14,8 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
+#| echo: false
+#| results: asis
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -60,10 +62,12 @@ cat("::: {.callout-note}\n## Online documentation\nThis vignette displays pre-co
 Summary of DE genes detected by each method (DESeq2, edgeR, limma-voom) and their consensus overlap.
 
 ```{r method-summary, results='asis'}
+#| echo: false
 show_target("vig_de_method_table")
 ```
 
 ```{r method-barplot, results='asis', fig.cap = "Number of significant DE genes identified by each method (|log2FC| > 1, padj < 0.05). Concordance across methods indicates robust signals. DESeq2 with apeglm shrinkage tends to be more conservative."}
+#| echo: false
 show_target("vig_de_method_barplot")
 ```
 
@@ -74,6 +78,8 @@ show_target("vig_de_method_barplot")
 - Preferred over raw counts or logCPM for exploratory visualization
 
 ```{r pca-plot, fig.cap = "PCA of VST-transformed RNA-seq counts. Each point is a sample. Variance explained per PC shown on axes. Computed from top 500 most variable genes. See DESeq2::vst() for the transformation method."}
+#| echo: false
+#| results: asis
 show_target("vig_pca_plot")
 ```
 
@@ -83,6 +89,8 @@ show_target("vig_pca_plot")
 - Genes in upper corners are both statistically significant and biologically meaningful
 
 ```{r volcano, fig.cap = "Volcano plot of DESeq2 results. X-axis: log2 fold change (apeglm-shrunken if available). Y-axis: -log10 adjusted p-value. Dashed lines: |LFC| = 1 and padj = 0.05 thresholds. Top 10 genes labeled by adjusted p-value. Red = upregulated, blue = downregulated."}
+#| echo: false
+#| results: asis
 show_target("vig_volcano_plot")
 ```
 
@@ -93,6 +101,8 @@ show_target("vig_volcano_plot")
 - Detects bias in fold-change estimates
 
 ```{r ma-plot, fig.cap = "MA plot of DESeq2 results. X-axis: log10(baseMean + 1). Y-axis: log2 fold change. Red points are significant at padj < 0.05 and |LFC| > 1. Dashed lines at LFC = +/-1. Genes with low mean expression tend to have higher variance."}
+#| echo: false
+#| results: asis
 show_target("vig_ma_plot")
 ```
 
@@ -102,6 +112,8 @@ The heatmap shows Z-score scaled VST expression for the most significant
 genes. Rows (genes) and columns (samples) are hierarchically clustered.
 
 ```{r heatmap, fig.height = 10, fig.cap = "Heatmap of top 50 DE genes by adjusted p-value. Expression values are VST-transformed and Z-score scaled per gene. Blue = below mean, red = above mean. Hierarchical clustering applied to both rows and columns. See data dictionary for gene ID mappings."}
+#| echo: false
+#| results: asis
 show_target("vig_heatmap_plot")
 ```
 
@@ -111,6 +123,7 @@ Genes identified as significant by all three methods (DESeq2, edgeR, limma)
 represent the highest-confidence DE candidates.
 
 ```{r consensus, results='asis'}
+#| echo: false
 show_target("vig_consensus_text")
 ```
 
@@ -121,10 +134,13 @@ a paired design (`~ patient_id + visit`) controls for inter-patient
 variability and tests for within-patient expression changes over time.
 
 ```{r paired-de-text, results='asis'}
+#| echo: false
 show_target("vig_paired_de_text")
 ```
 
 ```{r paired-de-plot, fig.cap = "Volcano plot for paired DE analysis (baseline vs relapse). Same thresholds as main analysis."}
+#| echo: false
+#| results: asis
 show_target("vig_paired_de_plot")
 ```
 
@@ -135,6 +151,7 @@ maps Ensembl IDs to HGNC symbols using
 [MSigDB gene mappings](https://www.gsea-msigdb.org/gsea/msigdb/).
 
 ```{r annotated-de, results='asis'}
+#| echo: false
 show_target("vig_annotated_de_table")
 ```
 
@@ -145,6 +162,8 @@ show_target("vig_annotated_de_table")
 Gene Set Enrichment Analysis using the full ranked gene list against MSigDB Hallmark pathways.
 
 ```{r gsea-dotplot, fig.cap = "GSEA enrichment dot plot of MSigDB Hallmark pathways. Dot color: -log10(adjusted p-value). Dot size: number of genes in the pathway. Pathways sorted by significance. See MSigDB Hallmark for pathway definitions."}
+#| echo: false
+#| results: asis
 show_target("vig_gsea_dotplot")
 ```
 
@@ -153,6 +172,8 @@ show_target("vig_gsea_dotplot")
 Over-representation analysis testing whether consensus DE genes are enriched in specific pathways.
 
 ```{r ora-barplot, fig.cap = "Over-representation analysis (ORA) of consensus DE genes in MSigDB Hallmark pathways. Bar length: -log10(adjusted p-value). Fisher's exact test (hypergeometric). Only consensus genes (significant in DESeq2, edgeR, and limma) are tested."}
+#| echo: false
+#| results: asis
 show_target("vig_ora_barplot")
 ```
 
@@ -183,6 +204,8 @@ pipeline data and synthetic test data, see the
 Recent project commits with lines added, files changed, and change categories.
 
 ```{r changelog}
+#| echo: false
+#| results: asis
 show_target("vig_git_changelog")
 ```
 

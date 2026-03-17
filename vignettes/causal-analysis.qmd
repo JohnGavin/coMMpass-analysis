@@ -14,6 +14,8 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
+#| echo: false
+#| results: asis
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -57,6 +59,8 @@ variables — tumor biology and comorbidities — represent important confounder
 that cannot be directly adjusted for.
 
 ```{r dag-plot, fig.height = 8, fig.width = 10, fig.cap = "CoMMpass causal DAG. Nodes represent measured and latent variables. Edges represent assumed causal effects. Exposure: cytogenetic_risk. Outcome: overall_survival. Latent variables (tumor_biology, comorbidities) represent unmeasured confounders."}
+#| echo: false
+#| results: asis
 show_target("vig_causal_dag_plot")
 ```
 
@@ -84,6 +88,8 @@ adjustment set** — the smallest set of variables that blocks all backdoor
 paths between exposure and outcome.
 
 ```{r adjustment-table}
+#| echo: false
+#| results: asis
 show_target("vig_causal_adjustment_table")
 ```
 
@@ -93,6 +99,8 @@ We compare the covariates used in current Cox proportional hazards models
 against the DAG-implied adjustment sets.
 
 ```{r model-check-table}
+#| echo: false
+#| results: asis
 show_target("vig_causal_model_check_table")
 ```
 

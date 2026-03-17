@@ -14,6 +14,8 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
+#| echo: false
+#| results: asis
 in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -61,6 +63,8 @@ Data is pre-computed via a `targets` pipeline and serialized to JSON. For raw
 The table below lists all JSON API endpoints with their descriptions and record counts.
 
 ```{r endpoints-table}
+#| echo: false
+#| results: asis
 show_target("vig_api_endpoints_dt")
 ```
 
@@ -124,6 +128,8 @@ pipeline data and synthetic test data, see the
 Recent project commits with lines added, files changed, and change categories.
 
 ```{r changelog}
+#| echo: false
+#| results: asis
 show_target("vig_git_changelog")
 ```
 
