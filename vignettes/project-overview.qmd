@@ -2,6 +2,9 @@
 title: "00. Project Overview"
 format:
   html:
+    toc: true
+    toc-expand: 2
+    toc-location: left
     code-fold: true
     code-summary: "Show code"
 vignette: >

@@ -68,8 +68,17 @@ safe_tar_read <- function(name) {
   for (rds in rds_candidates) {
     if (nzchar(rds) && file.exists(rds)) {
       obj <- readRDS(rds)
-      if (is.data.frame(obj) && requireNamespace("DT", quietly = TRUE))
-        return(DT::datatable(obj, rownames = FALSE))
+      # data.frames with a caption attribute get DT wrapping at render time
+      if (is.data.frame(obj) && requireNamespace("DT", quietly = TRUE)) {
+        cap <- attr(obj, "dt_caption")
+        dt_opts <- attr(obj, "dt_options")
+        if (is.null(dt_opts)) dt_opts <- list()
+        if (!is.null(cap)) {
+          return(DT::datatable(obj, rownames = FALSE, options = dt_opts,
+                               caption = htmltools::HTML(cap)))
+        }
+        return(DT::datatable(obj, rownames = FALSE, options = dt_opts))
+      }
       if (!is.null(obj)) return(.render_val(obj))
     }
   }

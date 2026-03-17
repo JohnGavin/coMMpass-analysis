@@ -2,6 +2,9 @@
 title: "04. Differential Expression Analysis"
 format:
   html:
+    toc: true
+    toc-expand: 2
+    toc-location: left
     code-fold: true
     code-summary: "Show code"
 vignette: >
