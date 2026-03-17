@@ -182,6 +182,128 @@ plan_vignette_outputs <- list(
     packages = c("SummarizedExperiment", "ggplot2", "dplyr")
   ),
 
+  # --- Data at a Glance summary table (data-sources) ---
+  tar_target(
+    vig_data_at_glance,
+    {
+      rows <- list()
+
+      # Clinical data
+      clin_file <- file.path(clinical_data, "clinical_data.parquet")
+      if (file.exists(clin_file)) {
+        clin <- arrow::read_parquet(clin_file)
+        iss_pct <- round(100 * sum(!is.na(clin$iss_stage)) / nrow(clin))
+        rows <- c(rows, list(data.frame(
+          Dataset = "Clinical metadata",
+          Records = nrow(clin), Variables = ncol(clin),
+          Completeness = paste0("ISS: ", iss_pct, "%"),
+          Source = "GDC API (open)",
+          stringsAsFactors = FALSE
+        )))
+      }
+
+      # Treatment data
+      trt_file <- file.path(clinical_data, "treatment_data.parquet")
+      if (file.exists(trt_file)) {
+        trt <- arrow::read_parquet(trt_file)
+        rows <- c(rows, list(data.frame(
+          Dataset = "Treatment records",
+          Records = nrow(trt),
+          Variables = ncol(trt),
+          Completeness = paste0(length(unique(trt$public_id)), " patients"),
+          Source = "GDC API (open)",
+          stringsAsFactors = FALSE
+        )))
+      }
+
+      # RNA-seq
+      if (!is.null(raw_rnaseq) && file.exists(raw_rnaseq)) {
+        se <- readRDS(raw_rnaseq)
+        rows <- c(rows, list(data.frame(
+          Dataset = "RNA-seq (STAR counts)",
+          Records = ncol(se),
+          Variables = nrow(se),
+          Completeness = "100%",
+          Source = "GDC STAR-Counts",
+          stringsAsFactors = FALSE
+        )))
+      }
+
+      # MSigDB
+      rows <- c(rows, list(data.frame(
+        Dataset = "MSigDB gene sets",
+        Records = 708, Variables = 2,
+        Completeness = "Hallmark + KEGG",
+        Source = "Pre-bundled parquet",
+        stringsAsFactors = FALSE
+      )))
+
+      if (length(rows) == 0) return(NULL)
+      df <- do.call(rbind, rows)
+      names(df)[2:3] <- c("Rows", "Columns")
+      DT::datatable(df, rownames = FALSE, options = list(dom = "t", paging = FALSE),
+                    caption = htmltools::tags$caption(
+                      style = "caption-side: bottom; text-align: left;",
+                      "Summary of all datasets used by the coMMpass pipeline. ",
+                      "Rows = records (patients/samples/treatment lines). ",
+                      "Columns = variables per record. ",
+                      "All data sourced from GDC open-access endpoints; ",
+                      "MMRF Gateway data (FISH, PFS, response) not yet available."
+                    ))
+    },
+    packages = c("arrow", "DT", "htmltools", "SummarizedExperiment")
+  ),
+
+  # --- Clinical data preview (data-dictionary) ---
+  tar_target(
+    vig_clinical_preview,
+    {
+      clin_file <- file.path(clinical_data, "clinical_data.parquet")
+      if (!file.exists(clin_file)) return(NULL)
+      clin <- arrow::read_parquet(clin_file)
+      # Show first 5 rows of key columns
+      key_cols <- intersect(
+        c("submitter_id", "age_at_diagnosis", "gender", "race",
+          "vital_status", "days_to_death", "days_to_last_follow_up",
+          "iss_stage"),
+        names(clin)
+      )
+      preview <- utils::head(clin[, key_cols, drop = FALSE], 5)
+      DT::datatable(preview, rownames = FALSE,
+                    options = list(dom = "t", paging = FALSE, scrollX = TRUE),
+                    caption = htmltools::tags$caption(
+                      style = "caption-side: bottom; text-align: left;",
+                      "First 5 rows of key clinical variables. ",
+                      "submitter_id = MMRF patient ID; age_at_diagnosis = days; ",
+                      "iss_stage = International Staging System (I/II/III). ",
+                      "Full dataset: ", nrow(clin), " patients x ", ncol(clin), " variables."
+                    ))
+    },
+    packages = c("arrow", "DT", "htmltools")
+  ),
+
+  # --- Treatment data preview (data-dictionary) ---
+  tar_target(
+    vig_treatment_preview,
+    {
+      trt_file <- file.path(clinical_data, "treatment_data.parquet")
+      if (!file.exists(trt_file)) return(NULL)
+      trt <- arrow::read_parquet(trt_file)
+      preview <- utils::head(trt, 5)
+      DT::datatable(preview, rownames = FALSE,
+                    options = list(dom = "t", paging = FALSE, scrollX = TRUE),
+                    caption = htmltools::tags$caption(
+                      style = "caption-side: bottom; text-align: left;",
+                      "First 5 treatment records from GDC API. ",
+                      "Each row = one drug administration for one patient. ",
+                      "regimen_or_line_of_therapy = treatment line (First, Second, etc). ",
+                      "Full dataset: ", nrow(trt), " records, ",
+                      length(unique(trt$public_id)), " patients."
+                    ))
+    },
+    packages = c("arrow", "DT", "htmltools")
+  ),
+
   # --- Clinical column structure DT (data-acquisition) ---
   tar_target(
     vig_clinical_column_info,

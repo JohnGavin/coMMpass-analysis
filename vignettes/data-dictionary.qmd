@@ -68,6 +68,12 @@ safe_tar_read("vig_dd_dictionary_table")
 - Downloaded via `TCGAbiolinks::GDCquery_clinic()`
 - All time/age variables in **days** (see [units reference](glossary.html#units-reference))
 
+### Sample Rows
+
+```{r clinical-preview}
+safe_tar_read("vig_clinical_preview")
+```
+
 ```{r clinical-summary-text, results='asis'}
 safe_tar_read("vig_dd_clinical_text")
 ```
@@ -106,6 +112,18 @@ safe_tar_read("vig_dd_rnaseq_biotype_table")
 
 ```{r rnaseq-sample-metadata}
 safe_tar_read("vig_dd_rnaseq_sample_table")
+```
+
+## Treatment Data
+
+- Treatment records extracted from GDC API (7,184 records, 994 patients)
+- Each row = one drug administration for one patient
+- Includes therapeutic agent, line of therapy, and timing
+
+### Sample Rows
+
+```{r treatment-preview}
+safe_tar_read("vig_treatment_preview")
 ```
 
 ## Column Name Mappings

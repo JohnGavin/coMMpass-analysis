@@ -66,6 +66,12 @@ Genetic Profile (CoMMpass) study is a longitudinal observational study of
 > Genomic and Immunophenotypic Profiles. *Blood*. 2013;122(21):532.
 > [doi:10.1182/blood.V122.21.532.532](https://doi.org/10.1182/blood.V122.21.532.532)
 
+## Data at a Glance
+
+```{r data-at-glance}
+safe_tar_read("vig_data_at_glance")
+```
+
 ## Data Access Tiers
 
 | Tier | Data | Access | Used by pipeline |

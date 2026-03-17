@@ -48,6 +48,45 @@ cat("::: {.callout-note}\n## Online documentation\nThis vignette displays pre-co
 - Open Access RNA-seq from the GDC S3 bucket (`s3://gdc-mmrf-commpass-phs000748-2-open/`)
 - Clinical metadata via `TCGAbiolinks::GDCquery_clinic()`
 
+## Data Flow
+
+```{mermaid}
+%%| fig-cap: "Simplified data flow from GDC to analysis outputs."
+flowchart LR
+  subgraph GDC["GDC Open Access"]
+    R["RNA-seq<br/>STAR Counts"]
+    C["Clinical<br/>Metadata"]
+    T["Treatment<br/>Records"]
+  end
+
+  subgraph Clean["Data Cleaning"]
+    SE["Summarized<br/>Experiment"]
+    CD["Clinical<br/>DataFrame"]
+    TD["Treatment<br/>DataFrame"]
+  end
+
+  subgraph Analysis
+    DE["Differential<br/>Expression"]
+    KM["Survival<br/>Analysis"]
+    PA["Pathway<br/>Enrichment"]
+    DAG["Causal<br/>DAGs"]
+  end
+
+  R --> SE
+  C --> CD
+  T --> TD
+  SE --> DE
+  CD --> KM
+  TD --> KM
+  DE --> PA
+  SE --> KM
+  CD --> DAG
+
+  style GDC fill:#e8f5e9,stroke:#4CAF50
+  style Clean fill:#e3f2fd,stroke:#2196F3
+  style Analysis fill:#fce4ec,stroke:#F44336
+```
+
 ## Pipeline Configuration
 
 Current pipeline settings including sample limit, random seed, and data paths.
