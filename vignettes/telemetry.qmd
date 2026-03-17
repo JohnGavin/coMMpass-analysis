@@ -52,7 +52,7 @@ Targets ordered by build duration. Long-running targets are candidates
 for caching optimization or parallel execution via `crew`.
 
 ```{r timing-table}
-safe_tar_read("vig_timing_table")
+show_target("vig_timing_table")
 ```
 
 ## Build Status Summary
@@ -60,7 +60,7 @@ safe_tar_read("vig_timing_table")
 High-level pipeline health metrics: target counts, build time, and storage size.
 
 ```{r status-table}
-safe_tar_read("vig_build_status")
+show_target("vig_build_status")
 ```
 
 ## Errors and Warnings
@@ -68,7 +68,7 @@ safe_tar_read("vig_build_status")
 Targets that produced errors or warnings during the most recent pipeline run.
 
 ```{r errors}
-safe_tar_read("vig_errors_table")
+show_target("vig_errors_table")
 ```
 
 ## Outdated Targets
@@ -76,7 +76,7 @@ safe_tar_read("vig_errors_table")
 Targets that need rebuilding due to changed code or upstream dependencies.
 
 ```{r outdated}
-safe_tar_read("vig_outdated_list")
+show_target("vig_outdated_list")
 ```
 
 ## Size Distribution
@@ -84,7 +84,7 @@ safe_tar_read("vig_outdated_list")
 Distribution of target serialized sizes, identifying large objects that dominate storage.
 
 ```{r size-plot, fig.cap="Target serialized sizes (log10 bytes). Dashed line = 1 MB threshold. Source: _targets/meta/meta.", fig.height=5}
-safe_tar_read("vig_size_plot")
+show_target("vig_size_plot")
 ```
 
 ## Git Activity
@@ -95,7 +95,7 @@ Weekly commit counts colored by conventional-commit type (feat, fix, docs, etc.)
 across the last 200 commits.
 
 ```{r commit-velocity, fig.cap="Weekly commit velocity colored by change type. Each bar segment represents commits of a given type (feat, fix, docs, ci, etc.) in that ISO week. Source: git log.", fig.height=5}
-safe_tar_read("vig_commit_velocity")
+show_target("vig_commit_velocity")
 ```
 
 ### Changes by Type
@@ -103,7 +103,7 @@ safe_tar_read("vig_commit_velocity")
 Commits grouped by conventional-commit prefix, with total lines added and removed.
 
 ```{r changes-by-type}
-safe_tar_read("vig_changes_by_type")
+show_target("vig_changes_by_type")
 ```
 
 ### Changes by File Category
@@ -112,7 +112,7 @@ How often each file category (R Source, Tests, Vignettes, CI/CD, etc.) was
 touched across the last 200 commits.
 
 ```{r changes-by-file-category}
-safe_tar_read("vig_changes_by_file_category")
+show_target("vig_changes_by_file_category")
 ```
 
 ### Recent Commits
@@ -120,7 +120,7 @@ safe_tar_read("vig_changes_by_file_category")
 Full 20-commit changelog with lines added, files changed, and change categories.
 
 ```{r recent-commits}
-safe_tar_read("vig_git_changelog")
+show_target("vig_git_changelog")
 ```
 
 ## GitHub Activity
@@ -130,7 +130,7 @@ safe_tar_read("vig_git_changelog")
 Open/closed issue and merged PR counts from the GitHub API.
 
 ```{r github-activity}
-safe_tar_read("vig_github_activity_table")
+show_target("vig_github_activity_table")
 ```
 
 ### Codebase Metrics
@@ -138,7 +138,7 @@ safe_tar_read("vig_github_activity_table")
 R files, test files, exports, lines of code, and package version.
 
 ```{r codebase-metrics}
-safe_tar_read("vig_codebase_metrics")
+show_target("vig_codebase_metrics")
 ```
 
 ## Reproducibility

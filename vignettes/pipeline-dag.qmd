@@ -77,7 +77,7 @@ safe_tar_read("dag_layer_validation")
 Interactive DAG showing the targets pipeline network with layer-based coloring. Nodes are colored by functional layer. Hover for target details, use the dropdown to search by name.
 
 ```{r pipeline-visnetwork}
-safe_tar_read("vig_pipeline_dag")
+show_target("vig_pipeline_dag")
 ```
 
 ## Interactive DAG (live)
@@ -98,7 +98,7 @@ selection, see `inst/shinylive/pipeline_dag.qmd`.
 Recent project commits with lines added, files changed, and change categories.
 
 ```{r changelog}
-safe_tar_read("vig_git_changelog")
+show_target("vig_git_changelog")
 ```
 
 ## Reproducibility

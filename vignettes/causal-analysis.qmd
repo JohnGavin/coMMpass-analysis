@@ -57,7 +57,7 @@ variables — tumor biology and comorbidities — represent important confounder
 that cannot be directly adjusted for.
 
 ```{r dag-plot, fig.height = 8, fig.width = 10, fig.cap = "CoMMpass causal DAG. Nodes represent measured and latent variables. Edges represent assumed causal effects. Exposure: cytogenetic_risk. Outcome: overall_survival. Latent variables (tumor_biology, comorbidities) represent unmeasured confounders."}
-safe_tar_read("vig_causal_dag_plot")
+show_target("vig_causal_dag_plot")
 ```
 
 ### Key Causal Assumptions
@@ -84,7 +84,7 @@ adjustment set** — the smallest set of variables that blocks all backdoor
 paths between exposure and outcome.
 
 ```{r adjustment-table}
-safe_tar_read("vig_causal_adjustment_table")
+show_target("vig_causal_adjustment_table")
 ```
 
 ## Model Adequacy Check
@@ -93,7 +93,7 @@ We compare the covariates used in current Cox proportional hazards models
 against the DAG-implied adjustment sets.
 
 ```{r model-check-table}
-safe_tar_read("vig_causal_model_check_table")
+show_target("vig_causal_model_check_table")
 ```
 
 ### Interpretation

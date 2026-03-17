@@ -86,12 +86,29 @@ safe_tar_read <- function(name) {
 }
 
 show_target <- function(name, .safe_tar_read = safe_tar_read) {
+  # Try pre-extracted code target first
   code_name <- paste0("code_", name)
   code <- .safe_tar_read(code_name)
+
   if (!is.null(code) && is.character(code) && nzchar(paste(code, collapse = ""))) {
     cat('<details><summary>Generating code</summary>\n\n```r\n')
     cat(paste(code, collapse = "\n"))
     cat('\n```\n</details>\n\n')
+  } else {
+    # Fallback: extract target body from tar_manifest()
+    tryCatch({
+      if (!is.null(tar_store)) {
+        manifest <- targets::tar_manifest(store = tar_store)
+        row <- manifest[manifest$name == name, ]
+        if (nrow(row) > 0 && !is.na(row$command[1]) && nzchar(row$command[1])) {
+          cat('<details><summary>Target definition</summary>\n\n```r\n')
+          cat(paste0("# targets::tar_target(", name, ")\n"))
+          cat(row$command[1])
+          cat('\n```\n</details>\n\n')
+        }
+      }
+    }, error = function(e) NULL)
   }
+
   .safe_tar_read(name)
 }

@@ -60,11 +60,11 @@ cat("::: {.callout-note}\n## Online documentation\nThis vignette displays pre-co
 Kaplan-Meier estimate of the overall survival function for the full patient cohort.
 
 ```{r km-overall, fig.cap = "Overall Kaplan-Meier survival curve for all CoMMpass patients with valid survival data. Shaded region: 95% confidence interval. Time in days from diagnosis."}
-safe_tar_read("vig_km_overall")
+show_target("vig_km_overall")
 ```
 
 ```{r km-overall-text, results='asis'}
-safe_tar_read("vig_km_overall_text")
+show_target("vig_km_overall_text")
 ```
 
 ## Survival by ISS Stage
@@ -74,7 +74,7 @@ safe_tar_read("vig_km_overall_text")
 - See the [EDA vignette](exploratory-analysis.html) for ISS stage distributions
 
 ```{r km-iss, fig.cap = "Kaplan-Meier curves by ISS stage (I, II, III). Log-rank p-value tests whether survival distributions differ across stages. ISS III patients are expected to have shorter survival. See Greipp et al. 2005 for ISS definition."}
-safe_tar_read("vig_km_iss")
+show_target("vig_km_iss")
 ```
 
 ## Survival by Cytogenetic Risk Group
@@ -83,7 +83,7 @@ Cytogenetic risk per [IMWG 2014 criteria](https://doi.org/10.1200/JCO.2014.55.15
 **high-risk** = t(4;14) OR t(14;16) OR del(17p); **standard-risk** = all others.
 
 ```{r km-risk, fig.cap = "Kaplan-Meier curves by IMWG cytogenetic risk group (high vs standard). High-risk: t(4;14), t(14;16), or del(17p). Standard-risk: all others. Log-rank p-value shown."}
-safe_tar_read("vig_km_risk")
+show_target("vig_km_risk")
 ```
 
 ## Survival by Individual Cytogenetic Markers
@@ -91,7 +91,7 @@ safe_tar_read("vig_km_risk")
 Each marker is analyzed separately: patients with vs without the alteration.
 
 ```{r km-markers, fig.height = 5, fig.cap = "Kaplan-Meier curves for individual cytogenetic markers. Each panel compares patients with (positive) vs without (negative) the alteration. Markers with fewer than 3 positive or negative patients are skipped."}
-safe_tar_read("vig_km_markers")
+show_target("vig_km_markers")
 ```
 
 ## Cox Proportional Hazards
@@ -117,7 +117,7 @@ show_target("vig_cox_full_table")
 Forest plot showing hazard ratios from the full multivariate Cox regression. Each row represents a covariate; the point estimate is the HR with 95% CI bars. HR > 1 indicates increased risk; HR < 1 indicates a protective effect. The dashed vertical line marks HR = 1 (no effect).
 
 ```{r forest-plot, fig.cap = "Forest plot of hazard ratios from multivariate Cox regression. Points: HR estimates. Horizontal bars: 95% CI. Dashed line: HR = 1 (no effect). Log scale x-axis. Stars: significance level."}
-safe_tar_read("vig_forest_plot")
+show_target("vig_forest_plot")
 ```
 
 ### Proportional Hazards Assumption
@@ -146,7 +146,7 @@ clinical outcomes.
 > significance threshold is p < 0.01.
 
 ```{r km-expression, fig.height = 5, fig.cap = "Kaplan-Meier curves stratified by median-split gene expression. High = above median VST, Low = below median. Log-rank p-value shown. Top DE genes from consensus analysis."}
-safe_tar_read("vig_km_by_expression")
+show_target("vig_km_by_expression")
 ```
 
 ## Expression by Cytogenetic Subtype
@@ -193,7 +193,7 @@ pipeline data and synthetic test data, see the
 Recent project commits with lines added, files changed, and change categories.
 
 ```{r changelog}
-safe_tar_read("vig_git_changelog")
+show_target("vig_git_changelog")
 ```
 
 ## Reproducibility

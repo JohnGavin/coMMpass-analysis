@@ -99,5 +99,39 @@ plan_dag_validation <- list(
       )
     },
     packages = c("targets", "DT", "htmltools", "cli")
+  ),
+
+  # Validate RDS exports don't contain Nix store paths
+  tar_target(
+    rds_nix_path_check,
+    {
+      rds_dir <- "inst/extdata/vignettes"
+      rds_files <- list.files(rds_dir, pattern = "\\.rds$", full.names = TRUE)
+      violations <- character(0)
+
+      for (rds in rds_files) {
+        obj <- readRDS(rds)
+        # Check serialized bytes for /nix/store/ paths
+        raw <- rawToChar(serialize(obj, NULL, ascii = TRUE))
+        if (grepl("/nix/store/", raw, fixed = TRUE)) {
+          violations <- c(violations, basename(rds))
+        }
+      }
+
+      if (length(violations) > 0) {
+        cli::cli_abort(c(
+          "x" = "{length(violations)} RDS file(s) contain Nix store paths",
+          "i" = "These will fail in CI (Ubuntu, no Nix)",
+          "i" = "Affected: {paste(violations, collapse = ', ')}",
+          "i" = "Fix: re-export DT targets as data.frames via export_dt_as_df.R"
+        ))
+      }
+
+      cli::cli_alert_success(
+        "RDS validation: {length(rds_files)} files, 0 Nix path violations"
+      )
+      list(n_files = length(rds_files), violations = violations)
+    },
+    cue = tar_cue(mode = "always")
   )
 )

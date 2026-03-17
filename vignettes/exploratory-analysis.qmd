@@ -57,7 +57,7 @@ appear in place of plots when pre-computed outputs are not yet available.
 ## Clinical Demographics
 
 ```{r clinical-demographics, results='asis'}
-safe_tar_read("vig_clinical_demographics_text")
+show_target("vig_clinical_demographics_text")
 ```
 
 ### Age at Diagnosis
@@ -91,7 +91,7 @@ stages based on serum beta-2 microglobulin and albumin levels. Higher stages
 indicate more advanced disease and worse prognosis.
 
 ```{r iss-distribution, results='asis'}
-safe_tar_read("vig_iss_distribution_text")
+show_target("vig_iss_distribution_text")
 ```
 
 ### ISS Stage Distribution
@@ -113,43 +113,43 @@ show_target("vig_iss_age_table")
 ## Survival Endpoints
 
 ```{r survival-endpoints, results='asis'}
-safe_tar_read("vig_survival_endpoints")
+show_target("vig_survival_endpoints")
 ```
 
 ## Biospecimen Overview
 
 ```{r biospecimen-overview, results='asis'}
-safe_tar_read("vig_biospecimen_overview_text")
+show_target("vig_biospecimen_overview_text")
 ```
 
 ### Sample Types
 
 ```{r sample-type-bar, fig.cap = "Sample type distribution across all CoMMpass biospecimens. Data: GDC biospecimen endpoint."}
-safe_tar_read("vig_sample_type_barplot")
+show_target("vig_sample_type_barplot")
 ```
 
 ### Samples per Patient
 
 ```{r samples-per-patient, fig.cap = "Number of biospecimen samples per patient. Most patients have multiple samples (longitudinal collection). Data: GDC biospecimen."}
-safe_tar_read("vig_samples_per_patient_hist")
+show_target("vig_samples_per_patient_hist")
 ```
 
 ## RNA-seq Quality
 
 ```{r rnaseq-quality, results='asis'}
-safe_tar_read("vig_rnaseq_quality_text")
+show_target("vig_rnaseq_quality_text")
 ```
 
 ### Library Size Distribution
 
 ```{r library-size-boxplot, fig.cap = "Library sizes (millions of reads) across RNA-seq samples. Library size = total mapped read counts per sample. Data: GDC STAR-Counts."}
-safe_tar_read("vig_library_size_boxplot")
+show_target("vig_library_size_boxplot")
 ```
 
 ### Genes Detected per Sample
 
 ```{r genes-detected-histogram, fig.cap = "Number of genes detected (count > 0) per RNA-seq sample. Samples with unusually low detection may be outliers. Data: GDC STAR-Counts."}
-safe_tar_read("vig_genes_detected_hist")
+show_target("vig_genes_detected_hist")
 ```
 
 ## Sample Clustering (PCA)
@@ -159,11 +159,11 @@ reveals sample-level structure. Points are colored by clinical covariates to che
 for batch effects or biological groupings.
 
 ```{r pca-biplot, fig.cap = "PCA biplot of RNA-seq samples using top 500 most variable genes (VST). PC1 and PC2 with variance explained. Colored by gender. Clustering by sex indicates strong expression differences."}
-safe_tar_read("vig_pca_biplot")
+show_target("vig_pca_biplot")
 ```
 
 ```{r pca-biplot-vital, fig.cap = "PCA biplot colored by vital status. Overlap between alive/dead suggests survival is not the dominant source of transcriptomic variation."}
-safe_tar_read("vig_pca_biplot_vital")
+show_target("vig_pca_biplot_vital")
 ```
 
 ## Cytogenetic Landscape
@@ -181,7 +181,7 @@ show_target("vig_cyto_frequency_table")
 ### Oncoprint
 
 ```{r cyto-oncoprint, fig.height = 5, fig.cap = "Cytogenetic oncoprint showing alteration landscape across patients. Rows: FISH markers. Columns: patients sorted by alteration frequency. Blue = translocation, red = deletion, green = gain. Percentages show alteration frequency among tested patients."}
-safe_tar_read("vig_cyto_oncoprint")
+show_target("vig_cyto_oncoprint")
 ```
 
 ### Co-occurrence Analysis
@@ -191,7 +191,7 @@ show_target("vig_cyto_cooccurrence_table")
 ```
 
 ```{r cyto-cooccurrence-heatmap, fig.cap = "Pairwise co-occurrence heatmap. Red: co-occurrence (positive association). Blue: mutual exclusivity (negative association). Color intensity: -log10(adjusted p-value). * = significant at padj < 0.05."}
-safe_tar_read("vig_cyto_cooccurrence_heatmap")
+show_target("vig_cyto_cooccurrence_heatmap")
 ```
 
 Cytogenetic markers are used for [survival stratification](survival-analysis.html) and inform [differential expression](differential-expression.html) analysis.
@@ -226,7 +226,7 @@ show_target("vig_duckdb_demo_agg")
 ## Cross-dataset Integration
 
 ```{r integration, results='asis'}
-safe_tar_read("vig_integration_text")
+show_target("vig_integration_text")
 ```
 
 ## Data Sources
@@ -246,7 +246,7 @@ pipeline data and synthetic test data, see the
 Recent project commits with lines added, files changed, and change categories.
 
 ```{r changelog}
-safe_tar_read("vig_git_changelog")
+show_target("vig_git_changelog")
 ```
 
 ## Reproducibility

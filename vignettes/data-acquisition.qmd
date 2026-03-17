@@ -95,7 +95,7 @@ flowchart LR
 Current pipeline settings including sample limit, random seed, and data paths.
 
 ```{r config, results='asis'}
-safe_tar_read("vig_config_text")
+show_target("vig_config_text")
 ```
 
 > **Note:** This vignette was built with `sample_limit = `r { x <- safe_tar_read("config"); if (!is.null(x)) x$sample_limit else "?" }`` patients. Numbers below reflect this subset, not the full ~900-patient CoMMpass cohort. For pipeline execution details, see [issue #46 (telemetry vignette)](https://github.com/JohnGavin/coMMpass-analysis/issues/46).
@@ -105,11 +105,11 @@ safe_tar_read("vig_config_text")
 RNA-seq gene expression data is downloaded from GDC as a [SummarizedExperiment](https://bioconductor.org/packages/SummarizedExperiment/) object containing [STAR-Counts](https://docs.gdc.cancer.gov/Data/Bioinformatics_Pipelines/Expression_mRNA_Pipeline/).
 
 ```{r rnaseq-summary-text, results='asis'}
-safe_tar_read("vig_rnaseq_summary_text")
+show_target("vig_rnaseq_summary_text")
 ```
 
 ```{r rnaseq-sample-table}
-safe_tar_read("vig_rnaseq_sample_stats")
+show_target("vig_rnaseq_sample_stats")
 ```
 
 ```{r count-distribution, results='asis', fig.cap = "Distribution of mean gene expression (log10 scale) across all genes. The three peaks correspond to distinct gene populations: (1) unexpressed/noise genes near zero, (2) lowly-expressed genes detected in a subset of samples, and (3) moderately-to-highly expressed housekeeping/structural genes. This trimodal pattern is expected for GENCODE-annotated RNA-seq data, which includes ~60k entries spanning protein-coding genes, lncRNAs, pseudogenes, and other biotypes with very different expression levels. Data: GDC STAR-Counts."}
@@ -121,7 +121,7 @@ show_target("vig_count_distribution_plot")
 Clinical metadata from [GDC](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS) provides patient demographics, disease characteristics, and outcomes. See the [data dictionary](data-dictionary.html) for variable definitions and the [glossary](glossary.html) for units.
 
 ```{r clinical-columns}
-safe_tar_read("vig_clinical_column_info")
+show_target("vig_clinical_column_info")
 ```
 
 ### Data Completeness
@@ -129,11 +129,11 @@ safe_tar_read("vig_clinical_column_info")
 Missing data rates across clinical variables, highlighting fields with substantial missingness.
 
 ```{r missing-data-text, results='asis'}
-safe_tar_read("vig_missing_data_text")
+show_target("vig_missing_data_text")
 ```
 
 ```{r missing-data-table}
-safe_tar_read("vig_missing_data_table")
+show_target("vig_missing_data_table")
 ```
 
 ## Quality Control {#quality-control}
@@ -152,15 +152,15 @@ The per-sample expression summary (Total Counts, Genes Detected) is shown in the
 - **Outlier** --- flagged `Yes` if the sample falls in the **bottom 5th percentile** of either library size OR genes detected
 
 ```{r qc-text, results='asis'}
-safe_tar_read("vig_qc_text")
+show_target("vig_qc_text")
 ```
 
 ```{r qc-table}
-safe_tar_read("vig_qc_table")
+show_target("vig_qc_table")
 ```
 
 ```{r filtered-summary, results='asis'}
-safe_tar_read("vig_filtered_summary")
+show_target("vig_filtered_summary")
 ```
 
 ## Data Sources
@@ -180,7 +180,7 @@ pipeline data and synthetic test data, see the
 Recent project commits with lines added, files changed, and change categories.
 
 ```{r changelog}
-safe_tar_read("vig_git_changelog")
+show_target("vig_git_changelog")
 ```
 
 ## Reproducibility
