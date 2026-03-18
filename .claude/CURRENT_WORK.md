@@ -1,44 +1,42 @@
 # Current Work — coMMpass-analysis
 
-## Last Session: 2026-03-15
+## Last Session: 2026-03-18
 
 ### Branch: main
 
 ### Completed This Session
 
-1. **Regenerated default.nix** — date 2026-02-02, qpdf added
-2. **Reduced ggplot sizes** — 7 targets, 96 MB → 1.1 MB via ggplotGrob()
-3. **GDC treatment extraction** — 7,184 records, 994 patients
-4. **Cox model fix** — drop all-NA covariates, ISS + age (C=0.673)
-5. **msigdbr fix** — fallback path for local parquets
-6. **Causal DAGs (#85)** — dagitty/ggdag, adjustment sets, model checks, vignette
-7. **pkgdown validated** — 14 articles, 112 ref pages, 54 figures, 0 errors
+1. **Code provenance refactor** — deleted 78 stale code_vig_*.rds snapshots, kept 20 real pipeline targets. Code display now comes from pipeline targets (auto-invalidating) or tar_manifest() locally.
+
+2. **echo:false on all show_target chunks** — 106 chunks across 12 vignettes. Quarto no longer shows `show_target(...)` in code folds; users see the generating R code via `<details>Generating code</details>`.
+
+3. **CI deployment fixed** — root cause was DT widgets in RDS with Nix store paths. RDS files now contain plain data.frames. Last 3 CI runs all succeeded.
+
+4. **Lessons-learned issue #95** created documenting 5 architectural lessons.
 
 ### Pipeline State
 
 - **R CMD check**: 0 errors, 0 warnings, 0 notes
-- **Tests**: 0 FAIL, 869 PASS, 14 SKIP
+- **Tests**: 0 FAIL, 873 PASS, 14 SKIP
 - **Targets**: 0 errored, 12 NULL (data limitations)
-- **RDS**: 143 files, 3.4 MB total
-- **pkgdown**: 14 articles built, 54 figure PNGs
+- **CI**: Last 3 deploys succeeded
+- **pkgdown**: 14 articles, 54 figures, 112 ref pages
 
-### NULL Targets (12 — all PFS/response/FISH data)
-- 7 PFS: shiny_pfs_data + 6 cascade (need pfs_time/pfs_status)
-- 3 FISH: vig_km_markers, vig_km_risk, shiny_risk_os_by_risk (need cytogenetic markers)
-- 2 response: shiny_km_os_by_response, shiny_risk_os_by_response (need treatment response)
-- All require MMRF Researcher Gateway registration (pending)
+### Architecture (Code Provenance)
 
-### Issues Closed This Session
-- #93 (package.nix from default.R) — done
-- #85 (causal DAGs) — done
+```
+R/viz/*.R                         ← source of truth (edit here)
+    ├→ code_vig_* target          ← deparse(body(fn)) → auto-invalidates
+    │   └→ RDS in inst/extdata/   ← available in CI (20 targets)
+    └→ vig_* target               ← evaluates function → plot/table
+        └→ RDS in inst/extdata/   ← available in CI (data.frames, not DT)
 
-### Issues Labelled Low-Priority
-- #79 (API documentation) — scope notes added
-- #86 (plumber2 API) — 5 phases documented
+Vignette: #| echo: false + show_target("vig_X")
+  → <details>Generating code</details> + rendered output
+```
 
-### Open Issues (by priority)
-1. #9 — Full data acquisition pipeline (blocked: MMRF Gateway access)
-2. #88, #89, #91 — NULL targets (blocked by #9)
-3. #79, #86 — API (low-priority, scope documented)
-4. #84 — Bayesian survival (low-priority)
-5. #70, #69, #66, #65, #8 — Analysis extensions (low-priority)
+### Open Issues
+- #94 — vignette rendering (partially closed — DT, TOC, echo done; interactive DAG remains)
+- #95 — lessons-learned documentation (open for review)
+- #9 — data acquisition (blocked: MMRF Gateway)
+- #79, #86 — API (low-priority)
