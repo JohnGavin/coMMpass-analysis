@@ -1,42 +1,30 @@
 # Current Work — coMMpass-analysis
 
-## Last Session: 2026-03-18
+## Last Session: 2026-03-19
 
 ### Branch: main
 
 ### Completed This Session
 
-1. **Code provenance refactor** — deleted 78 stale code_vig_*.rds snapshots, kept 20 real pipeline targets. Code display now comes from pipeline targets (auto-invalidating) or tar_manifest() locally.
-
-2. **echo:false on all show_target chunks** — 106 chunks across 12 vignettes. Quarto no longer shows `show_target(...)` in code folds; users see the generating R code via `<details>Generating code</details>`.
-
-3. **CI deployment fixed** — root cause was DT widgets in RDS with Nix store paths. RDS files now contain plain data.frames. Last 3 CI runs all succeeded.
-
-4. **Lessons-learned issue #95** created documenting 5 architectural lessons.
+1. **README Quick Start fixed** — removed fabricated output, replaced with verified `tar_meta()` and `str(km_overall)` output
+2. **Chunk-target mapping audit** — new `vig_chunk_audit` + `vig_chunk_audit_table` targets in telemetry pipeline. 153 chunks: 116 mapped, 36 infra (OK), 1 violation
+3. **Rules updated** — `quarto-vignette-format.md` rule 0b (chunk-target mapping mandatory), rule 0c (README must be README.qmd)
+4. **Issues created** — #96 (README.qmd conversion), #97 (visnetwork-live → static filtered DAGs)
+5. **MEMORY.md updated** — README.qmd requirement, CI validation
 
 ### Pipeline State
 
 - **R CMD check**: 0 errors, 0 warnings, 0 notes
-- **Tests**: 0 FAIL, 873 PASS, 14 SKIP
+- **Tests**: 0 FAIL, 875 PASS, 14 SKIP
 - **Targets**: 0 errored, 12 NULL (data limitations)
-- **CI**: Last 3 deploys succeeded
-- **pkgdown**: 14 articles, 54 figures, 112 ref pages
+- **CI**: 3 consecutive successful deploys
+- **Chunk audit**: 1 violation (visnetwork-live → issue #97)
 
-### Architecture (Code Provenance)
+### Open Issues (by priority)
 
-```
-R/viz/*.R                         ← source of truth (edit here)
-    ├→ code_vig_* target          ← deparse(body(fn)) → auto-invalidates
-    │   └→ RDS in inst/extdata/   ← available in CI (20 targets)
-    └→ vig_* target               ← evaluates function → plot/table
-        └→ RDS in inst/extdata/   ← available in CI (data.frames, not DT)
-
-Vignette: #| echo: false + show_target("vig_X")
-  → <details>Generating code</details> + rendered output
-```
-
-### Open Issues
-- #94 — vignette rendering (partially closed — DT, TOC, echo done; interactive DAG remains)
-- #95 — lessons-learned documentation (open for review)
-- #9 — data acquisition (blocked: MMRF Gateway)
-- #79, #86 — API (low-priority)
+1. #96 — Convert README.md → README.qmd (mandatory per readme-qmd-standard)
+2. #97 — Replace visnetwork-live with static filtered DAG images
+3. #94 — Vignette rendering (interactive DAG remains)
+4. #95 — Lessons-learned documentation (open for review)
+5. #9 — Data acquisition (blocked: MMRF Gateway)
+6. #79, #86 — API (low-priority)
