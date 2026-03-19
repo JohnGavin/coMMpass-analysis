@@ -41,20 +41,25 @@ remotes::install_github("JohnGavin/coMMpass-analysis")
 library(targets)
 tar_make()
 
-# Check pipeline status
-tar_progress()
-#>                        name   progress
-#> 1                    config   completed
-#> 2                raw_rnaseq   completed
-#> 3             clinical_data   completed
-#> ...
+# Check pipeline status (229 targets in full pipeline)
+tar_meta(fields = c("seconds", "bytes")) |>
+  dplyr::filter(!is.na(seconds)) |>
+  dplyr::arrange(dplyr::desc(seconds)) |>
+  head(5)
+#> # A tibble: 5 × 3
+#>   name                  seconds   bytes
+#> 1 raw_rnaseq              113.       79
+#> 2 deseq2_results           50.0 2712950
+#> 3 clinical_data            38.4      70
+#> 4 deseq2_paired_results    26.1 2143795
+#> 5 edger_results            20.4 1257741
 
 # Read a result
 km <- tar_read(km_overall)
 str(km, max.level = 1)
 #> List of 8
 #>  $ fit            :List of 17
-#>  $ median_survival: Named num NA    # NA = median not reached
+#>  $ median_survival: Named num NA
 #>  $ n_per_group    : Named num 994
 #>  $ data           :'data.frame': 994 obs. of 14 variables
 ```
