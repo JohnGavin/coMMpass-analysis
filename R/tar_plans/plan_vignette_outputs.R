@@ -954,8 +954,9 @@ plan_vignette_outputs <- list(
       if (is.null(eda_pca_summary) || nrow(eda_pca_summary$coords) == 0) {
         return(NULL)
       }
-      plot_pca(eda_pca_summary, color_by = "gender",
+      p <- plot_pca(eda_pca_summary, color_by = "gender",
                title = "PCA: Sample Clustering (by Gender)")
+      ggplot2::ggplotGrob(p)
     }
   ),
 
@@ -966,8 +967,9 @@ plan_vignette_outputs <- list(
       if (is.null(eda_pca_summary) || nrow(eda_pca_summary$coords) == 0) {
         return(NULL)
       }
-      plot_pca(eda_pca_summary, color_by = "vital_status",
+      p <- plot_pca(eda_pca_summary, color_by = "vital_status",
                title = "PCA: Sample Clustering (by Vital Status)")
+      ggplot2::ggplotGrob(p)
     }
   ),
 
@@ -998,7 +1000,8 @@ plan_vignette_outputs <- list(
 
       color_var <- NULL
       if ("condition" %in% names(pca_data$coords)) color_var <- "condition"
-      plot_pca(pca_data, color_by = color_var, title = "Sample PCA (VST)")
+      p <- plot_pca(pca_data, color_by = color_var, title = "Sample PCA (VST)")
+      ggplot2::ggplotGrob(p)
     }
   ),
 
@@ -1149,7 +1152,8 @@ plan_vignette_outputs <- list(
     {
       if (is.null(km_overall)) return(NULL)
       if (is.null(km_overall$fit)) return(NULL)
-      plot_km(km_overall, title = "Overall Survival")
+      p <- plot_km(km_overall, title = "Overall Survival")
+      ggplot2::ggplotGrob(p)
     }
   ),
 
@@ -1186,7 +1190,8 @@ plan_vignette_outputs <- list(
     {
       if (is.null(km_by_iss)) return(NULL)
       if (is.null(km_by_iss$fit)) return(NULL)
-      plot_km(km_by_iss, title = "Survival by ISS Stage")
+      p <- plot_km(km_by_iss, title = "Survival by ISS Stage")
+      ggplot2::ggplotGrob(p)
     }
   ),
 

@@ -248,7 +248,7 @@ plan_telemetry <- list(
       n_added <- format(summary$totals$total_added, big.mark = ",")
       n_removed <- format(summary$totals$total_removed, big.mark = ",")
 
-      ggplot2::ggplot(wv, ggplot2::aes(x = week, y = commits, fill = type)) +
+      p <- ggplot2::ggplot(wv, ggplot2::aes(x = week, y = commits, fill = type)) +
         ggplot2::geom_col() +
         ggplot2::scale_fill_manual(
           values = type_colors, name = "Change Type"
@@ -274,6 +274,7 @@ plan_telemetry <- list(
             size = 7, hjust = 0, lineheight = 1.2
           )
         )
+      ggplot2::ggplotGrob(p)
     },
     packages = c("ggplot2"),
     cue = targets::tar_cue(mode = "always")
