@@ -165,6 +165,17 @@ R files, test files, exports, lines of code, and package version.
 show_target("vig_codebase_metrics")
 ```
 
+## Chunk-Target Audit
+
+Mapping of every R code chunk across all vignettes to its pipeline target.
+Exceptions are infrastructure chunks (setup, banners, sessionInfo) or violations.
+
+```{r chunk-audit}
+#| echo: false
+#| results: asis
+show_target("vig_chunk_audit_table")
+```
+
 ## Reproducibility
 
 <details>

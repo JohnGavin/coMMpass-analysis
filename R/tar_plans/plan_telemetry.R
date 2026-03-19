@@ -770,5 +770,70 @@ plan_telemetry <- list(
     },
     packages = c("DT", "htmltools"),
     cue = targets::tar_cue(mode = "always")
+  ),
+
+  # --- Chunk-target mapping audit ---
+  targets::tar_target(
+    vig_chunk_audit,
+    {
+      vigs <- list.files("vignettes", pattern = "\\.qmd$", full.names = TRUE)
+      results <- list()
+      for (f in vigs) {
+        lines <- readLines(f, warn = FALSE)
+        vig <- sub("\\.qmd$", "", basename(f))
+        cs_all <- grep("^```\\{r", lines)
+        ce_all <- grep("^```$", lines)
+        for (cs in cs_all) {
+          ce <- min(ce_all[ce_all > cs])
+          if (is.infinite(ce)) next
+          header <- lines[cs]
+          body <- lines[(cs + 1):(ce - 1)]
+          code <- paste(body, collapse = "\n")
+          nm <- regmatches(header, regexec("\\{r\\s+([^,}]+)", header))[[1]]
+          chunk_name <- if (length(nm) >= 2) trimws(nm[2]) else "<unnamed>"
+          trefs <- unique(unlist(regmatches(code,
+            gregexpr('"(vig_[^"]+|code_[^"]+|config|glossary_table|dag_[^"]+|eda_[^"]+)"',
+                     code))))
+          trefs <- gsub('"', '', trefs)
+          has_show <- grepl("show_target", code)
+          ef <- any(grepl("echo.*false", body))
+          it <- if (length(trefs) > 0) paste(trefs, collapse = ", ") else "<none>"
+          ct <- if (has_show) "show_target"
+                else if (grepl("safe_tar_read", code)) "safe_tar_read"
+                else "<infra>"
+          results[[length(results) + 1]] <- data.frame(
+            Vignette = vig, Chunk = chunk_name, Call = ct,
+            Target = it, echo_false = ef, stringsAsFactors = FALSE
+          )
+        }
+      }
+      df <- do.call(rbind, results)
+      # Flag exceptions
+      infra_chunks <- c("setup", "pkgdown-banner", "session-info", "sessioninfo")
+      df$Status <- ifelse(
+        df$Chunk %in% infra_chunks, "infra (OK)",
+        ifelse(df$Target == "<none>", "VIOLATION", "mapped")
+      )
+      df
+    },
+    cue = targets::tar_cue(mode = "always")
+  ),
+
+  targets::tar_target(
+    vig_chunk_audit_table,
+    {
+      if (is.null(vig_chunk_audit)) return(NULL)
+      exc <- vig_chunk_audit[vig_chunk_audit$Status != "mapped", ]
+      DT::datatable(exc, rownames = FALSE,
+        options = list(dom = "t", paging = FALSE),
+        caption = htmltools::tags$caption(
+          style = "caption-side: bottom; text-align: left;",
+          "Chunk-target mapping exceptions. 'infra (OK)' = setup/banner/sessionInfo. ",
+          "'VIOLATION' = content chunk without a pipeline target. ",
+          "All content chunks should use show_target() with a vig_* target."
+        ))
+    },
+    packages = c("DT", "htmltools"),
+    cue = targets::tar_cue(mode = "always")
   )
 )
