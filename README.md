@@ -26,14 +26,43 @@ Planned features:
 ### Quick Start (without Nix)
 
 ```r
-# Install from GitHub
+# Install from GitHub (requires Bioconductor deps)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install(c("TCGAbiolinks", "DESeq2", "edgeR", "limma",
+                        "SummarizedExperiment", "fgsea"))
 remotes::install_github("JohnGavin/coMMpass-analysis")
-library(coMMpass)
 
-# Download data and run the pipeline
-data_dir <- acquire_commpass_data(sample_limit = 50)
-targets::tar_make()
+# Clone the repo (targets needs _targets.R in working directory)
+# git clone https://github.com/JohnGavin/coMMpass-analysis.git
+# setwd("coMMpass-analysis")
+
+# Run the pipeline — downloads data from GDC, then runs all analyses
+library(targets)
+tar_make()
+
+# Check pipeline status
+tar_progress()
+#>                        name   progress
+#> 1                    config   completed
+#> 2                raw_rnaseq   completed
+#> 3             clinical_data   completed
+#> ...
+
+# Read a result
+km <- tar_read(km_overall)
+str(km, max.level = 1)
+#> List of 8
+#>  $ fit            :List of 17
+#>  $ median_survival: Named num NA    # NA = median not reached
+#>  $ n_per_group    : Named num 994
+#>  $ data           :'data.frame': 994 obs. of 14 variables
 ```
+
+> **Note:** The pipeline downloads ~3.6 GB of RNA-seq data from GDC on first
+> run. Subsequent runs skip downloads (`cue = "never"`). The `config` target
+> sets `sample_limit = 200` by default — edit `R/tar_plans/plan_data_acquisition.R`
+> to change this.
 
 ### Quick Start (with Nix — fully reproducible)
 
