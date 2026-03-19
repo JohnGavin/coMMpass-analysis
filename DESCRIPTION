@@ -60,7 +60,12 @@ Suggests:
     visNetwork,
     here,
     dagitty,
-    ggdag
+    ggdag,
+    naniar,
+    brms,
+    bayesplot,
+    posterior,
+    splines2
 biocViews: Software
 Additional_repositories:
     https://bioc.r-universe.dev

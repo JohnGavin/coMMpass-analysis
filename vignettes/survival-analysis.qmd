@@ -217,6 +217,26 @@ Recent project commits with lines added, files changed, and change categories.
 show_target("vig_git_changelog")
 ```
 
+## Bayesian Survival Models
+
+Bayesian Cox PH models fit with [brms](https://paul-buerkner.github.io/brms/)
+using weakly informative priors. These complement the frequentist models above
+by providing posterior distributions, credible intervals, and natural
+hierarchical structure (e.g., ISS-stage random intercepts).
+
+::: {.callout-note}
+Bayesian models use `cue = "never"` — they only run when explicitly requested
+via `tar_make(names = bayes_cox_basic)`. MCMC compilation takes several minutes.
+:::
+
+### Frequentist vs Bayesian Comparison
+
+```{r bayes-comparison}
+#| echo: false
+#| results: asis
+show_target("vig_bayes_freq_table")
+```
+
 ## Reproducibility
 
 <details>

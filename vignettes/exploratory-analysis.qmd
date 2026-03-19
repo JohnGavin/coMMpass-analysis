@@ -264,6 +264,40 @@ show_target("vig_duckdb_demo_agg")
 show_target("vig_integration_text")
 ```
 
+## Missingness as Signal
+
+Missing data in clinical datasets is rarely random. In multiple myeloma,
+FISH testing is expensive and may be selectively ordered for patients with
+suspected high-risk disease. If missingness correlates with survival, it
+suggests the data is **missing not at random (MNAR)** — the missingness
+itself is clinically informative.
+
+### Variable Missingness
+
+```{r missingness-heatmap, fig.height = 10, fig.cap = "Missingness by variable category. Variables with 0% missing excluded."}
+#| echo: false
+#| results: asis
+show_target("vig_missingness_heatmap")
+```
+
+```{r missingness-table}
+#| echo: false
+#| results: asis
+show_target("vig_missingness_summary_table")
+```
+
+### Does Missingness Predict Survival?
+
+Cox regression testing whether patients with missing values for each
+variable have different survival outcomes. A significant HR suggests
+the missingness mechanism is informative (MNAR).
+
+```{r missingness-survival}
+#| echo: false
+#| results: asis
+show_target("vig_missingness_vs_survival_table")
+```
+
 ## Data Sources
 
 Results in this vignette are derived from the

@@ -18,8 +18,11 @@ in pkgs.rPackages.buildRPackage {
     apeglm
     arrow
     aws_s3
+    bayesplot
+    brms
     cli
     crew
+    dagitty
     DBI
     dbplyr
     DESeq2
@@ -30,6 +33,7 @@ in pkgs.rPackages.buildRPackage {
     fgsea
     GenomicDataCommons
     gert
+    ggdag
     ggplot2
     gh
     glue
@@ -39,15 +43,18 @@ in pkgs.rPackages.buildRPackage {
     knitr
     limma
     logger
+    naniar
     nanoparquet
     org_Hs_eg_db
     pkgdown
     plotly
     plumber
+    posterior
     quarto
     rmarkdown
     S4Vectors
     scales
+    splines2
     stringr
     SummarizedExperiment
     survival
