@@ -71,7 +71,9 @@ explicit allowed dependencies between layers.
 Validation checks on the targets pipeline DAG: no orphaned targets, no circular dependencies, and all vignette targets are reachable from raw data inputs. A passing validation confirms the pipeline is structurally sound.
 
 ```{r dag-validation}
-safe_tar_read("dag_layer_validation")
+#| echo: false
+#| results: asis
+show_target("dag_layer_validation")
 ```
 
 ## Target Network
@@ -84,18 +86,13 @@ Interactive DAG showing the targets pipeline network with layer-based coloring. 
 show_target("vig_pipeline_dag")
 ```
 
-## Interactive DAG (live)
+## Pipeline by Layer
 
-The interactive DAG below is rendered directly from the pipeline metadata
-via `tar_visnetwork()`. This requires a local targets store.
+To explore the full interactive DAG locally, run:
 
-```{r visnetwork-live, fig.height=8}
-#| eval: false
-# Run locally: targets::tar_visnetwork(targets_only = TRUE, label = "time")
+```r
+targets::tar_visnetwork(targets_only = TRUE, label = "time")
 ```
-
-For the full interactive DAG explorer with filtering, coloring, and
-selection, see `inst/shinylive/pipeline_dag.qmd`.
 
 ## Recent Changes
 

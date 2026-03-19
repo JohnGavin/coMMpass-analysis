@@ -1,0 +1,168 @@
+---
+format: gfm
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+library(targets)
+tar_store <- NULL
+if (dir.exists("_targets")) tar_store <- "_targets"
+
+safe_read <- function(name) {
+  if (!is.null(tar_store)) {
+    val <- tryCatch(tar_read_raw(name, store = tar_store), error = function(e) NULL)
+    if (!is.null(val)) return(val)
+  }
+  rds <- file.path("inst/extdata/vignettes", paste0(name, ".rds"))
+  if (file.exists(rds)) return(readRDS(rds))
+  NULL
+}
+```
+
+# coMMpass
+
+Reproducible analysis of the MMRF CoMMpass (Clinical Outcomes in MM to Personal Assessment of Genetic Profile) multiple myeloma study data using R and Nix.
+
+## Overview
+
+The [CoMMpass study](https://themmrf.org/finding-a-cure/personalized-treatment-approaches/) is a landmark longitudinal genomic-clinical study of **1,143 newly diagnosed multiple myeloma patients** collected between 2011-2016 with 8-year follow-up. This project provides:
+
+- Reproducible Nix environment with all required R/Bioconductor packages
+- Analysis workflows for RNA-seq, single-cell, and survival analysis
+- Direct access to CoMMpass data via GDC API and AWS S3 (open access)
+
+## Usage
+
+### Quick Start (without Nix)
+
+```r
+# Install from GitHub (requires Bioconductor deps)
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install(c("TCGAbiolinks", "DESeq2", "edgeR", "limma",
+                        "SummarizedExperiment", "fgsea"))
+remotes::install_github("JohnGavin/coMMpass-analysis")
+
+# Clone the repo (targets needs _targets.R in working directory)
+# git clone https://github.com/JohnGavin/coMMpass-analysis.git
+# setwd("coMMpass-analysis")
+
+# Run the pipeline — downloads data from GDC, then runs all analyses
+library(targets)
+tar_make()
+```
+
+#### Pipeline status
+
+```{r pipeline-status}
+#| results: asis
+ps <- safe_read("readme_pipeline_summary")
+if (!is.null(ps)) {
+  cat(paste0("The pipeline has **", ps$n_targets, " targets** ",
+             "(total build time: ", ps$total_seconds, "s).\n\n"))
+  cat("Top 5 targets by build time:\n\n")
+  cat(knitr::kable(ps$top5, format = "pipe"), sep = "\n")
+}
+```
+
+#### Example: read a result
+
+```{r km-structure}
+#| results: asis
+#| comment: "#>"
+km_str <- safe_read("readme_km_structure")
+if (!is.null(km_str)) {
+  cat("```r\nkm <- tar_read(km_overall)\nstr(km, max.level = 1)\n")
+  cat(paste0("#> ", km_str), sep = "\n")
+  cat("```\n")
+}
+```
+
+> **Note:** The pipeline downloads ~3.6 GB of RNA-seq data from GDC on first
+> run. Subsequent runs skip downloads (`cue = "never"`). The `config` target
+> sets `sample_limit = 200` by default — edit `R/tar_plans/plan_data_acquisition.R`
+> to change this.
+
+### Quick Start (with Nix — fully reproducible)
+
+```bash
+# Requires Nix package manager (https://nixos.org/download.html)
+chmod +x default.sh
+./default.sh
+
+# macOS only: prevent sleep during long builds
+caffeinate -i ./default.sh
+```
+
+### What Happens
+
+1. **`default.sh`** checks if `default_dev.nix` needs regeneration
+2. Runs **`default.R`** which:
+   - Extracts package dependencies from `DESCRIPTION` (single source of truth)
+   - Calls `rix::rix()` to generate `default_dev.nix`
+3. Builds the Nix environment with `nix-build`
+4. Creates a GC root symlink (prevents garbage collection)
+5. Enters an interactive shell with all packages
+
+## Data Access
+
+| Access Level | Data Type | Requirements | Used by this pipeline |
+|---|---|---|---|
+| **[GDC Data Portal](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS)** | Clinical, RNA-seq (995 cases) | None (open access) | Yes |
+| **[AWS Open Data](https://registry.opendata.aws/mmrf-commpass/)** | RNA-seq gene expression | None (AWS CLI) | Yes |
+| **[MMRF Researcher Gateway](https://research.themmrf.org/)** | FISH, PFS, treatment response | Free registration (pending) | No (12 targets blocked) |
+| **dbGaP Controlled** | Raw sequences (BAM/FASTQ) | Institutional IRB | No |
+
+## Key Packages Included
+
+| Category | Packages |
+|----------|----------|
+| **Data Access** | TCGAbiolinks, GenomicDataCommons, aws.s3 |
+| **Survival** | survival |
+| **DE Analysis** | DESeq2, edgeR, limma |
+| **Pathways** | fgsea |
+| **Causal** | dagitty, ggdag |
+| **Pipelines** | targets, crew, mirai |
+
+## Project Structure
+
+```
+coMMpass/
+├── R/                          # Package functions & pipeline plans
+│   ├── tar_plans/              # Modular targets plans
+│   └── viz/                    # Visualization functions
+├── vignettes/                  # Analysis vignettes (pkgdown articles)
+├── inst/extdata/vignettes/     # Pre-computed RDS for CI
+├── data/                       # Downloaded data (gitignored)
+├── default.sh                  # Nix environment setup
+└── default.R                   # rix configuration
+```
+
+## Key References
+
+- [Keats JJ et al. Blood 2013](https://doi.org/10.1182/blood.V122.21.532.532) — CoMMpass interim analysis
+- [Nature Genetics 2024](https://www.nature.com/articles/s41588-024-01853-0) — Molecular profiling of 1,143 patients
+- [Nature Cancer 2025](https://www.nature.com/articles/s43018-025-01072-4) — Bone marrow immune cell atlas
+
+## Glossary
+
+See the [Glossary](https://johngavin.github.io/coMMpass-analysis/articles/glossary.html) vignette for definitions of terms used throughout this project.
+
+## Requirements
+
+- [Nix](https://nixos.org/download.html) package manager (for reproducible environment)
+- [Cachix](https://cachix.org/) (optional, for faster builds)
+
+```bash
+# Configure cachix caches
+nix-env -iA cachix -f https://cachix.org/api/v1/install
+cachix use rstats-on-nix    # Pre-built R packages
+cachix use johngavin         # Compiled coMMpass R package
+```
+
+## License
+
+MIT

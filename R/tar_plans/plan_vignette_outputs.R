@@ -182,6 +182,36 @@ plan_vignette_outputs <- list(
     packages = c("SummarizedExperiment", "ggplot2", "dplyr")
   ),
 
+  # --- README targets (for README.qmd) ---
+  tar_target(
+    readme_pipeline_summary,
+    {
+      meta_path <- file.path("_targets", "meta", "meta")
+      if (!file.exists(meta_path)) return(NULL)
+      meta <- utils::read.csv(meta_path, stringsAsFactors = FALSE, sep = "|")
+      meta$seconds <- as.numeric(meta$seconds)
+      meta$bytes <- as.numeric(meta$bytes)
+      meta <- meta[!is.na(meta$seconds), ]
+      top5 <- utils::head(meta[order(-meta$seconds), c("name", "seconds", "bytes")], 5)
+      top5$seconds <- round(top5$seconds, 1)
+      top5$MB <- round(top5$bytes / 1e6, 2)
+      top5$bytes <- NULL
+      list(
+        n_targets = nrow(meta),
+        top5 = top5,
+        total_seconds = round(sum(meta$seconds, na.rm = TRUE))
+      )
+    }
+  ),
+
+  tar_target(
+    readme_km_structure,
+    {
+      if (is.null(km_overall)) return(NULL)
+      capture.output(str(km_overall, max.level = 1))
+    }
+  ),
+
   # --- Data at a Glance summary table (data-sources) ---
   tar_target(
     vig_data_at_glance,
