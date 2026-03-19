@@ -60,6 +60,7 @@ c(
   plan_cytogenetic_viz,    # Oncoprint and co-occurrence visualization
   plan_gene_correlations,  # Gene-gene correlation analysis
   plan_treatment,          # Treatment/regimen data cleaning
+  plan_normalisation,   # Clinical-informed biomarker normalisation
   plan_missingness,     # Missingness pattern analysis
   plan_bayesian,        # Bayesian survival models (brms)
   plan_causal,          # Causal DAG analysis (dagitty/ggdag)

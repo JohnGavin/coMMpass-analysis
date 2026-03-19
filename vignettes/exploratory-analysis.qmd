@@ -264,6 +264,31 @@ show_target("vig_duckdb_demo_agg")
 show_target("vig_integration_text")
 ```
 
+## Clinical-Informed Normalisation
+
+Standard z-scoring treats all variation equally, but for clinical biomarkers
+this compresses the clinically important normal range and expands the
+uninformative extreme range. The SCOPE method
+([Hussain et al. 2024](https://doi.org/10.1038/s41746-024-01189-3)) uses
+clinical reference ranges to normalise biomarkers, preserving clinically
+meaningful variation.
+
+### Reference Ranges
+
+```{r reference-ranges}
+#| echo: false
+#| results: asis
+show_target("vig_reference_ranges")
+```
+
+### Clinical vs Z-Score Comparison
+
+```{r normalisation-comparison}
+#| echo: false
+#| results: asis
+show_target("vig_normalisation_comparison")
+```
+
 ## Missingness as Signal
 
 Missing data in clinical datasets is rarely random. In multiple myeloma,

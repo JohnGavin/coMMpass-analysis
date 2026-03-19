@@ -33,6 +33,20 @@ fit_bayesian_cox <- function(survival_data, covariates = c("age_years", "gender"
   # Our status: 1 = event, 0 = censored → brms wants the opposite
   sd$censored <- 1L - sd$status
 
+  # Scale numeric covariates for numerical stability
+  # Store scaling parameters for back-transformation
+  scale_info <- list()
+  for (cv in covariates) {
+    if (is.numeric(sd[[cv]]) && cv != "status") {
+      mu <- mean(sd[[cv]], na.rm = TRUE)
+      s <- stats::sd(sd[[cv]], na.rm = TRUE)
+      if (!is.na(s) && s > 0) {
+        sd[[cv]] <- (sd[[cv]] - mu) / s
+        scale_info[[cv]] <- list(mean = mu, sd = s)
+      }
+    }
+  }
+
   # Build formula
   rhs <- paste(covariates, collapse = " + ")
   if (!is.null(hierarchical) && hierarchical %in% names(sd)) {
@@ -44,12 +58,19 @@ fit_bayesian_cox <- function(survival_data, covariates = c("age_years", "gender"
 
   logger::log_info("Fitting Bayesian Cox: {deparse(form)}")
   logger::log_info("Data: {nrow(sd)} patients, {sum(sd$status)} events")
+  if (length(scale_info) > 0) {
+    logger::log_info("Scaled covariates: {paste(names(scale_info), collapse = ', ')}")
+  }
+
+  # Weakly informative priors on scaled covariates
+  priors <- brms::prior(normal(0, 1), class = "b")
 
   fit <- tryCatch(
     brms::brm(
       formula = form,
       data = sd,
       family = brms::cox(),
+      prior = priors,
       chains = chains,
       iter = iter,
       seed = seed,
@@ -62,6 +83,9 @@ fit_bayesian_cox <- function(survival_data, covariates = c("age_years", "gender"
     }
   )
 
+  if (!is.null(fit)) {
+    attr(fit, "scale_info") <- scale_info
+  }
   fit
 }
 
@@ -78,35 +102,38 @@ fit_bayesian_cox <- function(survival_data, covariates = c("age_years", "gender"
 compare_bayesian_frequentist <- function(freq_result, bayes_fit) {
   if (is.null(freq_result) || is.null(bayes_fit)) return(NULL)
 
-  # Frequentist results
+  # Frequentist results — handle both $fit (coxph) and $model structures
   freq_coefs <- tryCatch({
-    s <- summary(freq_result$fit)
+    coxfit <- freq_result$fit %||% freq_result$model
+    if (is.null(coxfit)) return(NULL)
+    requireNamespace("survival", quietly = TRUE)
+    s <- getS3method("summary", "coxph")(coxfit)
     data.frame(
       Covariate = rownames(s$coefficients),
-      Freq_HR = round(exp(s$coefficients[, "coef"]), 3),
+      Freq_HR = round(s$conf.int[, "exp(coef)"], 3),
       Freq_CI = paste0("[",
         round(s$conf.int[, "lower .95"], 3), ", ",
         round(s$conf.int[, "upper .95"], 3), "]"),
       Freq_p = signif(s$coefficients[, "Pr(>|z|)"], 3),
       stringsAsFactors = FALSE
     )
-  }, error = function(e) NULL)
+  }, error = function(e) { logger::log_warn("Freq extraction failed: {conditionMessage(e)}"); NULL })
 
   if (is.null(freq_coefs)) return(NULL)
 
   # Bayesian results
   bayes_coefs <- tryCatch({
     post <- brms::fixef(bayes_fit)
+    rhat <- if ("Rhat" %in% colnames(post)) round(post[, "Rhat"], 3) else NA_real_
     data.frame(
       Covariate = rownames(post),
       Bayes_HR = round(exp(post[, "Estimate"]), 3),
       Bayes_CI = paste0("[",
         round(exp(post[, "Q2.5"]), 3), ", ",
         round(exp(post[, "Q97.5"]), 3), "]"),
-      Bayes_Rhat = round(post[, "Rhat"] %||% NA_real_, 3),
       stringsAsFactors = FALSE
     )
-  }, error = function(e) NULL)
+  }, error = function(e) { logger::log_warn("Bayes extraction failed: {conditionMessage(e)}"); NULL })
 
   if (is.null(bayes_coefs)) return(NULL)
 

@@ -31,12 +31,24 @@ plan_bayesian <- list(
     cue = tar_cue(mode = "never")
   ),
 
-  # Comparison table: frequentist vs Bayesian
+  # Frequentist Cox with same covariates as Bayesian (age + gender)
+  tar_target(
+    freq_cox_age_gender,
+    {
+      tryCatch(
+        run_cox_regression(survival_data, covariates = c("age_years", "gender")),
+        error = function(e) NULL
+      )
+    },
+    packages = c("survival")
+  ),
+
+  # Comparison table: frequentist vs Bayesian (same covariates)
   tar_target(
     bayes_freq_comparison,
     {
-      if (is.null(bayes_cox_basic)) return(NULL)
-      compare_bayesian_frequentist(shiny_cox_os_age_risk, bayes_cox_basic)
+      if (is.null(bayes_cox_basic) || is.null(freq_cox_age_gender)) return(NULL)
+      compare_bayesian_frequentist(freq_cox_age_gender, bayes_cox_basic)
     }
   ),
 
