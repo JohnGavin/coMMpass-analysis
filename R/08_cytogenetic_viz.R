@@ -55,10 +55,8 @@ plot_cytogenetic_oncoprint <- function(cyto_data,
     markers <- intersect(all_markers, names(cyto_data))
   }
   if (length(markers) == 0) {
-    return(ggplot2::ggplot() +
-             ggplot2::annotate("text", x = 0.5, y = 0.5,
-                               label = "No marker columns found") +
-             ggplot2::theme_void())
+    logger::log_warn("No FISH marker columns with non-NA data")
+    return(NULL)
   }
 
   # Build binary matrix (1 = positive, 0 = negative/NA)
@@ -448,10 +446,8 @@ plot_expression_by_subtype <- function(expr_matrix,
     markers <- intersect(all_markers, names(cyto_data))
   }
   if (length(markers) == 0) {
-    return(ggplot2::ggplot() +
-             ggplot2::annotate("text", x = 0.5, y = 0.5,
-                               label = "No marker columns found") +
-             ggplot2::theme_void())
+    logger::log_warn("No FISH marker columns with non-NA data")
+    return(NULL)
   }
 
   marker_labels <- c(
@@ -471,20 +467,16 @@ plot_expression_by_subtype <- function(expr_matrix,
     patient_to_sample <- patient_to_sample[!duplicated(names(patient_to_sample))]
     common <- intersect(cyto_data$patient_id, names(patient_to_sample))
     if (length(common) < 3) {
-      return(ggplot2::ggplot() +
-               ggplot2::annotate("text", x = 0.5, y = 0.5,
-                                 label = "Too few matched patients") +
-               ggplot2::theme_void())
+      logger::log_warn("Too few matched patients for cytogenetic plot")
+      return(NULL)
     }
     matched_samples <- patient_to_sample[common]
     expr_vals <- as.numeric(expr_matrix[gene, matched_samples])
   } else {
     common <- intersect(cyto_data$patient_id, sample_ids)
     if (length(common) < 3) {
-      return(ggplot2::ggplot() +
-               ggplot2::annotate("text", x = 0.5, y = 0.5,
-                                 label = "Too few matched patients") +
-               ggplot2::theme_void())
+      logger::log_warn("Too few matched patients for cytogenetic plot")
+      return(NULL)
     }
     expr_vals <- as.numeric(expr_matrix[gene, common])
   }
@@ -505,10 +497,8 @@ plot_expression_by_subtype <- function(expr_matrix,
   long <- do.call(rbind, Filter(Negate(is.null), long_list))
 
   if (is.null(long) || nrow(long) == 0) {
-    return(ggplot2::ggplot() +
-             ggplot2::annotate("text", x = 0.5, y = 0.5,
-                               label = "No valid marker data") +
-             ggplot2::theme_void())
+    logger::log_warn("No valid marker data for cytogenetic subtype plot")
+    return(NULL)
   }
 
   # Compute p-values per marker

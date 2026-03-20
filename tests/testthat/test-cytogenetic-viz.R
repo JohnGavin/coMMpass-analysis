@@ -66,14 +66,14 @@ test_that("plot_cytogenetic_oncoprint accepts custom markers", {
   expect_s3_class(p, "ggplot")
 })
 
-test_that("plot_cytogenetic_oncoprint handles missing marker columns", {
+test_that("plot_cytogenetic_oncoprint returns NULL for missing marker columns", {
   cyto <- data.frame(
     patient_id = paste0("P", 1:5),
     no_markers_here = 1:5,
     stringsAsFactors = FALSE
   )
   p <- plot_cytogenetic_oncoprint(cyto)
-  expect_s3_class(p, "ggplot")
+  expect_null(p)
 })
 
 # --- calculate_cooccurrence ---

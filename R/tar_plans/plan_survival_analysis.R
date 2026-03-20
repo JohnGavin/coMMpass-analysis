@@ -150,7 +150,7 @@ plan_survival_analysis <- list(
 
       result <- lapply(stats::setNames(available, available), function(g) {
         p <- plot_expression_by_subtype(vst_mat, cyto, gene = g)
-        # Convert to grob to strip ggplot2 S7 env overhead (9 MB → <1 KB)
+        if (is.null(p)) return(NULL)
         ggplot2::ggplotGrob(p)
       })
       rm(vst_counts, vst_mat, cyto)

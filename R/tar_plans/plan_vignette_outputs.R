@@ -2118,6 +2118,7 @@ plan_vignette_outputs <- list(
       }
       if (is.null(cyto_df)) return(NULL)
       p <- plot_expression_by_subtype(vst_mat, cyto_df, gene = gene_id)
+      if (is.null(p)) return(NULL)
       p <- p + ggplot2::labs(caption = paste0(
         gene_symbol, " VST expression across cytogenetic subtypes defined by FISH markers. ",
         "Each box = IQR of VST values; whiskers = 1.5x IQR; dots = outliers. ",

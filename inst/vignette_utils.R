@@ -68,16 +68,29 @@ safe_tar_read <- function(name) {
   for (rds in rds_candidates) {
     if (nzchar(rds) && file.exists(rds)) {
       obj <- readRDS(rds)
-      # data.frames with a caption attribute get DT wrapping at render time
-      if (is.data.frame(obj) && requireNamespace("DT", quietly = TRUE)) {
+      # data.frames: use kable for pkgdown (DT JS unreliable), DT for local
+      if (is.data.frame(obj)) {
         cap <- attr(obj, "dt_caption")
-        dt_opts <- attr(obj, "dt_options")
-        if (is.null(dt_opts)) dt_opts <- list()
-        if (!is.null(cap)) {
-          return(DT::datatable(obj, rownames = FALSE, options = dt_opts,
-                               caption = htmltools::HTML(cap)))
+        in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
+        if (in_pkgdown) {
+          # Static HTML table — no JavaScript dependency
+          cap_text <- if (!is.null(cap)) gsub("<[^>]+>", "", cap) else NULL
+          cat(knitr::kable(obj, format = "html", row.names = FALSE,
+                           caption = cap_text), sep = "\n")
+          return(invisible(obj))
         }
-        return(DT::datatable(obj, rownames = FALSE, options = dt_opts))
+        if (requireNamespace("DT", quietly = TRUE)) {
+          dt_opts <- attr(obj, "dt_options")
+          if (is.null(dt_opts)) dt_opts <- list()
+          if (!is.null(cap)) {
+            return(DT::datatable(obj, rownames = FALSE, options = dt_opts,
+                                 caption = htmltools::HTML(cap)))
+          }
+          return(DT::datatable(obj, rownames = FALSE, options = dt_opts))
+        }
+        # Fallback: kable
+        cat(knitr::kable(obj, format = "html", row.names = FALSE), sep = "\n")
+        return(invisible(obj))
       }
       if (!is.null(obj)) return(.render_val(obj))
     }
@@ -122,8 +135,21 @@ show_target <- function(name, .safe_tar_read = safe_tar_read) {
     }, error = function(e) NULL)
   }
 
-  # Tier 3: CI without code — just render the output (no code fold)
-  # This is acceptable: the output (plot/table) is what matters
+  # Tier 3: render the output
+  result <- .safe_tar_read(name)
 
-  .safe_tar_read(name)
+  # If NULL, show informative callout instead of blank space
+  if (is.null(result)) {
+    cat(paste0(
+      '<div style="padding: 1em; margin: 1em 0; border-left: 4px solid #f39c12; ',
+      'background: #2d2d2d; color: #ccc; border-radius: 4px;">',
+      '<strong>Data not available:</strong> Target <code>', name, '</code> ',
+      'returned NULL. This typically means the required data is not available ',
+      'from the current data source (GDC API). See the ',
+      '<a href="data-sources.html">Data Sources</a> vignette for details.',
+      '</div>\n'
+    ))
+  }
+
+  result
 }
