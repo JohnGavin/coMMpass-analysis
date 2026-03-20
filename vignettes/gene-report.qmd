@@ -61,7 +61,7 @@ cytogenetic context, and co-expression correlations.
 
 VST-normalized expression values across all samples, showing the distribution shape and central tendency.
 
-```{r expression-dist, fig.cap = paste0(gene, " expression distribution across samples (VST-transformed).")}
+```{r expression-dist.")}
 #| echo: false
 #| results: asis
 show_target("vig_gene_expression_dist")
@@ -71,7 +71,7 @@ show_target("vig_gene_expression_dist")
 
 Patients split at median `r gene` expression into High/Low groups.
 
-```{r km-expression, fig.cap = paste0("Kaplan-Meier curves stratified by median ", gene, " expression.")}
+```{r km-expression}
 #| echo: false
 #| results: asis
 show_target("vig_gene_km_expression")
@@ -81,7 +81,7 @@ show_target("vig_gene_km_expression")
 
 Boxplots comparing expression levels across FISH-defined cytogenetic marker groups (t(4;14), t(14;16), del(17p)).
 
-```{r expr-subtype, fig.cap = paste0(gene, " expression by cytogenetic marker status.")}
+```{r expr-subtype}
 #| echo: false
 #| results: asis
 show_target("vig_gene_expr_subtype")
@@ -97,7 +97,7 @@ Top correlated genes with `r gene` (Pearson, VST expression).
 show_target("vig_gene_correlations")
 ```
 
-```{r top-correlation-plot, fig.cap = paste0("Scatter plot of ", gene, " vs top correlated gene.")}
+```{r top-correlation-plot}
 #| echo: false
 #| results: asis
 show_target("vig_gene_correlation_plot")

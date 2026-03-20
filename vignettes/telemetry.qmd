@@ -93,7 +93,7 @@ show_target("vig_outdated_list")
 
 Distribution of target serialized sizes, identifying large objects that dominate storage.
 
-```{r size-plot, fig.cap="Target serialized sizes (log10 bytes). Dashed line = 1 MB threshold. Source: _targets/meta/meta.", fig.height=5}
+```{r size-plot, fig.height=5}
 #| echo: false
 #| results: asis
 show_target("vig_size_plot")
@@ -106,7 +106,7 @@ show_target("vig_size_plot")
 Weekly commit counts colored by conventional-commit type (feat, fix, docs, etc.)
 across the last 200 commits.
 
-```{r commit-velocity, fig.cap="Weekly commit velocity colored by change type. Each bar segment represents commits of a given type (feat, fix, docs, ci, etc.) in that ISO week. Source: git log.", fig.height=5}
+```{r commit-velocity, fig.height=5}
 #| echo: false
 #| results: asis
 show_target("vig_commit_velocity")

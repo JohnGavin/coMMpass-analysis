@@ -58,7 +58,7 @@ treatment, gene expression, and overall survival. Latent (unmeasured)
 variables — tumor biology and comorbidities — represent important confounders
 that cannot be directly adjusted for.
 
-```{r dag-plot, fig.height = 8, fig.width = 10, fig.cap = "CoMMpass causal DAG. Nodes represent measured and latent variables. Edges represent assumed causal effects. Exposure: cytogenetic_risk. Outcome: overall_survival. Latent variables (tumor_biology, comorbidities) represent unmeasured confounders."}
+```{r dag-plot, fig.height = 8, fig.width = 10}
 #| echo: false
 #| results: asis
 show_target("vig_causal_dag_plot")

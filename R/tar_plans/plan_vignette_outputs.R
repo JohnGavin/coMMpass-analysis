@@ -1025,6 +1025,8 @@ plan_vignette_outputs <- list(
       }
       p <- plot_pca(eda_pca_summary, color_by = "gender",
                title = "PCA: Sample Clustering (by Gender)")
+      p <- p + ggplot2::labs(caption = paste0("PCA colored by gender. ", "N = ", if(!is.null(eda_pca_summary)) nrow(eda_pca_summary$coords) else "?", " samples. ", "Source: GDC STAR-Counts + clinical data."))
+      p <- p + ggplot2::theme(plot.caption = ggplot2::element_text(size = 7, hjust = 0, lineheight = 1.2))
       ggplot2::ggplotGrob(p)
     }
   ),
@@ -1038,6 +1040,8 @@ plan_vignette_outputs <- list(
       }
       p <- plot_pca(eda_pca_summary, color_by = "vital_status",
                title = "PCA: Sample Clustering (by Vital Status)")
+      p <- p + ggplot2::labs(caption = paste0("PCA colored by vital status. ", "Overlap between alive/dead suggests survival not driven by global expression patterns. ", "N = ", if(!is.null(eda_pca_summary)) nrow(eda_pca_summary$coords) else "?", " samples. ", "Source: GDC STAR-Counts + clinical data."))
+      p <- p + ggplot2::theme(plot.caption = ggplot2::element_text(size = 7, hjust = 0, lineheight = 1.2))
       ggplot2::ggplotGrob(p)
     }
   ),
@@ -1070,6 +1074,8 @@ plan_vignette_outputs <- list(
       color_var <- NULL
       if ("condition" %in% names(pca_data$coords)) color_var <- "condition"
       p <- plot_pca(pca_data, color_by = color_var, title = "Sample PCA (VST)")
+      p <- p + ggplot2::labs(caption = paste0("PCA of VST-transformed RNA-seq. Top 500 variable genes. ", "N = ", if(!is.null(pca_data)) nrow(pca_data$coords) else "?", " samples. ", "Source: GDC STAR-Counts."))
+      p <- p + ggplot2::theme(plot.caption = ggplot2::element_text(size = 7, hjust = 0, lineheight = 1.2))
       ggplot2::ggplotGrob(p)
     }
   ),
@@ -1083,6 +1089,8 @@ plan_vignette_outputs <- list(
       p <- plot_volcano(volcano_plot_data, lfc_threshold = 1,
                    padj_threshold = 0.05, n_label = 10,
                    title = "DESeq2 Volcano Plot")
+      p <- p + ggplot2::labs(caption = "DESeq2 volcano plot. X: log2FC (apeglm-shrunken). Y: -log10(padj). Dashed lines: |LFC|=1, padj=0.05. Top 10 genes labeled. Red=up, blue=down. Source: GDC STAR-Counts.")
+      p <- p + ggplot2::theme(plot.caption = ggplot2::element_text(size = 7, hjust = 0, lineheight = 1.2))
       ggplot2::ggplotGrob(p)
     }
   ),
@@ -1095,6 +1103,8 @@ plan_vignette_outputs <- list(
       if (nrow(ma_plot_data) == 0) return(NULL)
       p <- plot_ma(ma_plot_data, lfc_threshold = 1, padj_threshold = 0.05,
               title = "DESeq2 MA Plot")
+      p <- p + ggplot2::labs(caption = "DESeq2 MA plot. X: log10(baseMean+1). Y: log2FC. Dashed lines: |LFC|=1, padj=0.05. Red/blue: significant DE genes. Source: GDC STAR-Counts.")
+      p <- p + ggplot2::theme(plot.caption = ggplot2::element_text(size = 7, hjust = 0, lineheight = 1.2))
       ggplot2::ggplotGrob(p)
     }
   ),
@@ -1109,6 +1119,8 @@ plan_vignette_outputs <- list(
       p <- plot_heatmap_de(top_de_heatmap_data$expr_matrix,
                       top_de_heatmap_data$de_results,
                       n_genes = 50, title = "Top 50 DE Genes")
+      p <- p + ggplot2::labs(caption = "Heatmap of top 50 DE genes by padj. VST expression z-scaled per gene. Columns: samples. Rows: genes clustered by expression pattern. Source: GDC STAR-Counts + DESeq2.")
+      p <- p + ggplot2::theme(plot.caption = ggplot2::element_text(size = 7, hjust = 0, lineheight = 1.2))
       ggplot2::ggplotGrob(p)
     }
   ),
@@ -1177,6 +1189,8 @@ plan_vignette_outputs <- list(
       p <- plot_volcano(pr$results_table, lfc_threshold = 1,
                    padj_threshold = 0.05, n_label = 10,
                    title = "Paired DE: Baseline vs Relapse")
+      p <- p + ggplot2::labs(caption = "Paired DE volcano (baseline vs relapse). Same thresholds as main analysis. Only patients with matched timepoints. Source: GDC STAR-Counts + DESeq2.")
+      p <- p + ggplot2::theme(plot.caption = ggplot2::element_text(size = 7, hjust = 0, lineheight = 1.2))
       ggplot2::ggplotGrob(p)
     }
   ),
@@ -1222,6 +1236,8 @@ plan_vignette_outputs <- list(
       if (is.null(km_overall)) return(NULL)
       if (is.null(km_overall$fit)) return(NULL)
       p <- plot_km(km_overall, title = "Overall Survival")
+      p <- p + ggplot2::labs(caption = paste0("Overall Kaplan-Meier survival curve. ", "N = ", if(!is.null(km_overall$n_per_group)) km_overall$n_per_group else "?", " patients. ", "Median OS: ", if(!is.na(km_overall$median_survival)) paste0(round(km_overall$median_survival), " days") else "not reached", ". ", "Shaded region: 95% CI. Time in days from diagnosis. ", "Source: GDC clinical data."))
+      p <- p + ggplot2::theme(plot.caption = ggplot2::element_text(size = 7, hjust = 0, lineheight = 1.2))
       ggplot2::ggplotGrob(p)
     }
   ),
@@ -1260,6 +1276,8 @@ plan_vignette_outputs <- list(
       if (is.null(km_by_iss)) return(NULL)
       if (is.null(km_by_iss$fit)) return(NULL)
       p <- plot_km(km_by_iss, title = "Survival by ISS Stage")
+      p <- p + ggplot2::labs(caption = paste0("Kaplan-Meier by ISS stage. ", "Log-rank p = ", if(!is.na(km_by_iss$logrank_p)) signif(km_by_iss$logrank_p, 3) else "NA", ". ", "Higher ISS stage associated with shorter survival. ", "Source: GDC clinical data."))
+      p <- p + ggplot2::theme(plot.caption = ggplot2::element_text(size = 7, hjust = 0, lineheight = 1.2))
       ggplot2::ggplotGrob(p)
     }
   ),

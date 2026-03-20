@@ -118,7 +118,7 @@ show_target("vig_rnaseq_summary_text")
 show_target("vig_rnaseq_sample_stats")
 ```
 
-```{r count-distribution, results='asis', fig.cap = "Distribution of mean gene expression (log10 scale) across all genes. The three peaks correspond to distinct gene populations: (1) unexpressed/noise genes near zero, (2) lowly-expressed genes detected in a subset of samples, and (3) moderately-to-highly expressed housekeeping/structural genes. This trimodal pattern is expected for GENCODE-annotated RNA-seq data, which includes ~60k entries spanning protein-coding genes, lncRNAs, pseudogenes, and other biotypes with very different expression levels. Data: GDC STAR-Counts."}
+```{r count-distribution, results='asis'}
 #| echo: false
 show_target("vig_count_distribution_plot")
 ```

@@ -65,7 +65,7 @@ show_target("vig_clinical_demographics_text")
 
 ### Age at Diagnosis
 
-```{r age-histogram, results='asis', fig.cap = "Age at diagnosis distribution for CoMMpass patients. GDC stores age in days; values are converted to years (age / 365.25). Data: GDC clinical endpoint."}
+```{r age-histogram, results='asis'}
 #| echo: false
 show_target("vig_age_histogram")
 ```
@@ -109,7 +109,7 @@ show_target("vig_iss_distribution_text")
 show_target("vig_iss_table")
 ```
 
-```{r iss-barplot, results='asis', fig.cap = "ISS stage distribution across CoMMpass patients. Higher stages indicate more advanced disease. ISS = International Staging System."}
+```{r iss-barplot, results='asis'}
 #| echo: false
 show_target("vig_iss_barplot")
 ```
@@ -137,7 +137,7 @@ show_target("vig_biospecimen_overview_text")
 
 ### Sample Types
 
-```{r sample-type-bar, fig.cap = "Sample type distribution across all CoMMpass biospecimens. Data: GDC biospecimen endpoint."}
+```{r sample-type-bar}
 #| echo: false
 #| results: asis
 show_target("vig_sample_type_barplot")
@@ -145,7 +145,7 @@ show_target("vig_sample_type_barplot")
 
 ### Samples per Patient
 
-```{r samples-per-patient, fig.cap = "Number of biospecimen samples per patient. Most patients have multiple samples (longitudinal collection). Data: GDC biospecimen."}
+```{r samples-per-patient}
 #| echo: false
 #| results: asis
 show_target("vig_samples_per_patient_hist")
@@ -160,7 +160,7 @@ show_target("vig_rnaseq_quality_text")
 
 ### Library Size Distribution
 
-```{r library-size-boxplot, fig.cap = "Library sizes (millions of reads) across RNA-seq samples. Library size = total mapped read counts per sample. Data: GDC STAR-Counts."}
+```{r library-size-boxplot}
 #| echo: false
 #| results: asis
 show_target("vig_library_size_boxplot")
@@ -168,7 +168,7 @@ show_target("vig_library_size_boxplot")
 
 ### Genes Detected per Sample
 
-```{r genes-detected-histogram, fig.cap = "Number of genes detected (count > 0) per RNA-seq sample. Samples with unusually low detection may be outliers. Data: GDC STAR-Counts."}
+```{r genes-detected-histogram}
 #| echo: false
 #| results: asis
 show_target("vig_genes_detected_hist")
@@ -180,13 +180,13 @@ Principal component analysis on the top 500 most variable genes (VST-transformed
 reveals sample-level structure. Points are colored by clinical covariates to check
 for batch effects or biological groupings.
 
-```{r pca-biplot, fig.cap = "PCA biplot of RNA-seq samples using top 500 most variable genes (VST). PC1 and PC2 with variance explained. Colored by gender. Clustering by sex indicates strong expression differences."}
+```{r pca-biplot}
 #| echo: false
 #| results: asis
 show_target("vig_pca_biplot")
 ```
 
-```{r pca-biplot-vital, fig.cap = "PCA biplot colored by vital status. Overlap between alive/dead suggests survival is not the dominant source of transcriptomic variation."}
+```{r pca-biplot-vital}
 #| echo: false
 #| results: asis
 show_target("vig_pca_biplot_vital")
@@ -207,7 +207,7 @@ show_target("vig_cyto_frequency_table")
 
 ### Oncoprint
 
-```{r cyto-oncoprint, fig.height = 5, fig.cap = "Cytogenetic oncoprint showing alteration landscape across patients. Rows: FISH markers. Columns: patients sorted by alteration frequency. Blue = translocation, red = deletion, green = gain. Percentages show alteration frequency among tested patients."}
+```{r cyto-oncoprint, fig.height = 5}
 #| echo: false
 #| results: asis
 show_target("vig_cyto_oncoprint")
@@ -220,7 +220,7 @@ show_target("vig_cyto_oncoprint")
 show_target("vig_cyto_cooccurrence_table")
 ```
 
-```{r cyto-cooccurrence-heatmap, fig.cap = "Pairwise co-occurrence heatmap. Red: co-occurrence (positive association). Blue: mutual exclusivity (negative association). Color intensity: -log10(adjusted p-value). * = significant at padj < 0.05."}
+```{r cyto-cooccurrence-heatmap}
 #| echo: false
 #| results: asis
 show_target("vig_cyto_cooccurrence_heatmap")
@@ -299,7 +299,7 @@ itself is clinically informative.
 
 ### Variable Missingness
 
-```{r missingness-heatmap, fig.height = 10, fig.cap = "Missingness by variable category. Variables with 0% missing excluded."}
+```{r missingness-heatmap, fig.height = 10}
 #| echo: false
 #| results: asis
 show_target("vig_missingness_heatmap")
