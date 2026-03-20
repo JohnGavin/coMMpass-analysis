@@ -100,7 +100,11 @@ plot_dag <- function(dag = NULL,
       )
     ) +
     ggplot2::theme(
-      plot.caption = ggplot2::element_text(size = 7, hjust = 0, lineheight = 1.2)
+      plot.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA),
+      panel.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA),
+      text = ggplot2::element_text(color = "white"),
+      plot.title = ggplot2::element_text(color = "white"),
+      plot.caption = ggplot2::element_text(size = 7, hjust = 0, lineheight = 1.2, color = "grey80")
     )
 }
 

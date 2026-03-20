@@ -194,7 +194,18 @@ plan_vignette_outputs <- list(
       meta <- meta[!is.na(meta$seconds), ]
       top5 <- utils::head(meta[order(-meta$seconds), c("name", "seconds", "bytes")], 5)
       top5$seconds <- round(top5$seconds, 1)
-      top5$MB <- round(top5$bytes / 1e6, 2)
+      # For path-only targets (tiny bytes = stored a file path string),
+      # look up actual data size from known paths
+      path_sizes <- c(
+        raw_rnaseq = file.size("data/raw/gdc/rnaseq_se.rds"),
+        clinical_data = sum(file.size(list.files("data/raw/clinical", full.names = TRUE)))
+      )
+      for (i in seq_len(nrow(top5))) {
+        if (top5$bytes[i] < 100 && top5$name[i] %in% names(path_sizes)) {
+          top5$bytes[i] <- path_sizes[top5$name[i]]
+        }
+      }
+      top5$MB <- round(top5$bytes / 1e6, 1)
       top5$bytes <- NULL
       list(
         n_targets = nrow(meta),
@@ -208,7 +219,18 @@ plan_vignette_outputs <- list(
     readme_km_structure,
     {
       if (is.null(km_overall)) return(NULL)
-      capture.output(str(km_overall, max.level = 1))
+      # Show only the meaningful fields (not NULL/NA ones)
+      km <- km_overall
+      n <- km$n_per_group
+      median_os <- km$median_survival
+      c(
+        "List of 8",
+        paste0(" $ n_per_group    : ", n, " patients"),
+        paste0(" $ median_survival: ", if (is.na(median_os)) "NA (not reached)" else paste0(round(median_os), " days")),
+        paste0(" $ fit            : survfit object"),
+        paste0(" $ data           : data.frame with ", nrow(km$data), " obs. of ", ncol(km$data), " variables"),
+        paste0(" $ formula        : ", deparse(km$formula))
+      )
     }
   ),
 

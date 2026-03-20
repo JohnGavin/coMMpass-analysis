@@ -93,23 +93,29 @@ show_target <- function(name, .safe_tar_read = safe_tar_read) {
   code_name <- paste0("code_", name)
   code <- .safe_tar_read(code_name)
   if (!is.null(code) && is.character(code) && nzchar(paste(code, collapse = ""))) {
-    cat('<details><summary>Generating code</summary>\n\n```r\n')
-    cat(paste(code, collapse = "\n"))
-    cat('\n```\n</details>\n\n')
+    # Use HTML <pre><code> not markdown fences — markdown inside <details> is not parsed
+    escaped <- gsub("&", "&amp;", paste(code, collapse = "\n"))
+    escaped <- gsub("<", "&lt;", escaped)
+    escaped <- gsub(">", "&gt;", escaped)
+    cat('<details><summary>Generating code</summary>\n')
+    cat('<pre><code class="language-r">', escaped, '</code></pre>\n', sep = "")
+    cat('</details>\n\n')
     code_shown <- TRUE
   }
 
   # Tier 2: tar_manifest()$command (local only — no targets store in CI)
-  # Shows the target body definition from _targets.R / plan files
   if (!code_shown) {
     tryCatch({
       if (!is.null(tar_store)) {
         manifest <- targets::tar_manifest(store = tar_store)
         row <- manifest[manifest$name == name, ]
         if (nrow(row) > 0 && !is.na(row$command[1]) && nzchar(row$command[1])) {
-          cat('<details><summary>Target definition</summary>\n\n```r\n')
-          cat(row$command[1])
-          cat('\n```\n</details>\n\n')
+          escaped <- gsub("&", "&amp;", row$command[1])
+          escaped <- gsub("<", "&lt;", escaped)
+          escaped <- gsub(">", "&gt;", escaped)
+          cat('<details><summary>Target definition</summary>\n')
+          cat('<pre><code class="language-r">', escaped, '</code></pre>\n', sep = "")
+          cat('</details>\n\n')
           code_shown <- TRUE
         }
       }

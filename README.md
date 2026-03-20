@@ -41,17 +41,17 @@ tar_make()
 
 #### Pipeline status
 
-The pipeline has **231 targets** (total build time: 387s).
+The pipeline has **244 targets** (total build time: 421s).
 
 Top 5 targets by build time:
 
 |     | name                  | seconds |   MB |
 |:----|:----------------------|--------:|-----:|
-| 70  | raw_rnaseq            |   113.2 | 0.00 |
-| 171 | deseq2_results        |    50.0 | 2.71 |
-| 36  | clinical_data         |    38.4 | 0.00 |
-| 170 | deseq2_paired_results |    26.1 | 2.14 |
-| 169 | edger_results         |    20.4 | 1.26 |
+| 68  | raw_rnaseq            |   113.2 | 60.5 |
+| 166 | deseq2_results        |    50.0 |  2.7 |
+| 36  | clinical_data         |    38.4 |  1.2 |
+| 239 | bayes_cox_basic       |    32.0 |  2.3 |
+| 165 | deseq2_paired_results |    26.1 |  2.1 |
 
 #### Example: read a result
 
@@ -59,18 +59,11 @@ Top 5 targets by build time:
 km <- tar_read(km_overall)
 str(km, max.level = 1)
 #> List of 8
-#>  $ fit            :List of 17
-#>   ..- attr(*, "class")= chr "survfit"
-#>  $ logrank        : NULL
-#>  $ logrank_p      : num NA
-#>  $ median_survival: Named num NA
-#>   ..- attr(*, "names")= chr "overall"
-#>  $ n_per_group    : Named num 994
-#>   ..- attr(*, "names")= chr "overall"
-#>  $ strata         : NULL
-#>  $ formula        :Class 'formula'  language survival::Surv(time_days, status) ~ 1
-#>   .. ..- attr(*, ".Environment")=<environment: 0x8c0f51888> 
-#>  $ data           :'data.frame': 994 obs. of  14 variables:
+#>  $ n_per_group    : 994 patients
+#>  $ median_survival: NA (not reached)
+#>  $ fit            : survfit object
+#>  $ data           : data.frame with 994 obs. of 14 variables
+#>  $ formula        : survival::Surv(time_days, status) ~ 1
 ```
 
 > **Note:** The pipeline downloads ~3.6 GB of RNA-seq data from GDC on
