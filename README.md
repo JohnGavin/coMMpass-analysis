@@ -34,7 +34,7 @@ remotes::install_github("JohnGavin/coMMpass-analysis")
 # git clone https://github.com/JohnGavin/coMMpass-analysis.git
 # setwd("coMMpass-analysis")
 
-# Run the pipeline — downloads data from GDC, then runs all analyses
+# Run the pipeline
 library(targets)
 tar_make()
 ```
@@ -102,28 +102,21 @@ caffeinate -i ./default.sh
 | **[MMRF Researcher Gateway](https://research.themmrf.org/)** | FISH, PFS, treatment response | Free registration (pending) | No (12 targets blocked) |
 | **dbGaP Controlled** | Raw sequences (BAM/FASTQ) | Institutional IRB | No |
 
-## Key Packages Included
-
-| Category        | Packages                                 |
-|-----------------|------------------------------------------|
-| **Data Access** | TCGAbiolinks, GenomicDataCommons, aws.s3 |
-| **Survival**    | survival                                 |
-| **DE Analysis** | DESeq2, edgeR, limma                     |
-| **Pathways**    | fgsea                                    |
-| **Causal**      | dagitty, ggdag                           |
-| **Pipelines**   | targets, crew, mirai                     |
-
 ## Project Structure
 
-    coMMpass/
-    ├── R/                          # Package functions & pipeline plans
-    │   ├── tar_plans/              # Modular targets plans
-    │   └── viz/                    # Visualization functions
-    ├── vignettes/                  # Analysis vignettes (pkgdown articles)
-    ├── inst/extdata/vignettes/     # Pre-computed RDS for CI
-    ├── data/                       # Downloaded data (gitignored)
-    ├── default.sh                  # Nix environment setup
-    └── default.R                   # rix configuration
+    R/                             # Package functions & pipeline plans
+    R/tar_plans/                   # Modular targets plans
+    R/viz/                         # Visualization functions
+    vignettes/                     # Analysis vignettes (pkgdown articles)
+    inst/extdata/vignettes/        # Pre-computed RDS for CI
+    tests/testthat/                # Unit + snapshot tests
+    data/                          # Downloaded data (gitignored)
+    default.sh                     # Nix environment setup
+    default.R                      # rix configuration
+    README.qmd                     # README source (generates README.md)
+
+**92** R source files, **13** vignettes, **156** pre-computed RDS,
+**22** test files.
 
 ## Key References
 

@@ -183,6 +183,53 @@ plan_vignette_outputs <- list(
   ),
 
   # --- README targets (for README.qmd) ---
+  # All code blocks in README.qmd are targets — no static code.
+  tar_target(
+    readme_install_code,
+    paste(
+      '# Install from GitHub (requires Bioconductor deps)',
+      'if (!requireNamespace("BiocManager", quietly = TRUE))',
+      '  install.packages("BiocManager")',
+      'BiocManager::install(c("TCGAbiolinks", "DESeq2", "edgeR", "limma",',
+      '                        "SummarizedExperiment", "fgsea"))',
+      'remotes::install_github("JohnGavin/coMMpass-analysis")',
+      '',
+      '# Clone the repo (targets needs _targets.R in working directory)',
+      '# git clone https://github.com/JohnGavin/coMMpass-analysis.git',
+      '# setwd("coMMpass-analysis")',
+      '',
+      '# Run the pipeline',
+      'library(targets)',
+      'tar_make()',
+      sep = "\n"
+    )
+  ),
+
+  tar_target(
+    readme_nix_code,
+    paste(
+      '# Requires Nix package manager (https://nixos.org/download.html)',
+      'chmod +x default.sh',
+      './default.sh',
+      '',
+      '# macOS only: prevent sleep during long builds',
+      'caffeinate -i ./default.sh',
+      sep = "\n"
+    )
+  ),
+
+
+  tar_target(
+    readme_cachix_code,
+    paste(
+      '# Configure cachix caches',
+      'nix-env -iA cachix -f https://cachix.org/api/v1/install',
+      'cachix use rstats-on-nix    # Pre-built R packages',
+      'cachix use johngavin         # Compiled coMMpass R package',
+      sep = "\n"
+    )
+  ),
+
   tar_target(
     readme_pipeline_summary,
     {

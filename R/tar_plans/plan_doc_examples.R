@@ -91,13 +91,26 @@ plan_doc_examples <- list(
     )
   ),
 
-  # --- README: Project structure tree ---
+  # --- README: Project structure + file counts ---
   targets::tar_target(
     readme_project_tree,
     {
-      force(file.exists("DESCRIPTION"))
-      utils::capture.output(
-        fs::dir_tree(recurse = 2, regexp = "^[^._]", type = "directory")
+      dirs <- c("R/", "R/tar_plans/", "R/viz/", "vignettes/",
+                "inst/extdata/vignettes/", "tests/testthat/", "data/",
+                "default.sh", "default.R", "README.qmd")
+      desc <- c("Package functions & pipeline plans", "Modular targets plans",
+                "Visualization functions", "Analysis vignettes (pkgdown articles)",
+                "Pre-computed RDS for CI", "Unit + snapshot tests",
+                "Downloaded data (gitignored)", "Nix environment setup",
+                "rix configuration", "README source (generates README.md)")
+      list(
+        tree = data.frame(Path = dirs, Description = desc, stringsAsFactors = FALSE),
+        counts = list(
+          r_files = length(list.files("R", "\\.R$", recursive = TRUE)),
+          vignettes = length(list.files("vignettes", "\\.qmd$")),
+          rds = length(list.files("inst/extdata/vignettes", "\\.rds$")),
+          tests = length(list.files("tests/testthat", "\\.R$"))
+        )
       )
     }
   ),
