@@ -26,11 +26,14 @@ tar_store <- .find_tar_store()
     return(invisible(val))
   }
 
-  # htmltools tag lists and htmlwidgets — use knitr's knit_print
+  # htmltools tag lists and htmlwidgets
   if (inherits(val, c("shiny.tag.list", "shiny.tag", "htmlwidget"))) {
-    if (requireNamespace("knitr", quietly = TRUE) && knitr::is_latex_output() == FALSE) {
-      # In knitr context, return the object for auto-printing
-      return(val)
+    # In pkgdown CI, htmlwidgets can crash with glue/htmltools errors
+    # Return the object for auto-printing only in local/interactive mode
+    in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
+    if (in_pkgdown) {
+      cat("*Interactive widget available in local builds only.*\n")
+      return(invisible(val))
     }
     return(val)
   }

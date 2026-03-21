@@ -83,7 +83,15 @@ Interactive DAG showing the targets pipeline network with layer-based coloring. 
 ```{r pipeline-visnetwork}
 #| echo: false
 #| results: asis
-show_target("vig_pipeline_dag")
+# visNetwork widget can't render in CI (glue/htmltools conflicts)
+# Show the node/edge summary instead
+val <- safe_tar_read("vig_pipeline_dag")
+if (inherits(val, c("shiny.tag.list", "htmlwidget"))) {
+  cat("*Interactive DAG available in local builds only.*\n\n")
+  cat("Run `targets::tar_visnetwork(targets_only = TRUE)` locally.\n")
+} else if (!is.null(val)) {
+  val
+}
 ```
 
 ## Pipeline by Layer
