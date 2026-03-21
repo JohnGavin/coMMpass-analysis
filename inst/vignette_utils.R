@@ -105,9 +105,23 @@ show_target <- function(name, .safe_tar_read = safe_tar_read) {
   code_shown <- FALSE
 
   # Tier 1: code_vig_* pipeline target (backed by deparse(body(fn)))
-  # Available both locally (targets store) and in CI (RDS fallback)
+  # Read RAW — do NOT go through .render_val() which would cat() it as text
   code_name <- paste0("code_", name)
-  code <- .safe_tar_read(code_name)
+  code <- NULL
+  if (!is.null(tar_store)) {
+    code <- tryCatch(targets::tar_read_raw(code_name, store = tar_store),
+                     error = function(e) NULL)
+  }
+  if (is.null(code)) {
+    rds_candidates <- c(
+      system.file(paste0("extdata/vignettes/", code_name, ".rds"), package = "coMMpass"),
+      file.path("inst/extdata/vignettes", paste0(code_name, ".rds")),
+      file.path("../inst/extdata/vignettes", paste0(code_name, ".rds"))
+    )
+    for (rds in rds_candidates) {
+      if (nzchar(rds) && file.exists(rds)) { code <- readRDS(rds); break }
+    }
+  }
   if (!is.null(code) && is.character(code) && nzchar(paste(code, collapse = ""))) {
     # Use HTML <pre><code> not markdown fences — markdown inside <details> is not parsed
     escaped <- gsub("&", "&amp;", paste(code, collapse = "\n"))
@@ -172,13 +186,14 @@ show_target <- function(name, .safe_tar_read = safe_tar_read) {
     return(invisible(NULL))
   }
 
-  # Grobs: convert back to recordable plot for knitr capture
+  # Grobs: wrap in ggplot for knitr capture + dark theme
   if (inherits(result, c("gtable", "grob", "gTree"))) {
-    # knitr can't capture grid::grid.draw() output
-    # Wrap in a ggplot layer so print.ggplot triggers knitr's plot hook
     p <- ggplot2::ggplot() +
       ggplot2::annotation_custom(result) +
-      ggplot2::theme_void()
+      ggplot2::theme_void() +
+      ggplot2::theme(
+        plot.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA)
+      )
     print(p)
     return(invisible(result))
   }
@@ -189,8 +204,13 @@ show_target <- function(name, .safe_tar_read = safe_tar_read) {
     in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
     if (in_pkgdown) {
       cap_text <- if (!is.null(cap)) gsub("<[^>]+>", "", cap) else NULL
-      cat(knitr::kable(result, format = "html", row.names = FALSE,
-                       caption = cap_text), sep = "\n")
+      tbl <- knitr::kable(result, format = "html", row.names = FALSE,
+                           caption = cap_text)
+      # Dark theme styling for tables
+      tbl <- sub("<table>",
+        '<table style="background:#1a1a2e;color:#e0e0e0;border-collapse:collapse;width:100%;">',
+        tbl)
+      cat(tbl, sep = "\n")
       return(invisible(result))
     }
     if (requireNamespace("DT", quietly = TRUE)) {
