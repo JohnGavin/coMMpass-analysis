@@ -18,8 +18,8 @@ tar_store <- .find_tar_store()
 .render_val <- function(val) {
   if (is.null(val)) return(invisible(NULL))
 
-  # Grobs from ggplotGrob() — draw directly
-
+  # Grobs from ggplotGrob() — draw to plot device
+  # Do NOT use results:asis for grob chunks — knitr needs default mode to capture
   if (inherits(val, c("gtable", "grob", "gTree"))) {
     grid::grid.newpage()
     grid::grid.draw(val)
@@ -139,20 +139,90 @@ show_target <- function(name, .safe_tar_read = safe_tar_read) {
   }
 
   # Tier 3: render the output
-  result <- .safe_tar_read(name)
+  # Read raw (bypass .render_val for grobs — we handle them specially here)
+  result <- NULL
+  if (!is.null(tar_store)) {
+    result <- tryCatch(
+      targets::tar_read_raw(name, store = tar_store),
+      error = function(e) NULL
+    )
+  }
+  if (is.null(result)) {
+    rds_candidates <- c(
+      system.file(paste0("extdata/vignettes/", name, ".rds"), package = "coMMpass"),
+      file.path("inst/extdata/vignettes", paste0(name, ".rds")),
+      file.path("../inst/extdata/vignettes", paste0(name, ".rds"))
+    )
+    for (rds in rds_candidates) {
+      if (nzchar(rds) && file.exists(rds)) {
+        result <- readRDS(rds)
+        break
+      }
+    }
+  }
 
-  # If NULL, show informative callout instead of blank space
   if (is.null(result)) {
     cat(paste0(
       '<div style="padding: 1em; margin: 1em 0; border-left: 4px solid #f39c12; ',
       'background: #2d2d2d; color: #ccc; border-radius: 4px;">',
       '<strong>Data not available:</strong> Target <code>', name, '</code> ',
-      'returned NULL. This typically means the required data is not available ',
-      'from the current data source (GDC API). See the ',
-      '<a href="data-sources.html">Data Sources</a> vignette for details.',
+      'returned NULL. See <a href="data-sources.html">Data Sources</a>.',
       '</div>\n'
     ))
+    return(invisible(NULL))
   }
 
+  # Grobs: convert back to recordable plot for knitr capture
+  if (inherits(result, c("gtable", "grob", "gTree"))) {
+    # knitr can't capture grid::grid.draw() output
+    # Wrap in a ggplot layer so print.ggplot triggers knitr's plot hook
+    p <- ggplot2::ggplot() +
+      ggplot2::annotation_custom(result) +
+      ggplot2::theme_void()
+    print(p)
+    return(invisible(result))
+  }
+
+  # Data frames: use kable in pkgdown, DT locally
+  if (is.data.frame(result)) {
+    cap <- attr(result, "dt_caption")
+    in_pkgdown <- nzchar(Sys.getenv("IN_PKGDOWN"))
+    if (in_pkgdown) {
+      cap_text <- if (!is.null(cap)) gsub("<[^>]+>", "", cap) else NULL
+      cat(knitr::kable(result, format = "html", row.names = FALSE,
+                       caption = cap_text), sep = "\n")
+      return(invisible(result))
+    }
+    if (requireNamespace("DT", quietly = TRUE)) {
+      dt_opts <- attr(result, "dt_options")
+      if (is.null(dt_opts)) dt_opts <- list()
+      if (!is.null(cap)) {
+        return(DT::datatable(result, rownames = FALSE, options = dt_opts,
+                             caption = htmltools::HTML(cap)))
+      }
+      return(DT::datatable(result, rownames = FALSE, options = dt_opts))
+    }
+  }
+
+  # Character strings
+  if (is.character(result) && !inherits(result, "html")) {
+    cat(result, sep = "\n")
+    return(invisible(result))
+  }
+
+  # Lists (e.g. expr_by_subtype = list of grobs)
+  if (is.list(result) && !is.data.frame(result)) {
+    for (item in result) {
+      if (inherits(item, c("gtable", "grob", "gTree"))) {
+        p <- ggplot2::ggplot() +
+          ggplot2::annotation_custom(item) +
+          ggplot2::theme_void()
+        print(p)
+      }
+    }
+    return(invisible(result))
+  }
+
+  # Everything else
   result
 }
