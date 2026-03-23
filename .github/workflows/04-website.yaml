@@ -1,20 +1,16 @@
 name: Deploy to GitHub Pages
 
 on:
+  release:
+    types: [published]
   push:
     branches: [main]
     paths:
-      - 'R/**'
-      - 'man/**'
-      - 'vignettes/**'
-      - '_pkgdown.yml'
-      - 'pkgdown/**'
-      - 'inst/**'
-      - 'DESCRIPTION'
-      - 'README.md'
-      - '.github/workflows/04-website.yaml'
+      - "vignettes/**"
+      - "_pkgdown.yml"
+      - "pkgdown/**"
+      - "DESCRIPTION"
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
