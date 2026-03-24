@@ -183,51 +183,76 @@ plan_vignette_outputs <- list(
   ),
 
   # --- README targets (for README.qmd) ---
-  # All code blocks in README.qmd are targets — no static code.
+  # All code blocks are targets. R code is parse-validated; bash is syntax-checked.
   tar_target(
     readme_install_code,
-    paste(
-      '# Install from GitHub (requires Bioconductor deps)',
-      'if (!requireNamespace("BiocManager", quietly = TRUE))',
-      '  install.packages("BiocManager")',
-      'BiocManager::install(c("TCGAbiolinks", "DESeq2", "edgeR", "limma",',
-      '                        "SummarizedExperiment", "fgsea"))',
-      'remotes::install_github("JohnGavin/coMMpass-analysis")',
-      '',
-      '# Clone the repo (targets needs _targets.R in working directory)',
-      '# git clone https://github.com/JohnGavin/coMMpass-analysis.git',
-      '# setwd("coMMpass-analysis")',
-      '',
-      '# Run the pipeline',
-      'library(targets)',
-      'tar_make()',
-      sep = "\n"
-    )
+    {
+      code <- paste(
+        '# Install from GitHub (requires Bioconductor deps)',
+        'if (!requireNamespace("BiocManager", quietly = TRUE))',
+        '  install.packages("BiocManager")',
+        'BiocManager::install(c("TCGAbiolinks", "DESeq2", "edgeR", "limma",',
+        '                        "SummarizedExperiment", "fgsea"))',
+        'remotes::install_github("JohnGavin/coMMpass-analysis")',
+        '',
+        '# Clone the repo (targets needs _targets.R in working directory)',
+        '# git clone https://github.com/JohnGavin/coMMpass-analysis.git',
+        '# setwd("coMMpass-analysis")',
+        '',
+        '# Run the pipeline',
+        'library(targets)',
+        'tar_make()',
+        sep = "\n"
+      )
+      # Validate: must parse as R
+      tryCatch(parse(text = code), error = function(e) {
+        stop("readme_install_code fails to parse: ", conditionMessage(e))
+      })
+      code
+    }
   ),
 
   tar_target(
     readme_nix_code,
-    paste(
-      '# Requires Nix package manager (https://nixos.org/download.html)',
-      'chmod +x default.sh',
-      './default.sh',
-      '',
-      '# macOS only: prevent sleep during long builds',
-      'caffeinate -i ./default.sh',
-      sep = "\n"
-    )
+    {
+      code <- paste(
+        '# Requires Nix package manager (https://nixos.org/download.html)',
+        'chmod +x default.sh',
+        './default.sh',
+        '',
+        '# macOS only: prevent sleep during long builds',
+        'caffeinate -i ./default.sh',
+        sep = "\n"
+      )
+      # Validate: bash -n syntax check
+      tf <- tempfile(fileext = ".sh")
+      writeLines(code, tf)
+      result <- system2("bash", c("-n", tf), stderr = TRUE)
+      if (length(result) > 0 && any(grepl("error", result, ignore.case = TRUE))) {
+        stop("readme_nix_code bash syntax error: ", paste(result, collapse = "\n"))
+      }
+      code
+    }
   ),
-
 
   tar_target(
     readme_cachix_code,
-    paste(
-      '# Configure cachix caches',
-      'nix-env -iA cachix -f https://cachix.org/api/v1/install',
-      'cachix use rstats-on-nix    # Pre-built R packages',
-      'cachix use johngavin         # Compiled coMMpass R package',
-      sep = "\n"
-    )
+    {
+      code <- paste(
+        '# Configure cachix caches',
+        'nix-env -iA cachix -f https://cachix.org/api/v1/install',
+        'cachix use rstats-on-nix    # Pre-built R packages',
+        'cachix use johngavin         # Compiled coMMpass R package',
+        sep = "\n"
+      )
+      tf <- tempfile(fileext = ".sh")
+      writeLines(code, tf)
+      result <- system2("bash", c("-n", tf), stderr = TRUE)
+      if (length(result) > 0 && any(grepl("error", result, ignore.case = TRUE))) {
+        stop("readme_cachix_code bash syntax error: ", paste(result, collapse = "\n"))
+      }
+      code
+    }
   ),
 
   tar_target(
