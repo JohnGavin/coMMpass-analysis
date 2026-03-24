@@ -41,17 +41,17 @@ tar_make()
 
 #### Pipeline status
 
-The pipeline has **244 targets** (total build time: 421s).
+The pipeline has **247 targets** (total build time: 6m 59s).
 
 Top 5 targets by build time:
 
-|     | name                  | seconds |   MB |
-|:----|:----------------------|--------:|-----:|
-| 68  | raw_rnaseq            |   113.2 | 60.5 |
-| 166 | deseq2_results        |    50.0 |  2.7 |
-| 36  | clinical_data         |    38.4 |  1.2 |
-| 239 | bayes_cox_basic       |    32.0 |  2.3 |
-| 165 | deseq2_paired_results |    26.1 |  2.1 |
+|     | name                  |   MB | time   |
+|:----|:----------------------|-----:|:-------|
+| 67  | raw_rnaseq            | 60.5 | 1m 53s |
+| 165 | deseq2_results        |  2.7 | 50s    |
+| 35  | clinical_data         |  1.2 | 38s    |
+| 235 | bayes_cox_basic       |  2.3 | 32s    |
+| 164 | deseq2_paired_results |  2.1 | 26s    |
 
 #### Example: read a result
 

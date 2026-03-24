@@ -51,7 +51,7 @@ if (!is.null(code)) cat("```r\n", code, "\n```\n", sep = "")
 ps <- safe_read("readme_pipeline_summary")
 if (!is.null(ps)) {
   cat(paste0("The pipeline has **", ps$n_targets, " targets** ",
-             "(total build time: ", ps$total_seconds, "s).\n\n"))
+             "(total build time: ", ps$total_time, ").\n\n"))
   cat("Top 5 targets by build time:\n\n")
   cat(knitr::kable(ps$top5, format = "pipe"), sep = "\n")
 }

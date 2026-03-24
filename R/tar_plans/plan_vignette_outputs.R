@@ -254,10 +254,23 @@ plan_vignette_outputs <- list(
       }
       top5$MB <- round(top5$bytes / 1e6, 1)
       top5$bytes <- NULL
+      # Human-readable time formatter
+      fmt_time <- function(s) {
+        s <- round(s)
+        if (s >= 3600) paste0(s %/% 3600, "h ", (s %% 3600) %/% 60, "m")
+        else if (s >= 60) paste0(s %/% 60, "m ", s %% 60, "s")
+        else paste0(s, "s")
+      }
+
+      total_s <- round(sum(meta$seconds, na.rm = TRUE))
+      top5$time <- vapply(top5$seconds, fmt_time, character(1))
+      top5$seconds <- NULL
+
       list(
         n_targets = nrow(meta),
         top5 = top5,
-        total_seconds = round(sum(meta$seconds, na.rm = TRUE))
+        total_time = fmt_time(total_s),
+        total_seconds = total_s
       )
     }
   ),
