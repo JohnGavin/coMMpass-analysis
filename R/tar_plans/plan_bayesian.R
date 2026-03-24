@@ -76,11 +76,12 @@ plan_bayesian <- list(
       if (is.null(bayes_cox_basic)) return(NULL)
       # Summary diagnostics
       post <- brms::fixef(bayes_cox_basic)
+      rhat <- if ("Rhat" %in% colnames(post)) round(post[, "Rhat"], 3) else NA_real_
       data.frame(
         Parameter = rownames(post),
         Estimate = round(post[, "Estimate"], 4),
         SE = round(post[, "Est.Error"], 4),
-        Rhat = round(post[, "Rhat"] %||% NA_real_, 3),
+        Rhat = rhat,
         stringsAsFactors = FALSE
       )
     },
