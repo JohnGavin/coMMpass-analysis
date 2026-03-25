@@ -4,62 +4,96 @@ $body-color: #e0e0e0;
 $link-color: #58a6ff;
 $code-color: #e6db74;
 $code-block-bg: #0d1117;
+$presentation-font-size-root: 28px;
+$presentation-h1-font-size: 1.6em;
+$presentation-h2-font-size: 1.3em;
 
 /*-- scss:rules --*/
 
-/* Section divider slides */
-.inverse {
-  background-color: #0f0f23 !important;
-  color: white !important;
-}
-.inverse h1, .inverse h2 {
-  color: #f39c12 !important;
+/* Center slides at 80% width */
+.reveal .slides {
+  width: 80% !important;
+  margin: 0 auto;
 }
 
-/* Tables */
+/* Footer with URL */
+.reveal .slide-footer {
+  font-size: 0.5em;
+  color: #666;
+  text-align: center;
+}
+
+/* Consistent font sizing */
+.reveal h1, .reveal h2 {
+  color: #f0f0f0;
+  font-weight: 600;
+}
+.reveal h1 { font-size: 1.6em; }
+.reveal h2 { font-size: 1.3em; }
+.reveal p, .reveal li {
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+
+/* Tables — dark, compact */
 .reveal table {
   background: #252540;
   color: #e0e0e0;
   border-collapse: collapse;
-  font-size: 0.75em;
+  font-size: 0.7em;
+  width: 100%;
 }
 .reveal table th {
   background: #1a1a2e;
   color: #f39c12;
   border-bottom: 2px solid #444;
-  padding: 0.5em;
+  padding: 0.4em 0.6em;
+  text-align: left;
 }
 .reveal table td {
   border-bottom: 1px solid #333;
-  padding: 0.4em 0.5em;
+  padding: 0.3em 0.6em;
 }
 
 /* Code blocks */
 .reveal pre {
   background: #0d1117;
   border-radius: 6px;
-  padding: 0.8em;
-}
-.reveal code {
-  color: #e6db74;
-}
-
-/* Mermaid diagrams */
-.mermaid {
-  background: transparent !important;
+  padding: 0.6em;
+  font-size: 0.65em;
 }
 
 /* Blockquotes */
 .reveal blockquote {
   background: #252540;
   border-left: 4px solid #f39c12;
-  padding: 0.5em 1em;
+  padding: 0.4em 0.8em;
   color: #d0d0d0;
   font-style: normal;
+  font-size: 0.8em;
 }
 
-/* Callouts */
-.reveal .callout {
-  background: #252540;
-  border-color: #444;
+/* Acronym tooltips */
+abbr[title] {
+  text-decoration: underline dotted #58a6ff;
+  cursor: help;
+  position: relative;
+}
+abbr[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  background: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75em;
+  white-space: nowrap;
+  z-index: 100;
+}
+
+/* Mermaid — larger text, fewer colours */
+.mermaid {
+  font-size: 16px !important;
 }

@@ -1,6 +1,6 @@
 ---
-title: "CoMMpass: Multiple Myeloma Data Analysis"
-subtitle: "Inputs, Outputs, and What the Data Tells Us"
+title: "CoMMpass"
+subtitle: "Inputs, outputs, and what the data tells us"
 author: "John Gavin"
 format:
   revealjs:
@@ -12,6 +12,7 @@ format:
     code-overflow: wrap
     fig-align: center
     transition: fade
+    footer: "[johngavin.github.io/coMMpass-analysis](https://johngavin.github.io/coMMpass-analysis/)"
 execute:
   echo: false
   warning: false
@@ -20,6 +21,7 @@ execute:
 
 ```{r setup}
 library(targets)
+library(ggplot2)
 tar_store <- if (dir.exists("../_targets")) "../_targets" else if (dir.exists("_targets")) "_targets" else NULL
 safe_read <- function(name) {
   if (!is.null(tar_store)) {
@@ -32,450 +34,184 @@ safe_read <- function(name) {
   }
   NULL
 }
-```
-
-# What is Multiple Myeloma? {.inverse}
-
-## The Disease
-
-:::: {.columns}
-::: {.column width="60%"}
-- Cancer of **plasma cells** in bone marrow
-- ~35,000 new US cases/year
-- Median age at diagnosis: **69 years**
-- 5-year survival: **~58%** (improving)
-
-. . .
-
-**Key question**: Which patients do well, and why?
-:::
-::: {.column width="40%"}
-```{mermaid}
-%%| fig-width: 5
-flowchart TD
-    BM[Bone Marrow] --> PC[Plasma Cells]
-    PC --> |normal| AB[Antibodies<br/>immune defence]
-    PC --> |cancer| MM[Myeloma Cells]
-    MM --> BD[Bone Damage]
-    MM --> KD[Kidney Damage]
-    MM --> IS[Immune<br/>Suppression]
-    style MM fill:#e74c3c,color:white
-    style AB fill:#2ecc71,color:white
-```
-:::
-::::
-
-## The CoMMpass Study
-
-| | |
-|---|---|
-| **Patients** | 1,143 newly diagnosed |
-| **Follow-up** | 8 years (2011–2019) |
-| **RNA-seq samples** | 859 (STAR counts) |
-| **Clinical variables** | 88 per patient |
-| **Treatment records** | 7,184 (from GDC API) |
-| **GDC files** | 34,109 total |
-
-. . .
-
-> The largest longitudinal genomics study of multiple myeloma ever conducted.
-
-# What Data Did We Get? {.inverse}
-
-## Data Access: 4 Tiers
-
-| Tier | What | We Use It? |
-|------|------|-----------|
-| **GDC Open** (API) | RNA-seq, clinical, treatment | ✅ Yes |
-| **AWS S3** (open) | RNA-seq files | ✅ Yes |
-| **MMRF Gateway** | FISH, PFS, response | ❌ Pending |
-| **dbGaP** | Raw BAM/FASTQ | ❌ No IRB |
-
-. . .
-
-**12 of 250 pipeline targets are NULL** because MMRF Gateway data is unavailable.
-
-## What We Downloaded
-
-```{r data-flow}
-#| fig-height: 4
-# Simple data flow diagram as a plot
-df <- data.frame(
-  source = c("GDC API", "GDC API", "GDC API", "Pre-bundled"),
-  dataset = c("RNA-seq\n(STAR counts)", "Clinical\nmetadata", "Treatment\nrecords", "MSigDB\ngene sets"),
-  records = c(100, 995, 7184, 708),
-  size_mb = c(60.5, 1.2, 0.03, 0.08),
-  stringsAsFactors = FALSE
-)
-p <- ggplot2::ggplot(df, ggplot2::aes(x = reorder(dataset, -records), y = records, fill = source)) +
-  ggplot2::geom_col(width = 0.7) +
-  ggplot2::geom_text(ggplot2::aes(label = paste0(format(records, big.mark = ","), "\nrecords")),
-                     vjust = -0.3, color = "white", size = 4) +
-  ggplot2::scale_fill_manual(values = c("GDC API" = "#3498db", "Pre-bundled" = "#9b59b6")) +
-  ggplot2::labs(title = "Datasets in the Pipeline",
-                x = NULL, y = "Records", fill = "Source") +
-  ggplot2::theme_minimal(base_size = 16) +
-  ggplot2::theme(
-    plot.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA),
-    panel.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA),
-    panel.grid = ggplot2::element_line(color = "#2d2d44"),
-    text = ggplot2::element_text(color = "white"),
-    axis.text = ggplot2::element_text(color = "#b0b0b0", size = 12),
-    legend.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA),
-    legend.text = ggplot2::element_text(color = "white")
-  )
-print(p)
-```
-
-# The Pipeline {.inverse}
-
-## 250 Targets, 7 Minutes
-
-```{r pipeline-stats}
-#| fig-height: 4.5
-ps <- safe_read("readme_pipeline_summary")
-if (!is.null(ps)) {
-  df <- data.frame(
-    Category = c("Vignette display", "Code provenance", "Shiny precompute",
-                 "Data pipeline", "Survival", "DE + pathway", "Other"),
-    Count = c(107, 36, 16, 8, 8, 16, 59),
-    stringsAsFactors = FALSE
-  )
-  p <- ggplot2::ggplot(df, ggplot2::aes(x = reorder(Category, Count), y = Count)) +
-    ggplot2::geom_col(fill = "#3498db", width = 0.7) +
-    ggplot2::geom_text(ggplot2::aes(label = Count), hjust = -0.3, color = "white", size = 5) +
-    ggplot2::coord_flip() +
-    ggplot2::labs(title = paste0(ps$n_targets, " Pipeline Targets (build time: ", ps$total_time, ")"),
-                  x = NULL, y = "Targets") +
-    ggplot2::theme_minimal(base_size = 16) +
-    ggplot2::theme(
-      plot.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA),
-      panel.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA),
-      panel.grid = ggplot2::element_line(color = "#2d2d44"),
-      text = ggplot2::element_text(color = "white"),
-      axis.text = ggplot2::element_text(color = "#b0b0b0", size = 14)
+# Shared dark theme for all plots
+theme_preso <- function(base_size = 18) {
+  theme_minimal(base_size = base_size) +
+    theme(
+      plot.background = element_rect(fill = "#1a1a2e", color = NA),
+      panel.background = element_rect(fill = "#1a1a2e", color = NA),
+      panel.grid = element_line(color = "#2d2d44"),
+      text = element_text(color = "white"),
+      axis.text = element_text(color = "#b0b0b0", size = rel(0.9)),
+      axis.title = element_text(color = "#d0d0d0"),
+      plot.title = element_text(size = rel(1.1), face = "bold"),
+      legend.background = element_rect(fill = "#1a1a2e", color = NA),
+      legend.text = element_text(color = "white", size = rel(0.85)),
+      legend.position = "bottom"
     )
+}
+# Render grob as ggplot
+show_grob <- function(val) {
+  if (is.null(val) || !inherits(val, c("gtable", "grob", "gTree"))) return(invisible(NULL))
+  p <- ggplot() + annotation_custom(val) + theme_void() +
+    theme(plot.background = element_rect(fill = "#1a1a2e", color = NA))
   print(p)
 }
 ```
 
-## Input → Output: The Chain
+## The <abbr title="Clinical Outcomes in Multiple Myeloma to Personal Assessment of Genetic Profile">CoMMpass</abbr> study
+
+- Cancer of plasma cells in bone marrow
+- ~35,000 new <abbr title="United States">US</abbr> cases per year; median age 69
+- <abbr title="CoMMpass: Clinical Outcomes in Multiple Myeloma to Personal Assessment of Genetic Profile">CoMMpass</abbr> enrolled **1,143 patients** (2011–2019) with 8-year follow-up
+- Largest longitudinal genomics study of multiple myeloma
+
+| | |
+|---|---|
+| Patients | 1,143 newly diagnosed |
+| <abbr title="RNA sequencing">RNA-seq</abbr> samples | 859 (<abbr title="Spliced Transcripts Alignment to a Reference">STAR</abbr> counts) |
+| Clinical variables | 88 per patient |
+| Treatment records | 7,184 (from <abbr title="Genomic Data Commons">GDC</abbr> <abbr title="Application Programming Interface">API</abbr>) |
+
+## Data we downloaded
+
+| Dataset | Records | Size | Source |
+|---------|--------:|-----:|--------|
+| <abbr title="RNA sequencing">RNA-seq</abbr> (<abbr title="Spliced Transcripts Alignment to a Reference">STAR</abbr> counts) | 100 samples | 60.5 <abbr title="Megabytes">MB</abbr> | <abbr title="Genomic Data Commons">GDC</abbr> open access |
+| Clinical metadata | 995 patients | 1.2 <abbr title="Megabytes">MB</abbr> | <abbr title="Genomic Data Commons">GDC</abbr> open access |
+| Treatment records | 7,184 lines | 34 <abbr title="Kilobytes">KB</abbr> | <abbr title="Genomic Data Commons">GDC</abbr> <abbr title="Application Programming Interface">API</abbr> |
+| <abbr title="Molecular Signatures Database">MSigDB</abbr> gene sets | 708 sets | 85 <abbr title="Kilobytes">KB</abbr> | Bundled in package |
+
+- <abbr title="Fluorescence In Situ Hybridisation">FISH</abbr> markers, <abbr title="Progression-Free Survival">PFS</abbr> endpoints, and treatment response are **not available** from <abbr title="Genomic Data Commons">GDC</abbr>
+- These require <abbr title="Multiple Myeloma Research Foundation">MMRF</abbr> Researcher Gateway access (pending)
+
+## Pipeline overview
+
+| | |
+|---|---|
+| Total targets | 250 |
+| Build time | ~7 minutes |
+| Errored | 0 |
+| <abbr title="Target returned NULL due to missing data">NULL</abbr> (data gaps) | 15 |
+| <abbr title="Serialised R object files">RDS</abbr> exports | 156 files, 3.4 <abbr title="Megabytes">MB</abbr> |
+| Vignettes | 14 articles |
+| Unit tests | 892 (0 failed) |
 
 ```{mermaid}
 %%| fig-width: 10
 flowchart LR
-    subgraph Input
-      GDC[GDC API<br/>995 patients]
-    end
-    subgraph Clean
-      SE[Summarized<br/>Experiment]
-      CD[Clinical<br/>DataFrame]
-    end
-    subgraph Analyse
-      DE[1615 DE genes]
-      KM[KM curves]
-      COX[Cox PH<br/>C=0.687]
-    end
-    subgraph Output
-      VIG[14 vignettes]
-      RDS[156 RDS files]
-      WEB[pkgdown site]
-    end
-    GDC --> SE --> DE --> VIG
-    GDC --> CD --> KM --> VIG
-    CD --> COX --> VIG
-    VIG --> RDS --> WEB
-    style Input fill:#2ecc71,color:white
-    style Clean fill:#3498db,color:white
-    style Analyse fill:#e74c3c,color:white
-    style Output fill:#9b59b6,color:white
+    GDC["GDC API"] --> SE["RNA-seq<br>+ clinical"]
+    SE --> DE["1,615 DE genes"]
+    SE --> KM["Survival curves"]
+    SE --> DAG["Causal DAG"]
+    DE --> GSEA["Pathway<br>enrichment"]
+    KM --> COX["Cox model<br>C = 0.687"]
+    style GDC fill:#2ecc71,stroke:#2ecc71,color:white
+    style DE fill:#e74c3c,stroke:#e74c3c,color:white
+    style KM fill:#3498db,stroke:#3498db,color:white
+    style COX fill:#3498db,stroke:#3498db,color:white
+    style GSEA fill:#e74c3c,stroke:#e74c3c,color:white
+    style DAG fill:#9b59b6,stroke:#9b59b6,color:white
+    style SE fill:#2ecc71,stroke:#2ecc71,color:white
 ```
 
-# Survival Analysis {.inverse}
-
-## Kaplan-Meier: Overall Survival
-
-```{r km-overall}
-#| fig-height: 5
-val <- safe_read("vig_km_overall")
-if (inherits(val, c("gtable", "grob"))) {
-  p <- ggplot2::ggplot() + ggplot2::annotation_custom(val) +
-    ggplot2::theme_void() +
-    ggplot2::theme(plot.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA))
-  print(p)
-}
-```
-
-**994 patients. Median OS not reached** — more than half alive at last follow-up.
-
-## What "Median Not Reached" Means
-
-:::: {.columns}
-::: {.column width="50%"}
-### Typical (our data)
-- 994 patients
-- 191 deaths (19%)
-- **Median: NA** (not reached)
-- *Good news: most patients alive*
-:::
-::: {.column width="50%"}
-### Extreme example
-- If all 994 died by day 30:
-- Median = **30 days**
-- Survival curve drops to 0 immediately
-- *This is what aggressive cancers look like*
-:::
-::::
-
-. . .
-
-> The fact that median is NOT reached means modern myeloma therapies are working.
-
-## ISS Staging: Who Does Worse?
+## Survival by <abbr title="International Staging System: I = low tumour burden, II = intermediate, III = high">ISS</abbr> stage
 
 ```{r km-iss}
 #| fig-height: 5
-val <- safe_read("vig_km_iss")
-if (inherits(val, c("gtable", "grob"))) {
-  p <- ggplot2::ggplot() + ggplot2::annotation_custom(val) +
-    ggplot2::theme_void() +
-    ggplot2::theme(plot.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA))
-  print(p)
-}
+show_grob(safe_read("vig_km_iss"))
 ```
 
-ISS III patients have **~5x the hazard** of ISS I (HR=4.9, p<0.001).
+- <abbr title="International Staging System">ISS</abbr> III patients have ~5× the hazard of <abbr title="International Staging System">ISS</abbr> I (<abbr title="Hazard Ratio: risk of death relative to reference group">HR</abbr> = 4.9, p < 0.001)
+- 994 patients from <abbr title="Genomic Data Commons">GDC</abbr> clinical data; condition derived from vital status (alive vs dead)
 
-## Cox Regression: What Predicts Survival?
+## <abbr title="Cox Proportional Hazards: a regression model for time-to-event data">Cox</abbr> regression: what predicts survival?
 
-| Covariate | HR | 95% CI | p |
-|-----------|---:|--------|---|
-| **ISS II** | 2.35 | [1.51, 3.67] | <0.001 |
-| **ISS III** | 4.90 | [3.21, 7.48] | <0.001 |
-| **Male** | 1.45 | [1.07, 1.97] | 0.018 |
-| Age (per year) | NA | — | — |
+| Covariate | <abbr title="Hazard Ratio: >1 means higher risk of death">HR</abbr> | 95% <abbr title="Confidence Interval">CI</abbr> | p-value |
+|-----------|---:|--------|------:|
+| <abbr title="International Staging System">ISS</abbr> stage II | 2.35 | [1.51, 3.67] | <0.001 |
+| <abbr title="International Staging System">ISS</abbr> stage III | 4.90 | [3.21, 7.48] | <0.001 |
+| Male sex | 1.45 | [1.07, 1.97] | 0.018 |
 
-. . .
+- <abbr title="Concordance index: 0.5 = coin flip, 1.0 = perfect discrimination">C-index</abbr> = 0.687 — moderate discrimination
+- Age not significant after adjusting for <abbr title="International Staging System">ISS</abbr>
+- Model uses clinical data only (no genomics)
 
-**C-index = 0.687** — the model discriminates better than a coin flip (0.5) but not perfectly (1.0).
-
-# Differential Expression {.inverse}
-
-## 1,615 DE Genes
+## Differential expression: alive vs dead
 
 ```{r volcano}
 #| fig-height: 5
-val <- safe_read("vig_volcano_plot")
-if (inherits(val, c("gtable", "grob"))) {
-  p <- ggplot2::ggplot() + ggplot2::annotation_custom(val) +
-    ggplot2::theme_void() +
-    ggplot2::theme(plot.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA))
-  print(p)
-}
+show_grob(safe_read("vig_volcano_plot"))
 ```
 
-**Alive vs Dead** comparison: 1,615 genes at |log2FC|>1, padj<0.05.
+- **1,615 genes** significantly changed between alive and dead patients
+- Thresholds: |log₂ fold change| > 1 and adjusted p-value < 0.05
+- <abbr title="Differential Expression analysis using DESeq2, a Bioconductor package">DESeq2</abbr> with <abbr title="Variance Stabilising Transformation: normalises RNA-seq counts for visualisation">VST</abbr>-normalised counts
 
-## Typical vs Extreme: Log2 Fold Change
+## What "1,615 genes" means in practice
 
-:::: {.columns}
-::: {.column width="50%"}
-### Typical DE gene
-- log2FC = **0.8** (1.7x expression change)
-- padj = 0.01
-- *Modest but real biological signal*
-- Most DE genes look like this
-:::
-::: {.column width="50%"}
-### Extreme DE gene
-- log2FC = **8.0** (256x change!)
-- padj = 1e-50
-- *Suspiciously large — check for:*
-  - Low-count artefact
-  - Single outlier sample
-  - Batch effect
-:::
-::::
+- A **typical** differentially expressed gene has log₂FC ≈ 0.8
+  - That is a 1.7× expression difference — subtle but real
+  - Example: gene X has 1,000 counts in alive patients, 1,700 in dead
+- An **extreme** gene might show log₂FC = 8
+  - That is a 256× difference — almost certainly an artefact
+  - Likely caused by a single outlier sample or a low-count gene
+- The adjusted p-value (0.05 threshold) controls false discoveries
+  - At 0.05: expect ~80 false positives among 1,615 (5%)
+  - The volcano plot's y-axis shows how confident each call is
 
-. . .
-
-> Rule of thumb: log2FC > 4 in bulk RNA-seq warrants manual inspection.
-
-## Pathway Enrichment: What Pathways?
+## Pathway enrichment
 
 ```{r gsea}
 #| fig-height: 5
-val <- safe_read("vig_gsea_dotplot")
-if (inherits(val, c("gtable", "grob"))) {
-  p <- ggplot2::ggplot() + ggplot2::annotation_custom(val) +
-    ggplot2::theme_void() +
-    ggplot2::theme(plot.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA))
-  print(p)
-}
+show_grob(safe_read("vig_gsea_dotplot"))
 ```
 
-# Causal Thinking {.inverse}
+- <abbr title="Gene Set Enrichment Analysis: tests whether predefined gene sets are enriched at the top/bottom of a ranked gene list">GSEA</abbr> of 50 <abbr title="Molecular Signatures Database: curated gene set collections from the Broad Institute">MSigDB</abbr> Hallmark pathways
+- Enriched pathways indicate biological processes disrupted in patients who died
 
-## The Causal DAG
+## Causal assumptions (<abbr title="Directed Acyclic Graph: a diagram encoding causal assumptions between variables">DAG</abbr>)
 
 ```{r dag}
 #| fig-height: 5
-val <- safe_read("vig_causal_dag_plot")
-if (inherits(val, c("gtable", "grob"))) {
-  p <- ggplot2::ggplot() + ggplot2::annotation_custom(val) +
-    ggplot2::theme_void() +
-    ggplot2::theme(plot.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA))
-  print(p)
-}
+show_grob(safe_read("vig_causal_dag_plot"))
 ```
 
-**Key insight**: cytogenetic risk → survival is **not identifiable** due to unmeasured tumor biology.
+- Cytogenetic risk → survival is **not identifiable** (unmeasured tumour biology confounds it)
+- <abbr title="International Staging System">ISS</abbr> → survival IS identifiable if we adjust for age, cytogenetics, and expression
 
-## Adjustment Sets
+## Missingness predicts outcomes
 
-| Causal Question | Identifiable? | Adjust For |
-|-----------------|:------------:|------------|
-| Cytogenetic risk → OS | ❌ No | Latent confounders |
-| ISS stage → OS | ✅ Yes | {age, cytogenetics, expression} |
-| Gene expression → OS | ✅ Yes | {age, cytogenetics, ISS} |
-| Treatment → OS | ❌ No | Latent confounders |
+| Variable | What "missing" means | <abbr title="Hazard Ratio">HR</abbr> | p-value |
+|----------|---------------------|---:|--------:|
+| Cause of death | Patient is alive | ≈ 0 | 2 × 10⁻²⁶ |
 
-. . .
+- Patients without a recorded cause of death are alive — the missingness IS the outcome
+- This is <abbr title="Missing Not At Random: the probability of being missing depends on the unobserved value itself">MNAR</abbr> — the missing value is informative, not noise
+- Obvious in hindsight, but the statistical test confirms the mechanism
 
-> You cannot estimate the causal effect of cytogenetic risk on survival without measuring tumor biology directly.
+## Bayesian vs frequentist: same answer
 
-# Missingness as Signal {.inverse}
+| Covariate | Frequentist <abbr title="Hazard Ratio">HR</abbr> | Bayesian <abbr title="Hazard Ratio">HR</abbr> |
+|-----------|---:|---:|
+| Male sex | 1.47 [1.08, 1.99] | 1.46 [1.07, 2.00] |
 
-## Missing Data Tells a Story
+- Both frameworks agree on the effect of sex on survival
+- Bayesian model fitted with <abbr title="brms: Bayesian Regression Models using Stan">brms</abbr> (weakly informative priors)
+- The Bayesian approach adds posterior distributions and natural hierarchical structure
 
-```{r missingness}
-#| fig-height: 4.5
-val <- safe_read("vig_missingness_heatmap")
-if (inherits(val, c("gtable", "grob"))) {
-  p <- ggplot2::ggplot() + ggplot2::annotation_custom(val) +
-    ggplot2::theme_void() +
-    ggplot2::theme(plot.background = ggplot2::element_rect(fill = "#1a1a2e", color = NA))
-  print(p)
-}
-```
+## Summary
 
-## The cause_of_death Finding
-
-| Variable | HR | p-value | Interpretation |
-|----------|---:|---------|---------------|
-| cause_of_death | ≈0 | 2e-26 | Missing → **alive** |
-
-. . .
-
-**This is obvious in hindsight**: patients without a cause of death are alive. But the statistical test confirms it — this is **MNAR** (missing not at random). The missingness IS the signal.
-
-. . .
-
-> Typical: missingness is noise. Extreme: missingness IS the variable.
-
-# Bayesian vs Frequentist {.inverse}
-
-## Same Data, Two Frameworks
-
-| Covariate | Frequentist HR | Bayesian HR |
-|-----------|---------------:|------------:|
-| **Male** | 1.466 [1.08, 1.99] | 1.458 [1.07, 2.00] |
-| Age (scaled) | NA | 1.010 [0.14, 7.71] |
-
-. . .
-
-**They agree.** The Bayesian model adds:
-
-- Posterior distributions (not just point estimates)
-- Credible intervals (direct probability, not repeated sampling)
-- Natural hierarchical structure (ISS random intercepts)
-
-# Quality & Reproducibility {.inverse}
-
-## Every Output is a Target
-
-```{mermaid}
-%%| fig-width: 10
-flowchart LR
-    SRC[R/viz/*.R<br/>source code] --> CODE[code_vig_*<br/>deparse body]
-    SRC --> VIG[vig_*<br/>plot/table]
-    CODE --> |"&lt;details&gt;"| HTML[Vignette HTML]
-    VIG --> |"&lt;img&gt;"| HTML
-    VIG --> RDS[RDS file<br/>for CI]
-    RDS --> CI[pkgdown build<br/>Ubuntu]
-    CI --> WEB[Live site]
-    style SRC fill:#2ecc71,color:white
-    style WEB fill:#9b59b6,color:white
-```
-
-## Validation Pipeline
-
-| Check | Count | Status |
-|-------|------:|--------|
-| Pipeline targets | 250 | ✅ 0 errored |
-| Unit tests | 892 | ✅ 0 failed |
-| R CMD check | — | ✅ 0/0/0 |
-| Chunk-target mapping | 165 chunks | ✅ 0 violations |
-| Nix path check | 156 RDS | ✅ 0 violations |
-| CI deploys | last 5 | ✅ all green |
-
-# What's Missing {.inverse}
-
-## 15 NULL Targets
-
-| Missing Data | Source | Targets Affected |
-|-------------|--------|:----------------:|
-| FISH markers (all NA) | MMRF Gateway | 9 |
-| PFS endpoints | MMRF Gateway | 7 |
-| Treatment response | MMRF Gateway | 2 |
-| Biomarker columns | GDC (in molecular_tests) | 1 |
-
-. . .
-
-**All require MMRF Researcher Gateway access** — registration submitted, pending approval.
-
-## The Architecture Handles It
-
-```{r null-example}
-#| results: asis
-cat('<div style="padding:1em;border-left:4px solid #f39c12;background:#2d2d2d;color:#ccc;border-radius:4px;font-size:0.9em;">')
-cat('<strong>Data not available:</strong> Target <code>vig_km_risk</code> returned NULL.')
-cat(' See <a href="https://johngavin.github.io/coMMpass-analysis/articles/data-sources.html">Data Sources</a>.')
-cat('</div>')
-```
-
-. . .
-
-Targets return `NULL` → vignettes show informative callout → no broken plots.
-
-# Summary {.inverse}
-
-## Key Numbers
-
-| Metric | Value |
-|--------|-------|
-| Patients | 994 (of 1,143 in study) |
-| Targets | 250 (0 errored) |
-| Tests | 892 (0 failed) |
-| Vignettes | 14 articles |
-| DE genes | 1,615 (padj<0.05) |
-| Cox C-index | 0.687 |
+| What we measured | Result |
+|------------------|--------|
+| Patients analysed | 994 (of 1,143 enrolled) |
+| <abbr title="Differential Expression">DE</abbr> genes | 1,615 (adjusted p < 0.05) |
+| <abbr title="International Staging System">ISS</abbr> III hazard ratio | 4.9× vs <abbr title="International Staging System">ISS</abbr> I |
+| <abbr title="Cox Proportional Hazards model">Cox</abbr> C-index | 0.687 |
+| Pipeline targets | 250 (0 errored) |
 | Build time | ~7 minutes |
-| RDS files | 156 (3.4 MB) |
 
-## Links
-
-| | |
-|---|---|
-| **Website** | [johngavin.github.io/coMMpass-analysis](https://johngavin.github.io/coMMpass-analysis/) |
-| **GitHub** | [github.com/JohnGavin/coMMpass-analysis](https://github.com/JohnGavin/coMMpass-analysis) |
-| **GDC Portal** | [portal.gdc.cancer.gov/projects/MMRF-COMMPASS](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS) |
-| **CoMMpass Study** | [NCT01454297](https://clinicaltrials.gov/study/NCT01454297) |
-| **Cachix** | [johngavin.cachix.org](https://johngavin.cachix.org) |
-
-## References
-
-- Keats JJ et al. *Blood* 2013 — CoMMpass interim analysis
-- Hussain Z et al. *npj Digital Medicine* 2024 — SCOPE clinical normalisation
-- Textor J et al. *IJE* 2016 — dagitty causal DAGs
-- Hernán MA, Robins JM. *Causal Inference: What If* 2020
+- **Website**: [johngavin.github.io/coMMpass-analysis](https://johngavin.github.io/coMMpass-analysis/)
+- **Code**: [github.com/JohnGavin/coMMpass-analysis](https://github.com/JohnGavin/coMMpass-analysis)
+- **Data**: [GDC portal](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS) (open access)
+- **Study**: [NCT01454297](https://clinicaltrials.gov/study/NCT01454297)
