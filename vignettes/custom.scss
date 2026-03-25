@@ -1,0 +1,65 @@
+/*-- scss:defaults --*/
+$body-bg: #1a1a2e;
+$body-color: #e0e0e0;
+$link-color: #58a6ff;
+$code-color: #e6db74;
+$code-block-bg: #0d1117;
+
+/*-- scss:rules --*/
+
+/* Section divider slides */
+.inverse {
+  background-color: #0f0f23 !important;
+  color: white !important;
+}
+.inverse h1, .inverse h2 {
+  color: #f39c12 !important;
+}
+
+/* Tables */
+.reveal table {
+  background: #252540;
+  color: #e0e0e0;
+  border-collapse: collapse;
+  font-size: 0.75em;
+}
+.reveal table th {
+  background: #1a1a2e;
+  color: #f39c12;
+  border-bottom: 2px solid #444;
+  padding: 0.5em;
+}
+.reveal table td {
+  border-bottom: 1px solid #333;
+  padding: 0.4em 0.5em;
+}
+
+/* Code blocks */
+.reveal pre {
+  background: #0d1117;
+  border-radius: 6px;
+  padding: 0.8em;
+}
+.reveal code {
+  color: #e6db74;
+}
+
+/* Mermaid diagrams */
+.mermaid {
+  background: transparent !important;
+}
+
+/* Blockquotes */
+.reveal blockquote {
+  background: #252540;
+  border-left: 4px solid #f39c12;
+  padding: 0.5em 1em;
+  color: #d0d0d0;
+  font-style: normal;
+}
+
+/* Callouts */
+.reveal .callout {
+  background: #252540;
+  border-color: #444;
+}
