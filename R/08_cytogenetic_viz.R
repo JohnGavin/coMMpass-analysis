@@ -138,7 +138,7 @@ plot_cytogenetic_oncoprint <- function(cyto_data,
       x = paste0("Patients (n = ", nrow(mat), ")"),
       y = NULL
     ) +
-    ggplot2::theme_minimal(base_size = 12) +
+    theme_commpass_dark() +
     ggplot2::theme(
       axis.text.x = ggplot2::element_blank(),
       axis.ticks.x = ggplot2::element_blank(),
@@ -325,7 +325,7 @@ plot_cooccurrence_heatmap <- function(cooccurrence,
       name = expression(-log[10](padj) %*% sign)
     ) +
     ggplot2::labs(title = title, x = NULL, y = NULL) +
-    ggplot2::theme_minimal(base_size = 12) +
+    theme_commpass_dark() +
     ggplot2::theme(
       axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
       panel.grid = ggplot2::element_blank()
@@ -552,6 +552,6 @@ plot_expression_by_subtype <- function(expr_matrix,
       x = "Marker Status",
       y = paste0(gene, " expression (VST)")
     ) +
-    ggplot2::theme_minimal(base_size = 12) +
+    theme_commpass_dark() +
     ggplot2::theme(legend.position = "none")
 }

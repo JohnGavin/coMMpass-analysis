@@ -54,7 +54,7 @@ plan_missingness <- list(
             "Source: GDC clinical data."
           )
         ) +
-        ggplot2::theme_minimal(base_size = 9) +
+        theme_commpass_dark() +
         ggplot2::theme(
           axis.text.y = ggplot2::element_text(size = 7),
           strip.text = ggplot2::element_text(face = "bold"),

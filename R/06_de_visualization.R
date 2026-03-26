@@ -224,7 +224,7 @@ plot_volcano <- function(
       x = expression(log[2]~"fold change"),
       y = expression(-log[10]~"adjusted p-value")
     ) +
-    ggplot2::theme_minimal(base_size = 12)
+    theme_commpass_dark()
 
   # Add gene labels if ggrepel available
   if (length(label_genes) > 0 &&
@@ -317,7 +317,7 @@ plot_ma <- function(
       x = if (expr_col == "baseMean") expression(log[10]~"mean expression") else "Mean expression",
       y = expression(log[2]~"fold change")
     ) +
-    ggplot2::theme_minimal(base_size = 12)
+    theme_commpass_dark()
 
   p
 }
@@ -370,7 +370,7 @@ plot_pca <- function(
       x = xlab,
       y = ylab
     ) +
-    ggplot2::theme_minimal(base_size = 12)
+    theme_commpass_dark()
 
   p
 }
@@ -465,7 +465,7 @@ plot_heatmap_de <- function(
       x = "Sample",
       y = "Gene"
     ) +
-    ggplot2::theme_minimal(base_size = 10) +
+    theme_commpass_dark() +
     ggplot2::theme(
       axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, size = 7),
       axis.text.y = ggplot2::element_text(size = 6)

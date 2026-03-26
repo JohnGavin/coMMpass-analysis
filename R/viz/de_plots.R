@@ -36,7 +36,7 @@ make_de_method_barplot <- function(de_method_summary) {
         "See method table for exact counts and annotated DE table for top genes."
       )
     ) +
-    ggplot2::theme_minimal(base_size = 12) +
+    theme_commpass_dark() +
     ggplot2::theme(plot.caption = ggplot2::element_text(
       size = 7, hjust = 0, lineheight = 1.2
     ))

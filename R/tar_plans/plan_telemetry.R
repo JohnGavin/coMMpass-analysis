@@ -267,7 +267,7 @@ plan_telemetry <- list(
             "changelog for individual commit details."
           )
         ) +
-        ggplot2::theme_minimal(base_size = 10) +
+        theme_commpass_dark() +
         ggplot2::theme(
           axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, size = 7),
           plot.caption = ggplot2::element_text(
@@ -642,7 +642,7 @@ plan_telemetry <- list(
             "Source: _targets/meta/meta."
           )
         ) +
-        ggplot2::theme_minimal(base_size = 10) +
+        theme_commpass_dark() +
         ggplot2::theme(
           axis.text.y = ggplot2::element_text(size = 7),
           strip.text = ggplot2::element_text(size = 9, face = "bold"),

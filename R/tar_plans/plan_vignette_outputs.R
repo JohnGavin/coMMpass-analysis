@@ -156,7 +156,7 @@ plan_vignette_outputs <- list(
             y = "Number of Genes",
             fill = NULL
           ) +
-          ggplot2::theme_minimal()
+          theme_commpass_dark()
       } else {
         plot_df <- data.frame(mean_expr = mean_expr)
         p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = mean_expr)) +
@@ -172,7 +172,7 @@ plan_vignette_outputs <- list(
             x = "Mean log10(counts + 1)",
             y = "Number of Genes"
           ) +
-          ggplot2::theme_minimal()
+          theme_commpass_dark()
       }
       # Remove large objects from aes() quosure environment before serializing
       rm(se, counts, log_counts, mean_expr, gene_meta)
@@ -834,7 +834,7 @@ plan_vignette_outputs <- list(
             "See data-dictionary biospecimen columns for field definitions."
           )
         ) +
-        ggplot2::theme_minimal() +
+        theme_commpass_dark() +
         ggplot2::theme(plot.caption = ggplot2::element_text(
           size = 7, hjust = 0, lineheight = 1.2
         ))
@@ -875,7 +875,7 @@ plan_vignette_outputs <- list(
             "See paired DE analysis for baseline vs relapse comparisons."
           )
         ) +
-        ggplot2::theme_minimal() +
+        theme_commpass_dark() +
         ggplot2::theme(plot.caption = ggplot2::element_text(
           size = 7, hjust = 0, lineheight = 1.2
         ))
@@ -931,7 +931,7 @@ plan_vignette_outputs <- list(
             "See QC metrics table for outlier flags and genes-detected histogram."
           )
         ) +
-        ggplot2::theme_minimal() +
+        theme_commpass_dark() +
         ggplot2::theme(
           axis.text.x = ggplot2::element_blank(),
           axis.ticks.x = ggplot2::element_blank(),
@@ -975,7 +975,7 @@ plan_vignette_outputs <- list(
             "See QC metrics table for outlier flags based on this metric."
           )
         ) +
-        ggplot2::theme_minimal() +
+        theme_commpass_dark() +
         ggplot2::theme(plot.caption = ggplot2::element_text(
           size = 7, hjust = 0, lineheight = 1.2
         ))
@@ -2155,7 +2155,7 @@ plan_vignette_outputs <- list(
             "See DE volcano plot for differential expression of this gene."
           )
         ) +
-        ggplot2::theme_minimal(base_size = 12) +
+        theme_commpass_dark() +
         ggplot2::theme(plot.caption = ggplot2::element_text(
           size = 7, hjust = 0, lineheight = 1.2
         ))

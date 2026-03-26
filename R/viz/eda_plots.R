@@ -33,7 +33,7 @@ make_age_histogram <- function(eda_clinical_summary) {
         "survival-analysis Cox models include age as a covariate."
       )
     ) +
-    ggplot2::theme_minimal() +
+    theme_commpass_dark() +
     ggplot2::theme(plot.caption = ggplot2::element_text(
       size = 7, hjust = 0, lineheight = 1.2
     ))
@@ -89,7 +89,7 @@ make_count_distribution_plot <- function(raw_rnaseq) {
         y = "Number of Genes",
         fill = NULL
       ) +
-      ggplot2::theme_minimal()
+      theme_commpass_dark()
   } else {
     plot_df <- data.frame(mean_expr = mean_expr)
     p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = mean_expr)) +
@@ -105,7 +105,7 @@ make_count_distribution_plot <- function(raw_rnaseq) {
         x = "Mean log10(counts + 1)",
         y = "Number of Genes"
       ) +
-      ggplot2::theme_minimal()
+      theme_commpass_dark()
   }
   p
 }
@@ -245,7 +245,7 @@ make_iss_barplot <- function(eda_iss_summary) {
         "See survival-analysis KM curves by ISS for prognostic impact."
       )
     ) +
-    ggplot2::theme_minimal() +
+    theme_commpass_dark() +
     ggplot2::theme(plot.caption = ggplot2::element_text(
       size = 7, hjust = 0, lineheight = 1.2
     ))

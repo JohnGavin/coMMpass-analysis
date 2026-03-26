@@ -254,7 +254,7 @@ plot_enrichment_dotplot <- function(
       y = NULL,
       size = "Gene set size"
     ) +
-    ggplot2::theme_minimal(base_size = 11) +
+    theme_commpass_dark() +
     ggplot2::theme(
       axis.text.y = ggplot2::element_text(size = 9)
     )
@@ -330,7 +330,7 @@ plot_enrichment_barplot <- function(
       x = xlab,
       y = NULL
     ) +
-    ggplot2::theme_minimal(base_size = 11) +
+    theme_commpass_dark() +
     ggplot2::theme(
       axis.text.y = ggplot2::element_text(size = 9)
     )
@@ -444,7 +444,7 @@ plot_gsea_running_score <- function(
       x = "Gene rank",
       y = "Enrichment score"
     ) +
-    ggplot2::theme_minimal(base_size = 12)
+    theme_commpass_dark()
 
   p
 }

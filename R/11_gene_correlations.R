@@ -180,5 +180,5 @@ plot_gene_correlation <- function(cor_result, title = NULL) {
       x = paste0(cor_result$gene_x, " expression"),
       y = paste0(cor_result$gene_y, " expression")
     ) +
-    ggplot2::theme_minimal(base_size = 12)
+    theme_commpass_dark()
 }

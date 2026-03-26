@@ -114,7 +114,7 @@ plot_km <- function(km_result,
       color = if (!is.null(km_result$strata)) km_result$strata else NULL,
       fill = if (!is.null(km_result$strata)) km_result$strata else NULL
     ) +
-    ggplot2::theme_minimal(base_size = 12) +
+    theme_commpass_dark() +
     ggplot2::theme(legend.position = "bottom")
 
   if (!is.null(time_breaks)) {
@@ -192,7 +192,7 @@ plot_forest <- function(cox_result, title = "Cox Regression Forest Plot") {
       x = "Hazard Ratio (95% CI, log scale)",
       y = NULL
     ) +
-    ggplot2::theme_minimal(base_size = 12) +
+    theme_commpass_dark() +
     ggplot2::coord_cartesian(clip = "off") +
     ggplot2::theme(plot.margin = ggplot2::margin(5.5, 80, 5.5, 5.5))
 }
