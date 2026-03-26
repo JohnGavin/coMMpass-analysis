@@ -1,23 +1,27 @@
 /*-- scss:defaults --*/
-$body-bg: #1a1a2e;
+$body-bg: black;
 $body-color: #e0e0e0;
 $link-color: #58a6ff;
 $code-color: #e6db74;
-$code-block-bg: #0d1117;
+$code-block-bg: #111;
 $presentation-font-size-root: 36px;
 $presentation-h1-font-size: 1.5em;
 $presentation-h2-font-size: 1.3em;
 
 /*-- scss:rules --*/
 
-/* Center slides at 80% width with text wrapping */
-.reveal .slides {
-  width: 80% !important;
-  margin: 0 auto;
+/* Title slide — larger text */
+.reveal .slides section.quarto-title-block h1.title {
+  font-size: 2.5em !important;
 }
-.reveal .slides section {
-  text-align: left;
-  width: 100%;
+.reveal .slides section.quarto-title-block .subtitle {
+  font-size: 1.2em !important;
+}
+
+/* Slides at 90% width */
+.reveal .slides {
+  width: 90% !important;
+  margin: 0 auto;
 }
 
 /* Footer */
@@ -27,82 +31,59 @@ $presentation-h2-font-size: 1.3em;
   text-align: center;
 }
 
-/* Headings */
-.reveal h1, .reveal h2 {
-  color: #f0f0f0;
-  font-weight: 600;
-}
-
-/* Body text and bullets */
-.reveal p, .reveal li {
-  font-size: 0.8em;
-  line-height: 1.6;
-}
+/* Sub-bullets same white as parent (not grey) */
 .reveal ul ul li {
-  font-size: 0.9em;
-  color: #b0b0b0;
+  color: white !important;
 }
 
 /* Tables */
 .reveal table {
-  background: #252540;
+  background: #111;
   color: #e0e0e0;
   border-collapse: collapse;
   font-size: 0.65em;
   width: 100%;
 }
 .reveal table th {
-  background: #1a1a2e;
+  background: #1a1a1a;
   color: #f39c12;
   border-bottom: 2px solid #444;
   padding: 0.4em 0.6em;
-  text-align: left;
 }
 .reveal table td {
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #222;
   padding: 0.3em 0.6em;
 }
 
-/* Blockquotes */
-.reveal blockquote {
-  background: #252540;
-  border-left: 4px solid #f39c12;
-  padding: 0.4em 0.8em;
-  color: #d0d0d0;
-  font-style: normal;
-  font-size: 0.75em;
-}
-
-/* Acronym tooltips — instant, large, wrapping */
+/* Acronym tooltips — instant, large, centered, no duplicate */
 abbr[title] {
   text-decoration: underline dotted #58a6ff;
   cursor: help;
   position: relative;
+  /* Suppress native browser tooltip */
+  pointer-events: auto;
+}
+/* Hide native tooltip by converting title to data attr via JS */
+abbr[title]::after {
+  content: attr(data-tip);
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #111;
+  color: #f0f0f0;
+  padding: 16px 24px;
+  border-radius: 8px;
+  border: 1px solid #555;
+  font-size: 0.8em;
+  line-height: 1.6;
+  width: 50vw;
+  max-width: 600px;
+  white-space: pre-line;
+  z-index: 10000;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.8);
 }
 abbr[title]:hover::after {
-  content: attr(title);
-  position: absolute;
-  bottom: 110%;
-  left: 0;
-  background: #222;
-  color: #f0f0f0;
-  padding: 12px 16px;
-  border-radius: 6px;
-  border: 1px solid #555;
-  font-size: 0.85em;
-  line-height: 1.5;
-  width: 40vw;
-  max-width: 500px;
-  white-space: normal;
-  word-wrap: break-word;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-  /* instant popup */
-  transition: none;
-  animation: none;
-}
-
-/* Mermaid — larger text */
-.mermaid {
-  font-size: 18px !important;
+  display: block;
 }
