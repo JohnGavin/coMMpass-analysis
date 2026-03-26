@@ -4,43 +4,51 @@ $body-color: #e0e0e0;
 $link-color: #58a6ff;
 $code-color: #e6db74;
 $code-block-bg: #0d1117;
-$presentation-font-size-root: 28px;
-$presentation-h1-font-size: 1.6em;
+$presentation-font-size-root: 36px;
+$presentation-h1-font-size: 1.5em;
 $presentation-h2-font-size: 1.3em;
 
 /*-- scss:rules --*/
 
-/* Center slides at 80% width */
+/* Center slides at 80% width with text wrapping */
 .reveal .slides {
   width: 80% !important;
   margin: 0 auto;
 }
+.reveal .slides section {
+  text-align: left;
+  width: 100%;
+}
 
-/* Footer with URL */
+/* Footer */
 .reveal .slide-footer {
-  font-size: 0.5em;
+  font-size: 0.45em;
   color: #666;
   text-align: center;
 }
 
-/* Consistent font sizing */
+/* Headings */
 .reveal h1, .reveal h2 {
   color: #f0f0f0;
   font-weight: 600;
 }
-.reveal h1 { font-size: 1.6em; }
-.reveal h2 { font-size: 1.3em; }
+
+/* Body text and bullets */
 .reveal p, .reveal li {
-  font-size: 0.85em;
-  line-height: 1.5;
+  font-size: 0.8em;
+  line-height: 1.6;
+}
+.reveal ul ul li {
+  font-size: 0.9em;
+  color: #b0b0b0;
 }
 
-/* Tables — dark, compact */
+/* Tables */
 .reveal table {
   background: #252540;
   color: #e0e0e0;
   border-collapse: collapse;
-  font-size: 0.7em;
+  font-size: 0.65em;
   width: 100%;
 }
 .reveal table th {
@@ -55,14 +63,6 @@ $presentation-h2-font-size: 1.3em;
   padding: 0.3em 0.6em;
 }
 
-/* Code blocks */
-.reveal pre {
-  background: #0d1117;
-  border-radius: 6px;
-  padding: 0.6em;
-  font-size: 0.65em;
-}
-
 /* Blockquotes */
 .reveal blockquote {
   background: #252540;
@@ -70,10 +70,10 @@ $presentation-h2-font-size: 1.3em;
   padding: 0.4em 0.8em;
   color: #d0d0d0;
   font-style: normal;
-  font-size: 0.8em;
+  font-size: 0.75em;
 }
 
-/* Acronym tooltips */
+/* Acronym tooltips — instant, large, wrapping */
 abbr[title] {
   text-decoration: underline dotted #58a6ff;
   cursor: help;
@@ -82,18 +82,27 @@ abbr[title] {
 abbr[title]:hover::after {
   content: attr(title);
   position: absolute;
-  bottom: 100%;
+  bottom: 110%;
   left: 0;
-  background: #333;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.75em;
-  white-space: nowrap;
-  z-index: 100;
+  background: #222;
+  color: #f0f0f0;
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  font-size: 0.85em;
+  line-height: 1.5;
+  width: 40vw;
+  max-width: 500px;
+  white-space: normal;
+  word-wrap: break-word;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  /* instant popup */
+  transition: none;
+  animation: none;
 }
 
-/* Mermaid — larger text, fewer colours */
+/* Mermaid — larger text */
 .mermaid {
-  font-size: 16px !important;
+  font-size: 18px !important;
 }

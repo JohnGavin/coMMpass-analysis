@@ -9,7 +9,6 @@ format:
     width: 1280
     height: 720
     embed-resources: true
-    code-overflow: wrap
     fig-align: center
     transition: fade
     footer: "[johngavin.github.io/coMMpass-analysis](https://johngavin.github.io/coMMpass-analysis/)"
@@ -20,8 +19,8 @@ execute:
 ---
 
 ```{r setup}
-library(targets)
 library(ggplot2)
+library(targets)
 tar_store <- if (dir.exists("../_targets")) "../_targets" else if (dir.exists("_targets")) "_targets" else NULL
 safe_read <- function(name) {
   if (!is.null(tar_store)) {
@@ -34,184 +33,171 @@ safe_read <- function(name) {
   }
   NULL
 }
-# Shared dark theme for all plots
-theme_preso <- function(base_size = 18) {
-  theme_minimal(base_size = base_size) +
+theme_preso <- function(base_size = 22) {
+  theme_minimal(base_size = base_size) %+replace%
     theme(
-      plot.background = element_rect(fill = "#1a1a2e", color = NA),
-      panel.background = element_rect(fill = "#1a1a2e", color = NA),
-      panel.grid = element_line(color = "#2d2d44"),
+      plot.background = element_rect(fill = "black", color = NA),
+      panel.background = element_rect(fill = "black", color = NA),
+      panel.grid.major = element_line(color = "#333333"),
+      panel.grid.minor = element_blank(),
       text = element_text(color = "white"),
-      axis.text = element_text(color = "#b0b0b0", size = rel(0.9)),
-      axis.title = element_text(color = "#d0d0d0"),
-      plot.title = element_text(size = rel(1.1), face = "bold"),
-      legend.background = element_rect(fill = "#1a1a2e", color = NA),
-      legend.text = element_text(color = "white", size = rel(0.85)),
-      legend.position = "bottom"
+      axis.text = element_text(color = "#cccccc", size = rel(1)),
+      axis.title = element_text(color = "white", size = rel(1.1)),
+      axis.line = element_line(color = "white"),
+      plot.title = element_blank(),
+      plot.caption = element_blank(),
+      legend.background = element_rect(fill = "black", color = NA),
+      legend.text = element_text(color = "white", size = rel(0.9)),
+      legend.title = element_text(color = "white"),
+      legend.position = "bottom",
+      strip.text = element_text(color = "white", size = rel(1), face = "bold"),
+      strip.background = element_rect(fill = "#222222", color = NA)
     )
 }
-# Render grob as ggplot
 show_grob <- function(val) {
   if (is.null(val) || !inherits(val, c("gtable", "grob", "gTree"))) return(invisible(NULL))
   p <- ggplot() + annotation_custom(val) + theme_void() +
-    theme(plot.background = element_rect(fill = "#1a1a2e", color = NA))
+    theme(plot.background = element_rect(fill = "black", color = NA))
   print(p)
 }
 ```
 
-## The <abbr title="Clinical Outcomes in Multiple Myeloma to Personal Assessment of Genetic Profile">CoMMpass</abbr> study
+## The patients
 
-- Cancer of plasma cells in bone marrow
-- ~35,000 new <abbr title="United States">US</abbr> cases per year; median age 69
-- <abbr title="CoMMpass: Clinical Outcomes in Multiple Myeloma to Personal Assessment of Genetic Profile">CoMMpass</abbr> enrolled **1,143 patients** (2011–2019) with 8-year follow-up
-- Largest longitudinal genomics study of multiple myeloma
+- <abbr title="CoMMpass: Clinical Outcomes in Multiple Myeloma to Personal Assessment of Genetic Profile. A longitudinal study tracking 1,143 myeloma patients over 8 years. Example: patient MMRF_1618 enrolled in 2012, followed until 2019.">CoMMpass</abbr> enrolled **1,143 newly diagnosed <abbr title="Multiple myeloma: a cancer of plasma cells in the bone marrow. Plasma cells normally make antibodies. In myeloma, they grow uncontrollably. Example: a patient's bone marrow biopsy shows 60% plasma cells instead of the normal 2-3%.">multiple myeloma</abbr> patients** (2011–2019)
+- Median age at diagnosis: **69 years** (range: 27–93)
+- 8-year follow-up with <abbr title="RNA sequencing: measures which genes are active and how active they are, by counting RNA molecules. Example: gene TP53 has 500 RNA copies in sample A but only 50 in sample B — it is 10× more active in A.">RNA-seq</abbr>, clinical data, and treatment records
 
-| | |
-|---|---|
-| Patients | 1,143 newly diagnosed |
-| <abbr title="RNA sequencing">RNA-seq</abbr> samples | 859 (<abbr title="Spliced Transcripts Alignment to a Reference">STAR</abbr> counts) |
-| Clinical variables | 88 per patient |
-| Treatment records | 7,184 (from <abbr title="Genomic Data Commons">GDC</abbr> <abbr title="Application Programming Interface">API</abbr>) |
+| What was measured | Example from the data |
+|-------------------|----------------------|
+| Age at diagnosis | Patient MMRF_2240: 71 years |
+| <abbr title="International Staging System: classifies myeloma severity using two blood tests (albumin and beta-2 microglobulin). Stage I = low tumour burden, Stage III = high tumour burden. Example: albumin 3.0 g/dL + B2M 8.0 mg/L = Stage III.">ISS</abbr> stage | 348 patients Stage I, 353 Stage II, 266 Stage III |
+| Vital status | 803 alive, 191 dead at last follow-up |
+| Genes measured | 60,660 genes per patient |
+| Treatment drugs | Dexamethasone (1,760 records), Lenalidomide (1,393), Bortezomib (1,076) |
 
-## Data we downloaded
+## The data we have
 
-| Dataset | Records | Size | Source |
-|---------|--------:|-----:|--------|
-| <abbr title="RNA sequencing">RNA-seq</abbr> (<abbr title="Spliced Transcripts Alignment to a Reference">STAR</abbr> counts) | 100 samples | 60.5 <abbr title="Megabytes">MB</abbr> | <abbr title="Genomic Data Commons">GDC</abbr> open access |
-| Clinical metadata | 995 patients | 1.2 <abbr title="Megabytes">MB</abbr> | <abbr title="Genomic Data Commons">GDC</abbr> open access |
-| Treatment records | 7,184 lines | 34 <abbr title="Kilobytes">KB</abbr> | <abbr title="Genomic Data Commons">GDC</abbr> <abbr title="Application Programming Interface">API</abbr> |
-| <abbr title="Molecular Signatures Database">MSigDB</abbr> gene sets | 708 sets | 85 <abbr title="Kilobytes">KB</abbr> | Bundled in package |
+- **<abbr title="RNA sequencing counts: the number of RNA fragments detected for each gene in each sample. Higher count = gene is more active. Example: gene ACTB has 50,000 counts (very active housekeeping gene) while gene FOXP3 has 12 counts (rarely active).">RNA-seq</abbr>** — 100 patient samples, 60,660 genes each
+  - Each sample is a snapshot of which genes are turned on or off
+  - Size: 60.5 <abbr title="Megabytes: a unit of file size. 1 MB ≈ 500 pages of text. Example: the RNA-seq data is 60 MB, roughly equivalent to 30,000 pages.">MB</abbr> from <abbr title="Genomic Data Commons: the US National Cancer Institute's data portal for cancer genomics. Open access for most clinical and expression data. Example: visit portal.gdc.cancer.gov to browse 995 CoMMpass cases.">GDC</abbr> open access
+- **Clinical metadata** — 995 patients, 88 variables each
+  - Demographics (age, sex, race), disease staging (<abbr title="International Staging System: classifies myeloma severity. Stage I = low tumour burden, Stage III = high. Example: ISS III patients have 5× higher death rate than Stage I.">ISS</abbr>), outcomes (alive/dead)
+  - Size: 1.2 <abbr title="Megabytes">MB</abbr>
+- **Treatment records** — 7,184 drug administration records for 994 patients
+  - Which drugs, which line of therapy, timing
+  - Example: Patient MMRF_2240 received Dexamethasone + Cyclophosphamide as first-line, then switched to Dexamethasone alone as second-line
+- **<abbr title="Molecular Signatures Database: curated collections of known gene groups. Hallmark = 50 well-defined biological processes. Example: 'HALLMARK_APOPTOSIS' contains 161 genes involved in programmed cell death.">MSigDB</abbr> gene sets** — 708 predefined gene groups (bundled in package, not downloaded)
 
-- <abbr title="Fluorescence In Situ Hybridisation">FISH</abbr> markers, <abbr title="Progression-Free Survival">PFS</abbr> endpoints, and treatment response are **not available** from <abbr title="Genomic Data Commons">GDC</abbr>
-- These require <abbr title="Multiple Myeloma Research Foundation">MMRF</abbr> Researcher Gateway access (pending)
+## The data we don't have
 
-## Pipeline overview
+| Missing data | Why it matters | Why it's missing |
+|-------------|----------------|-----------------|
+| <abbr title="Fluorescence In Situ Hybridisation: a lab test that detects specific chromosome changes. Example: t(4;14) means chromosomes 4 and 14 swapped pieces — this happens in ~15% of myeloma patients and predicts worse outcomes.">FISH</abbr> markers | Classify patients into high-risk vs standard-risk | Not in <abbr title="Genomic Data Commons">GDC</abbr>; requires <abbr title="Multiple Myeloma Research Foundation: the organisation that runs the CoMMpass study and controls access to detailed clinical data.">MMRF</abbr> Gateway |
+| <abbr title="Progression-Free Survival: time from treatment start until the disease gets worse or the patient dies. Example: a PFS of 24 months means the treatment kept the cancer controlled for 2 years.">PFS</abbr> endpoints | Measure treatment effectiveness | Not in <abbr title="Genomic Data Commons">GDC</abbr>; requires <abbr title="Multiple Myeloma Research Foundation">MMRF</abbr> Gateway |
+| Treatment response | Did the drug work? (complete response, partial, etc.) | <abbr title="Genomic Data Commons">GDC</abbr> field is all empty |
+| Biomarker lab values | Blood test results (creatinine, LDH, etc.) | Stored in nested <abbr title="Genomic Data Commons">GDC</abbr> fields, not flat columns |
 
-| | |
-|---|---|
-| Total targets | 250 |
-| Build time | ~7 minutes |
-| Errored | 0 |
-| <abbr title="Target returned NULL due to missing data">NULL</abbr> (data gaps) | 15 |
-| <abbr title="Serialised R object files">RDS</abbr> exports | 156 files, 3.4 <abbr title="Megabytes">MB</abbr> |
-| Vignettes | 14 articles |
-| Unit tests | 892 (0 failed) |
+- 15 of 250 pipeline targets return empty because of these gaps
+- Registration submitted to <abbr title="Multiple Myeloma Research Foundation">MMRF</abbr> Researcher Gateway
 
-```{mermaid}
-%%| fig-width: 10
-flowchart LR
-    GDC["GDC API"] --> SE["RNA-seq<br>+ clinical"]
-    SE --> DE["1,615 DE genes"]
-    SE --> KM["Survival curves"]
-    SE --> DAG["Causal DAG"]
-    DE --> GSEA["Pathway<br>enrichment"]
-    KM --> COX["Cox model<br>C = 0.687"]
-    style GDC fill:#2ecc71,stroke:#2ecc71,color:white
-    style DE fill:#e74c3c,stroke:#e74c3c,color:white
-    style KM fill:#3498db,stroke:#3498db,color:white
-    style COX fill:#3498db,stroke:#3498db,color:white
-    style GSEA fill:#e74c3c,stroke:#e74c3c,color:white
-    style DAG fill:#9b59b6,stroke:#9b59b6,color:white
-    style SE fill:#2ecc71,stroke:#2ecc71,color:white
-```
-
-## Survival by <abbr title="International Staging System: I = low tumour burden, II = intermediate, III = high">ISS</abbr> stage
+## Who survives longer? Staging matters
 
 ```{r km-iss}
-#| fig-height: 5
+#| fig-height: 4.5
 show_grob(safe_read("vig_km_iss"))
 ```
 
-- <abbr title="International Staging System">ISS</abbr> III patients have ~5× the hazard of <abbr title="International Staging System">ISS</abbr> I (<abbr title="Hazard Ratio: risk of death relative to reference group">HR</abbr> = 4.9, p < 0.001)
-- 994 patients from <abbr title="Genomic Data Commons">GDC</abbr> clinical data; condition derived from vital status (alive vs dead)
+- <abbr title="International Staging System: Stage I (albumin ≥ 3.5, B2M < 3.5) = low tumour burden. Stage III (B2M ≥ 5.5) = high tumour burden. Example: Stage I patient typically survives 5+ years; Stage III median ~2-3 years.">ISS</abbr> Stage III patients die at **5× the rate** of Stage I
+- The three curves separate early and stay separated — staging predicts long-term outcome
+- 994 patients; alive vs dead comparison derived from vital status
 
-## <abbr title="Cox Proportional Hazards: a regression model for time-to-event data">Cox</abbr> regression: what predicts survival?
+## What predicts survival?
 
-| Covariate | <abbr title="Hazard Ratio: >1 means higher risk of death">HR</abbr> | 95% <abbr title="Confidence Interval">CI</abbr> | p-value |
-|-----------|---:|--------|------:|
-| <abbr title="International Staging System">ISS</abbr> stage II | 2.35 | [1.51, 3.67] | <0.001 |
-| <abbr title="International Staging System">ISS</abbr> stage III | 4.90 | [3.21, 7.48] | <0.001 |
-| Male sex | 1.45 | [1.07, 1.97] | 0.018 |
+- A <abbr title="Cox Proportional Hazards model: a statistical method that estimates how much each factor (age, sex, staging) increases or decreases the risk of death. Example: HR = 2.0 means twice the risk of death compared to the reference group.">Cox regression model</abbr> adjusting for age, sex, and <abbr title="International Staging System">ISS</abbr> stage:
 
-- <abbr title="Concordance index: 0.5 = coin flip, 1.0 = perfect discrimination">C-index</abbr> = 0.687 — moderate discrimination
-- Age not significant after adjusting for <abbr title="International Staging System">ISS</abbr>
-- Model uses clinical data only (no genomics)
+| Factor | <abbr title="Hazard Ratio: the relative risk of death. HR = 1 means no effect. HR = 2 means twice the risk. HR = 0.5 means half the risk. Example: HR = 4.9 for ISS III means these patients die at nearly 5× the rate of ISS I.">HR</abbr> | Meaning |
+|--------|---:|---------|
+| <abbr title="International Staging System">ISS</abbr> II vs I | 2.4 | 2.4× higher death rate |
+| <abbr title="International Staging System">ISS</abbr> III vs I | 4.9 | Nearly 5× higher death rate |
+| Male vs female | 1.5 | 50% higher death rate |
+| Age | Not significant | After adjusting for <abbr title="International Staging System">ISS</abbr>, age adds little |
 
-## Differential expression: alive vs dead
+- <abbr title="Concordance index: measures how well the model discriminates who dies first. C = 0.5 is random guessing. C = 1.0 is perfect. C = 0.687 means the model correctly ranks 69% of patient pairs. Example: given two patients, the model correctly predicts which dies first 69% of the time.">C-index</abbr> = 0.687 — the model correctly ranks patients 69% of the time
+
+## Which genes differ between alive and dead?
 
 ```{r volcano}
-#| fig-height: 5
+#| fig-height: 4.5
 show_grob(safe_read("vig_volcano_plot"))
 ```
 
-- **1,615 genes** significantly changed between alive and dead patients
-- Thresholds: |log₂ fold change| > 1 and adjusted p-value < 0.05
-- <abbr title="Differential Expression analysis using DESeq2, a Bioconductor package">DESeq2</abbr> with <abbr title="Variance Stabilising Transformation: normalises RNA-seq counts for visualisation">VST</abbr>-normalised counts
+- **1,615 genes** significantly differ between alive and dead patients
+- <abbr title="Volcano plot: each dot is one gene. X-axis = how much the gene changes (fold change). Y-axis = how confident we are (statistical significance). Genes in the top-left and top-right corners are the most interesting — big change AND high confidence. Example: a gene at x=2, y=10 has 4× expression change with very high confidence.">Volcano plot</abbr>: x-axis = expression change, y-axis = confidence
+- Thresholds: |<abbr title="log₂ Fold Change: the log-base-2 of the ratio of expression between groups. log₂FC = 1 means 2× change. log₂FC = 2 means 4× change. Why log₂? Because it makes increases and decreases symmetric: +1 = doubled, -1 = halved. Example: gene with 1000 counts in alive vs 2000 in dead has log₂FC = 1.">log₂FC</abbr>| > 1 (at least 2× change) and adjusted p-value < 0.05
 
-## What "1,615 genes" means in practice
+## What gene changes mean in practice
 
-- A **typical** differentially expressed gene has log₂FC ≈ 0.8
-  - That is a 1.7× expression difference — subtle but real
-  - Example: gene X has 1,000 counts in alive patients, 1,700 in dead
-- An **extreme** gene might show log₂FC = 8
-  - That is a 256× difference — almost certainly an artefact
-  - Likely caused by a single outlier sample or a low-count gene
-- The adjusted p-value (0.05 threshold) controls false discoveries
-  - At 0.05: expect ~80 false positives among 1,615 (5%)
-  - The volcano plot's y-axis shows how confident each call is
+- **Typical**: <abbr title="log₂ Fold Change">log₂FC</abbr> ≈ 0.8
+  - A 1.7× expression difference — subtle but real
+  - Example: gene X has 1,000 <abbr title="RNA sequencing">RNA</abbr> counts in alive patients, 1,700 in dead
+  - This is the kind of change that adds up across many genes
+- **Extreme**: <abbr title="log₂ Fold Change">log₂FC</abbr> = 8.0
+  - A 256× difference — almost certainly an artefact
+  - Usually caused by a gene with very low counts in one group
+  - Example: 1 count in alive, 256 in dead — statistically big but biologically noisy
+- **The 1,615 genes** at our thresholds:
+  - Expect ~80 false positives (5% of 1,615)
+  - The rest are real differences worth investigating
+  - Median <abbr title="log₂ Fold Change">log₂FC</abbr> among significant genes: ~1.2 (2.3× change)
 
-## Pathway enrichment
+## Which biological processes are disrupted?
+
+- <abbr title="Gene Set Enrichment Analysis: instead of looking at one gene at a time, GSEA asks 'are genes in this known group (e.g. cell death genes) collectively shifted?' Example: if 100 out of 161 apoptosis genes are slightly upregulated, GSEA detects this even though no single gene is dramatic.">GSEA</abbr> tests whether predefined gene groups are collectively shifted
+- We tested 50 <abbr title="Hallmark gene sets: a curated collection of 50 biological processes from MSigDB, each representing a specific, well-defined state or function. They are more specific than broad categories like 'cancer genes'. Example: HALLMARK_HYPOXIA (200 genes activated when oxygen is low) vs HALLMARK_APOPTOSIS (161 genes involved in cell death). Non-Hallmark sets include thousands of less-curated groups.">Hallmark</abbr> pathways from <abbr title="Molecular Signatures Database">MSigDB</abbr>
 
 ```{r gsea}
-#| fig-height: 5
+#| fig-height: 3.5
 show_grob(safe_read("vig_gsea_dotplot"))
 ```
 
-- <abbr title="Gene Set Enrichment Analysis: tests whether predefined gene sets are enriched at the top/bottom of a ranked gene list">GSEA</abbr> of 50 <abbr title="Molecular Signatures Database: curated gene set collections from the Broad Institute">MSigDB</abbr> Hallmark pathways
-- Enriched pathways indicate biological processes disrupted in patients who died
+- Each dot is one pathway; position shows enrichment strength
+- Enriched pathways = biological processes more active in dead patients
 
-## Causal assumptions (<abbr title="Directed Acyclic Graph: a diagram encoding causal assumptions between variables">DAG</abbr>)
+## Can we prove causation?
 
 ```{r dag}
-#| fig-height: 5
+#| fig-height: 4
 show_grob(safe_read("vig_causal_dag_plot"))
 ```
 
-- Cytogenetic risk → survival is **not identifiable** (unmeasured tumour biology confounds it)
-- <abbr title="International Staging System">ISS</abbr> → survival IS identifiable if we adjust for age, cytogenetics, and expression
+- A <abbr title="Directed Acyclic Graph: a diagram that maps assumed cause-and-effect relationships. Arrows show 'A causes B'. If there is a hidden common cause of both A and B, we cannot prove A causes B even if they are correlated. Example: ice cream sales and drowning deaths are correlated — but the common cause is hot weather, not ice cream.">DAG</abbr> maps our assumptions about what causes what
+- Chromosome changes (<abbr title="Cytogenetics: the study of chromosome structure. In myeloma, specific chromosome rearrangements (like swapping pieces between chromosomes 4 and 14) predict worse outcomes.">cytogenetics</abbr>) → survival: **cannot be proven** because unmeasured tumour biology confounds it
+- <abbr title="International Staging System">ISS</abbr> → survival: **can be estimated** if we adjust for age, chromosome changes, and <abbr title="Gene expression: how active each gene is, measured as RNA counts. Example: a gene with high expression (10,000 counts) is very active; one with low expression (10 counts) is nearly silent.">gene expression</abbr>
 
-## Missingness predicts outcomes
+## Missing data tells a story
 
 | Variable | What "missing" means | <abbr title="Hazard Ratio">HR</abbr> | p-value |
 |----------|---------------------|---:|--------:|
-| Cause of death | Patient is alive | ≈ 0 | 2 × 10⁻²⁶ |
+| Cause of death | Patient is **alive** | ≈ 0 | 2 × 10⁻²⁶ |
 
-- Patients without a recorded cause of death are alive — the missingness IS the outcome
-- This is <abbr title="Missing Not At Random: the probability of being missing depends on the unobserved value itself">MNAR</abbr> — the missing value is informative, not noise
-- Obvious in hindsight, but the statistical test confirms the mechanism
-
-## Bayesian vs frequentist: same answer
-
-| Covariate | Frequentist <abbr title="Hazard Ratio">HR</abbr> | Bayesian <abbr title="Hazard Ratio">HR</abbr> |
-|-----------|---:|---:|
-| Male sex | 1.47 [1.08, 1.99] | 1.46 [1.07, 2.00] |
-
-- Both frameworks agree on the effect of sex on survival
-- Bayesian model fitted with <abbr title="brms: Bayesian Regression Models using Stan">brms</abbr> (weakly informative priors)
-- The Bayesian approach adds posterior distributions and natural hierarchical structure
+- Patients without a recorded cause of death are alive — the gap in the data IS the answer
+- This is <abbr title="Missing Not At Random: the reason the data is missing is related to the missing value itself. Example: cause of death is missing BECAUSE the patient is alive. FISH test is missing BECAUSE the doctor decided the patient was low-risk and didn't order it. Contrast with MCAR (Missing Completely At Random) where missingness is unrelated to the value.">MNAR</abbr> — the missing value is informative, not noise
+- Obvious in hindsight, but the statistical test (p < 10⁻²⁶) confirms it
+- In myeloma, <abbr title="Fluorescence In Situ Hybridisation">FISH</abbr> testing is expensive — if missingness correlates with better survival, doctors may skip it for low-risk patients
 
 ## Summary
 
 | What we measured | Result |
 |------------------|--------|
-| Patients analysed | 994 (of 1,143 enrolled) |
-| <abbr title="Differential Expression">DE</abbr> genes | 1,615 (adjusted p < 0.05) |
-| <abbr title="International Staging System">ISS</abbr> III hazard ratio | 4.9× vs <abbr title="International Staging System">ISS</abbr> I |
-| <abbr title="Cox Proportional Hazards model">Cox</abbr> C-index | 0.687 |
-| Pipeline targets | 250 (0 errored) |
-| Build time | ~7 minutes |
+| Patients analysed | 994 of 1,143 enrolled |
+| Genes tested | 60,660 |
+| Significant genes (alive vs dead) | 1,615 |
+| <abbr title="International Staging System">ISS</abbr> III vs I hazard ratio | 4.9× |
+| Model discrimination (<abbr title="Concordance index">C-index</abbr>) | 0.687 |
+| Pipeline targets | 250 (0 errors) |
 
 - **Website**: [johngavin.github.io/coMMpass-analysis](https://johngavin.github.io/coMMpass-analysis/)
 - **Code**: [github.com/JohnGavin/coMMpass-analysis](https://github.com/JohnGavin/coMMpass-analysis)
 - **Data**: [GDC portal](https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS) (open access)
-- **Study**: [NCT01454297](https://clinicaltrials.gov/study/NCT01454297)
+- **Study registration**: [NCT01454297](https://clinicaltrials.gov/study/NCT01454297)
