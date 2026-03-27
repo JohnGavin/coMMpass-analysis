@@ -1,0 +1,18 @@
+agent = "claude-code"
+review_context_count = 3
+excluded_commit_patterns = ["[skip review]", "docs: rebuild pkgdown", "chore: gitignore"]
+review_reasoning = "standard"
+fix_reasoning = "standard"
+refine_reasoning = "standard"
+fix_min_severity = "medium"
+refine_min_severity = "medium"
+review_guidelines = """
+R package (coMMpass) — genomics/myeloma analysis. Review for:
+- PHI/patient identifiers in code or comments
+- suppressWarnings(as.*) anti-pattern
+- DBI::dbGetQuery (use duckplyr instead)
+- Bioconductor API correctness (SummarizedExperiment, DESeq2)
+- Hardcoded values in vignettes (must use tar_read)
+- Missing cli::cli_abort (use instead of stop())
+- Lab measurement units should be explicit
+"""
