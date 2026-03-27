@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>05. Survival Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="survival-analysis_files/libs/clipboard/clipboard.min.js"></script>
+<script src="survival-analysis_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="survival-analysis_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="survival-analysis_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="survival-analysis_files/libs/quarto-html/popper.min.js"></script>
+<script src="survival-analysis_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="survival-analysis_files/libs/quarto-html/anchor.min.js"></script>
+<link href="survival-analysis_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="survival-analysis_files/libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="survival-analysis_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="survival-analysis_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="survival-analysis_files/libs/bootstrap/bootstrap-d5fa03fb90ac27921a6d47853be462c0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="2">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#overall-survival" id="toc-overall-survival" class="nav-link" data-scroll-target="#overall-survival">Overall Survival</a></li>
+  <li><a href="#survival-by-iss-stage" id="toc-survival-by-iss-stage" class="nav-link" data-scroll-target="#survival-by-iss-stage">Survival by ISS Stage</a></li>
+  <li><a href="#survival-by-cytogenetic-risk-group" id="toc-survival-by-cytogenetic-risk-group" class="nav-link" data-scroll-target="#survival-by-cytogenetic-risk-group">Survival by Cytogenetic Risk Group</a></li>
+  <li><a href="#survival-by-individual-cytogenetic-markers" id="toc-survival-by-individual-cytogenetic-markers" class="nav-link" data-scroll-target="#survival-by-individual-cytogenetic-markers">Survival by Individual Cytogenetic Markers</a></li>
+  <li><a href="#cox-proportional-hazards" id="toc-cox-proportional-hazards" class="nav-link" data-scroll-target="#cox-proportional-hazards">Cox Proportional Hazards</a>
+  <ul class="collapse">
+  <li><a href="#basic-model-age-gender" id="toc-basic-model-age-gender" class="nav-link" data-scroll-target="#basic-model-age-gender">Basic Model: Age + Gender</a></li>
+  <li><a href="#full-model-age-gender-iss-cytogenetic-risk" id="toc-full-model-age-gender-iss-cytogenetic-risk" class="nav-link" data-scroll-target="#full-model-age-gender-iss-cytogenetic-risk">Full Model: Age + Gender + ISS + Cytogenetic Risk</a></li>
+  <li><a href="#forest-plot" id="toc-forest-plot" class="nav-link" data-scroll-target="#forest-plot">Forest Plot</a></li>
+  <li><a href="#proportional-hazards-assumption" id="toc-proportional-hazards-assumption" class="nav-link" data-scroll-target="#proportional-hazards-assumption">Proportional Hazards Assumption</a></li>
+  </ul></li>
+  <li><a href="#model-comparison" id="toc-model-comparison" class="nav-link" data-scroll-target="#model-comparison">Model Comparison</a></li>
+  <li><a href="#survival-by-gene-expression" id="toc-survival-by-gene-expression" class="nav-link" data-scroll-target="#survival-by-gene-expression">Survival by Gene Expression</a></li>
+  <li><a href="#expression-by-cytogenetic-subtype" id="toc-expression-by-cytogenetic-subtype" class="nav-link" data-scroll-target="#expression-by-cytogenetic-subtype">Expression by Cytogenetic Subtype</a></li>
+  <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">Next Steps</a></li>
+  <li><a href="#data-sources" id="toc-data-sources" class="nav-link" data-scroll-target="#data-sources">Data Sources</a></li>
+  <li><a href="#recent-changes" id="toc-recent-changes" class="nav-link" data-scroll-target="#recent-changes">Recent Changes</a></li>
+  <li><a href="#bayesian-survival-models" id="toc-bayesian-survival-models" class="nav-link" data-scroll-target="#bayesian-survival-models">Bayesian Survival Models</a>
+  <ul class="collapse">
+  <li><a href="#frequentist-vs-bayesian-comparison" id="toc-frequentist-vs-bayesian-comparison" class="nav-link" data-scroll-target="#frequentist-vs-bayesian-comparison">Frequentist vs Bayesian Comparison</a></li>
+  </ul></li>
+  <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">05. Survival Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<blockquote class="blockquote">
+<p>See the <a href="glossary.html">Glossary</a> for term definitions used throughout this project.</p>
+</blockquote>
+<ul>
+<li>Survival analysis of the CoMMpass cohort stratified by clinical and cytogenetic features</li>
+<li><strong>Kaplan-Meier curves</strong> with log-rank tests for group comparisons</li>
+<li><strong>Cox proportional hazards models</strong> for multivariate analysis</li>
+<li><strong>Forest plots</strong> of hazard ratios with 95% confidence intervals</li>
+</ul>
+<blockquote class="blockquote">
+<p><strong>Note:</strong> This vignette was built in CI with <code>sample_limit=20</code>. Local builds default to 200 samples. Numbers below reflect the CI subset.</p>
+</blockquote>
+</section>
+<section id="overall-survival" class="level2">
+<h2 class="anchored" data-anchor-id="overall-survival">Overall Survival</h2>
+<p>Kaplan-Meier estimate of the overall survival function for the full patient cohort.</p>
+<p><img src="survival-analysis_files/figure-html/km-overall-1.png" class="img-fluid" width="768"></p>
+<p><strong>Median overall survival</strong> has not been reached in this cohort (n = 994 patients). This indicates that more than 50% of patients remain alive at last follow-up, which is consistent with improving outcomes in multiple myeloma with modern therapies.</p>
+</section>
+<section id="survival-by-iss-stage" class="level2">
+<h2 class="anchored" data-anchor-id="survival-by-iss-stage">Survival by ISS Stage</h2>
+<ul>
+<li><a href="https://doi.org/10.1200/JCO.2005.04.242">ISS</a> stratifies by serum albumin and beta-2 microglobulin</li>
+<li>ISS III is expected to have worse survival than ISS I</li>
+<li>See the <a href="exploratory-analysis.html">EDA vignette</a> for ISS stage distributions</li>
+</ul>
+<p><img src="survival-analysis_files/figure-html/km-iss-1.png" class="img-fluid" width="768"></p>
+</section>
+<section id="survival-by-cytogenetic-risk-group" class="level2">
+<h2 class="anchored" data-anchor-id="survival-by-cytogenetic-risk-group">Survival by Cytogenetic Risk Group</h2>
+<p>Cytogenetic risk per <a href="https://doi.org/10.1200/JCO.2014.55.1519">IMWG 2014 criteria</a>: <strong>high-risk</strong> = t(4;14) OR t(14;16) OR del(17p); <strong>standard-risk</strong> = all others.</p>
+<div style="padding: 1em; margin: 1em 0; border-left: 4px solid #f39c12; background: #2d2d2d; color: #ccc; border-radius: 4px;">
+<strong>Data not available:</strong> Target <code>vig_km_risk</code> returned NULL. See <a href="data-sources.html">Data Sources</a>.
+</div>
+</section>
+<section id="survival-by-individual-cytogenetic-markers" class="level2">
+<h2 class="anchored" data-anchor-id="survival-by-individual-cytogenetic-markers">Survival by Individual Cytogenetic Markers</h2>
+<p>Each marker is analyzed separately: patients with vs without the alteration.</p>
+<div style="padding: 1em; margin: 1em 0; border-left: 4px solid #f39c12; background: #2d2d2d; color: #ccc; border-radius: 4px;">
+<strong>Data not available:</strong> Target <code>vig_km_markers</code> returned NULL. See <a href="data-sources.html">Data Sources</a>.
+</div>
+</section>
+<section id="cox-proportional-hazards" class="level2">
+<h2 class="anchored" data-anchor-id="cox-proportional-hazards">Cox Proportional Hazards</h2>
+<section id="basic-model-age-gender" class="level3">
+<h3 class="anchored" data-anchor-id="basic-model-age-gender">Basic Model: Age + Gender</h3>
+<p>Hazard ratios for age and gender from a minimal Cox PH model.</p>
+{ if (is.null(cox_basic) || is.null(cox_basic<span class="math inline">\(hazard_ratios))
+        return(NULL)
+    hr &lt;- cox_basic\)</span>hazard_ratios for (col in names(hr)) { if (is.numeric(hr[[col]])) { hr[[col]] &lt;- if (col == “p.value”) signif(hr[[col]], 4) else round(hr[[col]], 3) } } caption &lt;- paste0(“Cox PH model: age + gender.”, “term = covariate name.”, “HR (hazard ratio) &gt; 1 = increased hazard (worse survival).”, “CI = 95% confidence interval for HR.”, “p.value = Wald test significance.”, “n =”, cox_basic<span class="math inline">\(n, " patients, ", cox_basic\)</span>n_events, ” events. C-index = “, round(cox_basic<span class="math inline">\(concordance, 3),
+        ". ", "* p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001.")
+    DT::datatable(hr, rownames = FALSE, filter = "top", options = list(pageLength = 15,
+        scrollX = TRUE), caption = htmltools::tags\)</span>caption(style =”caption-side: top; text-align: left;“, caption)) }
+<details>
+<summary>
+Generating code
+</summary>
+<pre><code class="language-r">{
+    if (is.null(cox_basic) || is.null(cox_basic$hazard_ratios)) 
+        return(NULL)
+    hr &lt;- cox_basic$hazard_ratios
+    for (col in names(hr)) {
+        if (is.numeric(hr[[col]])) {
+            hr[[col]] &lt;- if (col == "p.value") 
+                signif(hr[[col]], 4)
+            else round(hr[[col]], 3)
+        }
+    }
+    caption &lt;- paste0("Cox PH model: age + gender. ", "term = covariate name. ", 
+        "HR (hazard ratio) &gt; 1 = increased hazard (worse survival). ", 
+        "CI = 95% confidence interval for HR. ", "p.value = Wald test significance. ", 
+        "n = ", cox_basic$n, " patients, ", cox_basic$n_events, 
+        " events. C-index = ", round(cox_basic$concordance, 3), 
+        ". ", "* p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001.")
+    DT::datatable(hr, rownames = FALSE, filter = "top", options = list(pageLength = 15, 
+        scrollX = TRUE), caption = htmltools::tags$caption(style = "caption-side: top; text-align: left;", 
+        caption))
+}</code></pre>
+</details>
+</section>
+<section id="full-model-age-gender-iss-cytogenetic-risk" class="level3">
+<h3 class="anchored" data-anchor-id="full-model-age-gender-iss-cytogenetic-risk">Full Model: Age + Gender + ISS + Cytogenetic Risk</h3>
+<p>Multivariable Cox model adjusting for ISS stage and IMWG cytogenetic risk classification.</p>
+{ if (is.null(cox_full) || is.null(cox_full<span class="math inline">\(hazard_ratios))
+        return(NULL)
+    hr &lt;- cox_full\)</span>hazard_ratios for (col in names(hr)) { if (is.numeric(hr[[col]])) { hr[[col]] &lt;- if (col == “p.value”) signif(hr[[col]], 4) else round(hr[[col]], 3) } } caption &lt;- paste0(“Multivariate Cox PH model with clinical and cytogenetic covariates.”, “term = covariate name.”, “HR &gt; 1 = increased hazard (worse survival).”, “CI = 95% confidence interval.”, “n =”, cox_full<span class="math inline">\(n,
+        " patients, ", cox_full\)</span>n_events, ” events. “,”C-index = “, round(cox_full<span class="math inline">\(concordance, 3), ". ", "Covariates: ",
+        paste(cox_full\)</span>covariates_used, collapse =”, “),”.”) DT::datatable(hr, rownames = FALSE, filter = “top”, options = list(pageLength = 15, scrollX = TRUE), caption = htmltools::tags<span class="math inline">\(caption(style = "caption-side: top; text-align: left;",
+        caption))
+}
+&lt;details&gt;&lt;summary&gt;Generating code&lt;/summary&gt;
+&lt;pre&gt;&lt;code class="language-r"&gt;{
+    if (is.null(cox_full) || is.null(cox_full\)</span>hazard_ratios)) return(NULL) hr &lt;- cox_full<span class="math inline">\(hazard_ratios
+    for (col in names(hr)) {
+        if (is.numeric(hr[[col]])) {
+            hr[[col]] &amp;lt;- if (col == "p.value")
+                signif(hr[[col]], 4)
+            else round(hr[[col]], 3)
+        }
+    }
+    caption &amp;lt;- paste0("Multivariate Cox PH model with clinical and cytogenetic covariates. ",
+        "term = covariate name. ", "HR &amp;gt; 1 = increased hazard (worse survival). ",
+        "CI = 95% confidence interval. ", "n = ", cox_full\)</span>n, ” patients, “, cox_full<span class="math inline">\(n_events, " events. ", "C-index = ",
+        round(cox_full\)</span>concordance, 3),”. “,”Covariates: “, paste(cox_full<span class="math inline">\(covariates_used, collapse = ", "), ".")
+    DT::datatable(hr, rownames = FALSE, filter = "top", options = list(pageLength = 15,
+        scrollX = TRUE), caption = htmltools::tags\)</span>caption(style =”caption-side: top; text-align: left;“, caption)) }
+
+
+</section>
+<section id="forest-plot" class="level3">
+<h3 class="anchored" data-anchor-id="forest-plot">Forest Plot</h3>
+<p>Forest plot showing hazard ratios from the full multivariate Cox regression. Each row represents a covariate; the point estimate is the HR with 95% CI bars. HR &gt; 1 indicates increased risk; HR &lt; 1 indicates a protective effect. The dashed vertical line marks HR = 1 (no effect).</p>
+<p><img src="survival-analysis_files/figure-html/forest-plot-1.png" class="img-fluid" width="768"></p>
+</section>
+<section id="proportional-hazards-assumption" class="level3">
+<h3 class="anchored" data-anchor-id="proportional-hazards-assumption">Proportional Hazards Assumption</h3>
+<p>Schoenfeld residuals test for the proportional hazards assumption. A significant p-value (&lt; 0.05) suggests the covariate’s effect changes over time, violating the PH assumption. Covariates that fail this test may need time-varying coefficients or stratification.</p>
+{ cox_for_ph &lt;- if (!is.null(cox_full)) cox_full else cox_basic if (is.null(cox_for_ph) || is.null(cox_for_ph<span class="math inline">\(ph_test))
+        return(NULL)
+    ph &lt;- cox_for_ph\)</span>ph_test ph_table &lt;- as.data.frame(ph<span class="math inline">\(table)
+    ph_table\)</span>variable &lt;- rownames(ph_table) ph_table &lt;- ph_table[, c(“variable”, “chisq”, “p”)] names(ph_table) &lt;- c(“Variable”, “Chi-squared”, “p-value”) ph_table<span class="math inline">\(`Chi-squared` &lt;- round(ph_table\)</span><code>Chi-squared</code>, 2) ph_table<span class="math inline">\(`p-value` &lt;- signif(ph_table\)</span><code>p-value</code>, 4) caption &lt;- paste0(“Proportional hazards assumption test (cox.zph).”, “Variable = covariate tested.”, “Chi-squared = Schoenfeld residual test statistic.”, “p-value &lt; 0.05 indicates the PH assumption may be violated”, “(hazard ratio changes over time).”, “If violated, time-varying coefficients or stratification”, “should be considered.”) DT::datatable(ph_table, rownames = FALSE, filter = “top”, options = list(pageLength = 15, scrollX = TRUE), caption = htmltools::tags<span class="math inline">\(caption(style = "caption-side: top; text-align: left;",
+            caption))
+}
+&lt;details&gt;&lt;summary&gt;Generating code&lt;/summary&gt;
+&lt;pre&gt;&lt;code class="language-r"&gt;{
+    cox_for_ph &amp;lt;- if (!is.null(cox_full))
+        cox_full
+    else cox_basic
+    if (is.null(cox_for_ph) || is.null(cox_for_ph\)</span>ph_test)) return(NULL) ph &lt;- cox_for_ph<span class="math inline">\(ph_test
+    ph_table &amp;lt;- as.data.frame(ph\)</span>table) ph_table<span class="math inline">\(variable &amp;lt;- rownames(ph_table)
+    ph_table &amp;lt;- ph_table[, c("variable", "chisq", "p")]
+    names(ph_table) &amp;lt;- c("Variable", "Chi-squared", "p-value")
+    ph_table\)</span><code>Chi-squared</code> &lt;- round(ph_table<span class="math inline">\(`Chi-squared`, 2)
+    ph_table\)</span><code>p-value</code> &lt;- signif(ph_table<span class="math inline">\(`p-value`, 4)
+    caption &amp;lt;- paste0("Proportional hazards assumption test (cox.zph). ",
+        "Variable = covariate tested. ", "Chi-squared = Schoenfeld residual test statistic. ",
+        "p-value &amp;lt; 0.05 indicates the PH assumption may be violated ",
+        "(hazard ratio changes over time). ", "If violated, time-varying coefficients or stratification ",
+        "should be considered.")
+    DT::datatable(ph_table, rownames = FALSE, filter = "top",
+        options = list(pageLength = 15, scrollX = TRUE), caption = htmltools::tags\)</span>caption(style = “caption-side: top; text-align: left;”, caption)) }
+
+
+</section>
+</section>
+<section id="model-comparison" class="level2">
+<h2 class="anchored" data-anchor-id="model-comparison">Model Comparison</h2>
+<p>Comparison of nested Cox models using likelihood ratio test, AIC, and concordance index. The full model includes ISS stage and cytogenetic risk in addition to age and gender. A significant likelihood ratio test indicates the additional covariates improve model fit.</p>
+{ if (is.null(cox_basic) || is.null(cox_full)) return(NULL) if (is.null(cox_basic<span class="math inline">\(concordance) || is.null(cox_full\)</span>concordance)) return(NULL) comp &lt;- data.frame(Model = c(“Basic (age + gender)”, paste0(“Full (”, paste(cox_full<span class="math inline">\(covariates_used, collapse = " + "), ")")),
+        N = c(cox_basic\)</span>n, cox_full<span class="math inline">\(n), Events = c(cox_basic\)</span>n_events, cox_full<span class="math inline">\(n_events), C_index = c(round(cox_basic\)</span>concordance, 3), round(cox_full<span class="math inline">\(concordance, 3)), stringsAsFactors = FALSE)
+    caption &lt;- paste0("Cox model comparison. ", "Model = covariates included. ",
+        "N = patients with complete data for all covariates. ",
+        "Events = observed deaths. ", "C-index = concordance statistic ",
+        "(0.5 = random, 1.0 = perfect discrimination). ", "Higher C-index indicates better prognostic discrimination.")
+    DT::datatable(comp, rownames = FALSE, filter = "top", options = list(pageLength = 10,
+        scrollX = TRUE), colnames = c("Model", "N", "Events",
+        "C-index"), caption = htmltools::tags\)</span>caption(style = “caption-side: top; text-align: left;”, caption)) }
+<details>
+<summary>
+Generating code
+</summary>
+<pre><code class="language-r">{
+    if (is.null(cox_basic) || is.null(cox_full)) 
+        return(NULL)
+    if (is.null(cox_basic$concordance) || is.null(cox_full$concordance)) 
+        return(NULL)
+    comp &lt;- data.frame(Model = c("Basic (age + gender)", paste0("Full (", 
+        paste(cox_full$covariates_used, collapse = " + "), ")")), 
+        N = c(cox_basic$n, cox_full$n), Events = c(cox_basic$n_events, 
+            cox_full$n_events), C_index = c(round(cox_basic$concordance, 
+            3), round(cox_full$concordance, 3)), stringsAsFactors = FALSE)
+    caption &lt;- paste0("Cox model comparison. ", "Model = covariates included. ", 
+        "N = patients with complete data for all covariates. ", 
+        "Events = observed deaths. ", "C-index = concordance statistic ", 
+        "(0.5 = random, 1.0 = perfect discrimination). ", "Higher C-index indicates better prognostic discrimination.")
+    DT::datatable(comp, rownames = FALSE, filter = "top", options = list(pageLength = 10, 
+        scrollX = TRUE), colnames = c("Model", "N", "Events", 
+        "C-index"), caption = htmltools::tags$caption(style = "caption-side: top; text-align: left;", 
+        caption))
+}</code></pre>
+</details>
+</section>
+<section id="survival-by-gene-expression" class="level2">
+<h2 class="anchored" data-anchor-id="survival-by-gene-expression">Survival by Gene Expression</h2>
+<p>Patients are split at the median VST expression of each top DE gene into “High” and “Low” groups. This connects differential expression results to clinical outcomes.</p>
+<blockquote class="blockquote">
+<p><strong>Note on multiple testing:</strong> With 5 genes tested, a Bonferroni-corrected significance threshold is p &lt; 0.01.</p>
+</blockquote>
+</section>
+<section id="expression-by-cytogenetic-subtype" class="level2">
+<h2 class="anchored" data-anchor-id="expression-by-cytogenetic-subtype">Expression by Cytogenetic Subtype</h2>
+<p>Violin/box plots showing gene expression (VST) stratified by cytogenetic marker status. This reveals whether specific alterations drive expression changes in top DE genes.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>plots <span class="ot">&lt;-</span> <span class="fu">safe_tar_read</span>(<span class="st">"vig_expr_by_subtype"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">is.list</span>(plots) <span class="sc">&amp;&amp;</span> <span class="sc">!</span><span class="fu">inherits</span>(plots, <span class="fu">c</span>(<span class="st">"gtable"</span>, <span class="st">"grob"</span>))) {</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (p <span class="cf">in</span> plots) {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">inherits</span>(p, <span class="fu">c</span>(<span class="st">"gtable"</span>, <span class="st">"grob"</span>, <span class="st">"gTree"</span>))) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>      grid<span class="sc">::</span><span class="fu">grid.newpage</span>(); grid<span class="sc">::</span><span class="fu">grid.draw</span>(p)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> <span class="fu">print</span>(p)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="next-steps" class="level2">
+<h2 class="anchored" data-anchor-id="next-steps">Next Steps</h2>
+<ul>
+<li><strong>Time-varying coefficients</strong>: For covariates violating the PH assumption.</li>
+<li><strong>Cure models</strong>: If a plateau is observed in KM curves, consider mixture cure models.</li>
+<li>See the <a href="exploratory-analysis.html">cytogenetic landscape</a> for alteration frequencies underlying risk groups.</li>
+<li>See the <a href="differential-expression.html">DE results</a> for gene signatures that could inform survival stratification.</li>
+</ul>
+</section>
+<section id="data-sources" class="level2">
+<h2 class="anchored" data-anchor-id="data-sources">Data Sources</h2>
+<p>Results in this vignette are derived from the <a href="https://portal.gdc.cancer.gov/projects/MMRF-COMMPASS">MMRF CoMMpass study</a> (MMRF-COMMPASS, ~1,143 patients), downloaded via <a href="https://bioconductor.org/packages/TCGAbiolinks/">TCGAbiolinks</a>. The pipeline runs with a configurable <code>sample_limit</code> (default 200; CI uses 20).</p>
+<p>For full citations, data access tiers, and the distinction between pipeline data and synthetic test data, see the <a href="data-sources.html">Data Sources</a> vignette.</p>
+</section>
+<section id="recent-changes" class="level2">
+<h2 class="anchored" data-anchor-id="recent-changes">Recent Changes</h2>
+<p>Recent project commits with lines added, files changed, and change categories.</p>
+</section>
+<section id="bayesian-survival-models" class="level2">
+<h2 class="anchored" data-anchor-id="bayesian-survival-models">Bayesian Survival Models</h2>
+<p>Bayesian Cox PH models fit with <a href="https://paul-buerkner.github.io/brms/">brms</a> using weakly informative priors. These complement the frequentist models above by providing posterior distributions, credible intervals, and natural hierarchical structure (e.g., ISS-stage random intercepts).</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Bayesian models use <code>cue = "never"</code> — they only run when explicitly requested via <code>tar_make(names = bayes_cox_basic)</code>. MCMC compilation takes several minutes.</p>
+</div>
+</div>
+<section id="frequentist-vs-bayesian-comparison" class="level3">
+<h3 class="anchored" data-anchor-id="frequentist-vs-bayesian-comparison">Frequentist vs Bayesian Comparison</h3>
+</section>
+</section>
+<section id="reproducibility" class="level2">
+<h2 class="anchored" data-anchor-id="reproducibility">Reproducibility</h2>
+<details>
+<summary>
+Session Info (click to expand)
+</summary>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; R version 4.5.2 (2025-10-31)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Platform: aarch64-apple-darwin25.2.0</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Running under: macOS Tahoe 26.3.1</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Matrix products: default</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; BLAS:   /nix/store/ab8sq4g14lg45192ykfqcklgw6fvaswh-blas-3/lib/libblas.dylib </span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; LAPACK: /nix/store/ssl6kfm7w37gz5pn57jn2x7xzw3bss24-openblas-0.3.30/lib/libopenblasp-r0.3.30.dylib;  LAPACK version 3.12.0</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; locale:</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; time zone: UTC</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; tzcode source: internal</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; attached base packages:</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; other attached packages:</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] targets_1.11.4</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1] base64url_1.4       gtable_0.3.6        jsonlite_2.0.0     </span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4] dplyr_1.1.4         compiler_4.5.2      tidyselect_1.2.1   </span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7] callr_3.7.6         scales_1.4.0        yaml_2.3.12        </span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10] fastmap_1.2.0       ggplot2_4.0.1       R6_2.6.1           </span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [13] generics_0.1.4      igraph_2.2.1        knitr_1.51         </span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [16] htmlwidgets_1.6.4   backports_1.5.0     tibble_3.3.1       </span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [19] pillar_1.11.1       RColorBrewer_1.1-3  rlang_1.1.7        </span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [22] DT_0.34.0           xfun_0.56           S7_0.2.1           </span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [25] otel_0.2.0          cli_3.6.5           withr_3.0.2        </span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [28] magrittr_2.0.4      ps_1.9.1            digest_0.6.39      </span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [31] grid_4.5.2          processx_3.8.6      secretbase_1.1.1   </span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [34] lifecycle_1.0.5     prettyunits_1.2.0   vctrs_0.7.1        </span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [37] evaluate_1.0.5      glue_1.8.0          data.table_1.18.2.1</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [40] farver_2.1.2        codetools_0.2-20    rmarkdown_2.30     </span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [43] tools_4.5.2         pkgconfig_2.0.3     htmltools_0.5.9</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</details>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
