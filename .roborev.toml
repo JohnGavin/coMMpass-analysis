@@ -15,4 +15,5 @@ R package (coMMpass) — genomics/myeloma analysis. Review for:
 - Hardcoded values in vignettes (must use tar_read)
 - Missing cli::cli_abort (use instead of stop())
 - Lab measurement units should be explicit
+- Diffs are structural (difftastic/tree-sitter) — formatting changes are invisible, focus on semantic changes only
 """
