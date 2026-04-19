@@ -18,7 +18,8 @@ tar_option_set(
   garbage_collection = TRUE,
   controller = crew_controller_local(
     workers = 4,  # Parallel workers
-    seconds_idle = 60
+    seconds_idle = 60,
+    seconds_wall = 3600
   )
 )
 
