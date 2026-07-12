@@ -48,3 +48,4 @@
 
 # LICENSE (included via License field)
 ^LICENSE\.md$
+^LICENSE\.content\.md$
