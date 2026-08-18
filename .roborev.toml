@@ -1,4 +1,10 @@
-agent = "codex"
+# No per-repo `agent` pin: inherit the global default_agent (gemini) and
+# default_backup_agent (claude-code). This repo previously pinned
+# agent = "codex" (commit 7801158, 2026-05-13). codex was globally abandoned
+# as a backup in 2026-07 (llm#723, "codex failing 6/6") and its credential
+# now returns HTTP 401 invalid_api_key, so the pin made every review here
+# fail terminally — the repo set no backup_agent, so a codex failure had no
+# fallback. See llm#964.
 review_context_count = 3
 excluded_commit_patterns = ["[skip review]", "docs: rebuild pkgdown", "chore: gitignore"]
 review_reasoning = "standard"
