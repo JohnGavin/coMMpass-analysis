@@ -5,6 +5,20 @@
 # now returns HTTP 401 invalid_api_key, so the pin made every review here
 # fail terminally — the repo set no backup_agent, so a codex failure had no
 # fallback. See llm#964.
+#
+# 2026-08-27 update: the no-pin strategy above assumed default_backup_agent
+# actually covers a gemini failure. It does not, for THIS failure mode —
+# review_jobs.backup_agent is recorded empty on every job this repo has ever
+# run, and gemini's "the diff is gitignored, can't read it" response
+# completes the job (a verdict is recorded) rather than erroring, so no
+# fallback is ever triggered. Confirmed against ~/.roborev/reviews.db: the 2
+# currently-open gemini reviews here failed exactly this way. Pinning
+# agent = 'claude-code' directly (same fix already applied to llmtelemetry
+# and historical) is the actual fix. See llm#1035 / kenn-io/roborev#1104.
+agent = 'claude-code'
+model = 'sonnet'
+review_backup_agent = 'claude-code'
+review_backup_model = 'sonnet'
 review_context_count = 3
 excluded_commit_patterns = ["[skip review]", "docs: rebuild pkgdown", "chore: gitignore"]
 review_reasoning = "standard"
