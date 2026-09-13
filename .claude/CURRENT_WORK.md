@@ -1,6 +1,14 @@
 # Current Work — coMMpass-analysis
 
-## Last Session: 2026-03-19
+## Last Session: 2026-09-13 (branch feat/cc-20260913-184749)
+
+### Completed This Session
+
+- Filed [#104](https://github.com/JohnGavin/coMMpass-analysis/issues/104) — research task: virtuallab.themmrf.org (MMRF Virtual Lab) as a data source, and API access requirements. No code changes.
+- Key finding: Virtual Lab is a **Gen3** data commons deployment (Center for Translational Data Science, UChicago) — access model is inferred to be account + granted data access → API key (`credentials.json`) → short-lived bearer token → GraphQL (`sheepdog`/`peregrine`) + file download (`indexd`). Not confirmed for the MMRF instance itself; the public pages expose no eligibility/DUA/cost info.
+- This directly relates to the **"blocked: MMRF Gateway"** items below (#88, #89, #9) — worth checking during #104's research whether Virtual Lab access unblocks any of them, or whether the "no academic email" constraint (from `project_genomic-data-source-leads.md` memory) blocks this too.
+
+### Previous Session: 2026-03-19
 
 ### Branch: main
 
